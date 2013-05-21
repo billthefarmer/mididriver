@@ -23,18 +23,21 @@
 
 package org.billthefarmer.mididriver;
 
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 
 public class MainActivity extends Activity
-    implements OnTouchListener
+    implements OnTouchListener, OnClickListener
 {
 
     protected MidiDriver midi;
+    protected MediaPlayer player;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -55,6 +58,14 @@ public class MainActivity extends Activity
 	v = findViewById(R.id.button2);
 	if (v != null)
 	    v.setOnTouchListener(this);
+
+	v = findViewById(R.id.button3);
+	if (v != null)
+	    v.setOnClickListener(this);
+
+	v = findViewById(R.id.button4);
+	if (v != null)
+	    v.setOnClickListener(this);
     }
 
     @Override
@@ -89,6 +100,11 @@ public class MainActivity extends Activity
 
 	if (midi != null)
 	    midi.stop();
+
+	// Stop player
+
+	if (player != null)
+	    player.stop();
     }
 
     // On touch
@@ -107,11 +123,11 @@ public class MainActivity extends Activity
 	    switch (id)
 	    {
 	    case R.id.button1:
-		sendMidi(0x90, 48, 127);
+		sendMidi(0x90, 48, 63);
 		break;
 
 	    case R.id.button2:
-		sendMidi(0x90, 56, 127);
+		sendMidi(0x90, 56, 63);
 		break;
 
 	    default:
@@ -142,6 +158,31 @@ public class MainActivity extends Activity
 	}
 
 	return true;
+    }
+
+    @Override
+    public void onClick(View v)
+    {
+	int id = v.getId();
+
+	switch (id)
+	{
+	case R.id.button3:
+	    if (player != null)
+	    {
+		player.stop();
+		player.release();
+	    }
+
+	    player = MediaPlayer.create(this, R.raw.banjos);
+	    player.start();
+	    break;
+
+	case R.id.button4:
+	    if (player != null)
+		player.stop();
+	    break;
+	}
     }
 
     protected void sendMidi(int m, int n, int v)

@@ -3,7 +3,7 @@ Midi Driver
 
 Android midi driver using Sonivox EAS library
 
-The app just has a couple of buttons that play a couple of piano notes when touched.
+The app just has a couple of buttons that play a couple of piano notes when touched. I've added two more buttons that play and stop a midi file using the MediaPlayer to check that there is no interaction problem.
 
 To use this driver you need to:
 
