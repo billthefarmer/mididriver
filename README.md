@@ -19,3 +19,21 @@ Or you can just copy the libmidi.so file from here, but it has
 embedded in the native method names.
 
 The NDK toolkit doesn't appear to use anything other than standard windows shell commands and it's own tools, so you don't need Cygwin, despite what the docs say.
+
+Native Methods
+--------------
+
+	int init()  Return buffer size in shorts, or 0 on failure.
+	
+	int[] config()  Return a four element array of ints with part of the the EAS onfig:
+
+      config[0] = pLibConfig->maxVoices;
+      config[1] = pLibConfig->numChannels;
+      config[2] = pLibConfig->sampleRate;
+      config[3] = pLibConfig->mixBufferSize;
+
+	int render(short buffer[])  Renders a buffer's worth of audio from the Sonivox synthesizer. The buffer provided should be an array of shorts of the size returned by init().
+
+	boolean write(byte buffer[])  Writes midi data to the Sonivox Synthesizer. The length of the array should be the exact length of the message or messages. It seems to ignore three byte program change messages, for example. Returns true on success, false on faulure.
+
+	boolean shutdown()  Shut down the synthesizer. Returns true on success, false on faulure.
