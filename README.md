@@ -20,7 +20,7 @@ embedded in the native method names.
 
 The NDK toolkit doesn't appear to use anything other than standard windows shell commands and it's own tools, so you don't need Cygwin, despite what the docs say.
 
-# Native Methods
+## Native Methods
 
 	int init()  Return buffer size in shorts, or 0 on failure.
 	
