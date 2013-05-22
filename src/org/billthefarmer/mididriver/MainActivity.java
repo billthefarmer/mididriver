@@ -23,6 +23,8 @@
 
 package org.billthefarmer.mididriver;
 
+import org.billthefarmer.mididriver.MidiDriver.OnMidiStartListener;
+
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.app.Activity;
@@ -33,7 +35,7 @@ import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 
 public class MainActivity extends Activity
-    implements OnTouchListener, OnClickListener
+    implements OnTouchListener, OnClickListener, OnMidiStartListener
 {
 
     protected MidiDriver midi;
@@ -66,6 +68,11 @@ public class MainActivity extends Activity
 	v = findViewById(R.id.button4);
 	if (v != null)
 	    v.setOnClickListener(this);
+
+	// Set on midi start listener
+
+	if (midi != null)
+	    midi.setOnMidiStartListener(this);
     }
 
     @Override
@@ -160,6 +167,8 @@ public class MainActivity extends Activity
 	return true;
     }
 
+    // On click
+
     @Override
     public void onClick(View v)
     {
@@ -184,6 +193,19 @@ public class MainActivity extends Activity
 	    break;
 	}
     }
+
+    // Listener for sending initial midi messages when the Sonivox
+    // synthesizer has been started, such as program change. Runs on
+    // the MidiDriver thread, so should only be used for sending midi
+    // messages.
+
+    @Override
+    public void onMidiStart()
+    {
+	// TODO
+    }
+
+    // Send a midi message
 
     protected void sendMidi(int m, int n, int v)
     {

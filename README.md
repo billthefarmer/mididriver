@@ -3,7 +3,7 @@ Midi Driver
 
 Android midi driver using Sonivox EAS library
 
-The app just has a couple of buttons that play a couple of piano notes when touched. I've added two more buttons that play and stop a midi file using the MediaPlayer to check that there is no interaction problem.
+The app just has a couple of buttons that play a couple of piano notes when touched. I've added two more buttons that play and stop a midi file using the MediaPlayer to check that there is no interaction problem. Added a listener for sending initial midi messages when the midi driver has started.
 
 To use this driver you need to:
 
@@ -25,6 +25,8 @@ The NDK toolkit doesn't appear to use anything other than standard windows shell
 	void start()  Start the driver. Call from onResume().
 
 	void stop()  Stop the driver. Call from onPause();
+
+	void addOnMidiStartListener(OnMidiStartListener l);
 
 Use the native write(byte[]) method to write midi data.
 

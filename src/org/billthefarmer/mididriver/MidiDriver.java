@@ -34,10 +34,12 @@ public class MidiDriver implements Runnable
     static final int SAMPLE_RATE = 22050;
     static final int BUFFER_SIZE = 4096;
 
-    protected Thread thread;
-    protected AudioTrack audioTrack;
+    private Thread thread;
+    private AudioTrack audioTrack;
 
-    protected short shortArray[];
+    private OnMidiStartListener listener;
+
+    private short shortArray[];
 
     // Constructor
 
@@ -47,7 +49,7 @@ public class MidiDriver implements Runnable
 
     // Start midi
 
-    protected void start()
+    public void start()
     {
 	// Start the thread
 
@@ -65,7 +67,7 @@ public class MidiDriver implements Runnable
 
     // Stop
 
-    protected void stop()
+    public void stop()
     {
 	Thread t = thread;
 	thread = null;
@@ -78,7 +80,7 @@ public class MidiDriver implements Runnable
 
     // Process MidiDriver
 
-    protected void processMidi()
+    private void processMidi()
     {
 	int status = 0;
 	int size = 0;
@@ -102,6 +104,11 @@ public class MidiDriver implements Runnable
 	    return;
 	}
 
+	// Call listener
+
+	if (listener != null)
+	    listener.onMidiStart();
+
 	// Play track
 
 	audioTrack.play();
@@ -110,7 +117,7 @@ public class MidiDriver implements Runnable
 
 	while (thread != null)
 	{
-	    // Render the ausio
+	    // Render the audio
 
 	    if (render(shortArray) == 0)
 		break;
@@ -135,13 +142,27 @@ public class MidiDriver implements Runnable
 	audioTrack.release();
     }
 
+    // Set listener
+
+    public void setOnMidiStartListener(OnMidiStartListener l)
+    {
+	listener = l;
+    }
+
+    // Listener interface
+
+    public interface OnMidiStartListener
+    {
+	public abstract void onMidiStart();
+    }
+
     // Native midi methods
 
-    protected native int     init();
-    protected native int[]   config();
-    protected native int     render(short a[]);
-    protected native boolean write(byte a[]);
-    protected native boolean shutdown();
+    private native int     init();
+    public  native int[]   config();
+    private native int     render(short a[]);
+    public  native boolean write(byte a[]);
+    private native boolean shutdown();
 
     // Load midi library
 
