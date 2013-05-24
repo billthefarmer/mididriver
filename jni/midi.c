@@ -80,6 +80,9 @@ Java_org_billthefarmer_mididriver_MidiDriver_config(JNIEnv *env,
 {
     jboolean isCopy;
 
+    if (pLibConfig == NULL)
+	return NULL;
+
     jintArray configArray = (*env)->NewIntArray(env, 4);
 
     jint *config = (*env)->GetIntArrayElements(env, configArray, &isCopy);
@@ -110,6 +113,9 @@ Java_org_billthefarmer_mididriver_MidiDriver_render(JNIEnv *env,
 
     // void* GetPrimitiveArrayCritical(JNIEnv*, jarray, jboolean*);
     // void ReleasePrimitiveArrayCritical(JNIEnv*, jarray, void*, jint);
+
+    if (pEASData == NULL)
+	return 0;
 
     buffer =
 	(EAS_PCM *)(*env)->GetShortArrayElements(env, shortArray, &isCopy);
@@ -142,6 +148,9 @@ Java_org_billthefarmer_mididriver_MidiDriver_write(JNIEnv *env,
     jint length;
     EAS_U8 *buf;
 
+    if (pEASData == NULL || midiHandle == NULL)
+	return JNI_FALSE;
+
     buf = (EAS_U8 *)(*env)->GetByteArrayElements(env, byteArray, &isCopy);
     length = (*env)->GetArrayLength(env, byteArray);
 
@@ -160,6 +169,9 @@ jboolean
 Java_org_billthefarmer_mididriver_MidiDriver_shutdown(JNIEnv *env,
 						      jobject clazz)
 {
+
+    if (pEASData == NULL || midiHandle == NULL)
+	return JNI_FALSE;
 
     EAS_CloseMIDIStream(pEASData, midiHandle);
     EAS_Shutdown(pEASData);
