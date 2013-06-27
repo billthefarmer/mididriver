@@ -34,7 +34,7 @@
 static EAS_DATA_HANDLE pEASData;
 const S_EAS_LIB_CONFIG *pLibConfig;
 static EAS_PCM *buffer;
-static EAS_RESULT result;
+// static EAS_RESULT result;
 static EAS_I32 bufferSize;
 static EAS_HANDLE midiHandle;
 
@@ -43,6 +43,8 @@ jint
 Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
 						  jobject clazz)
 {
+    EAS_RESULT result;
+
     // get the library configuration
     pLibConfig = EAS_Config();
     if (pLibConfig == NULL || pLibConfig->libVersion != LIB_VERSION)
@@ -54,7 +56,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
 
     // init library
     if ((result = EAS_Init(&pEASData)) != EAS_SUCCESS)
-        return 0;
+	return 0;
 
     // select reverb preset and enable
     EAS_SetParameter(pEASData, EAS_MODULE_REVERB, EAS_PARAM_REVERB_PRESET,
@@ -104,6 +106,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_render(JNIEnv *env,
 						    jshortArray shortArray)
 {
     jboolean isCopy;
+    EAS_RESULT result;
     EAS_I32 numGenerated;
     EAS_I32 count;
     jsize size;
@@ -125,12 +128,12 @@ Java_org_billthefarmer_mididriver_MidiDriver_render(JNIEnv *env,
     count = 0;
     while (count < size)
     {
-    	result = EAS_Render(pEASData, buffer + count,
-    			    pLibConfig->mixBufferSize, &numGenerated);
-    	if (result != EAS_SUCCESS)
-    	    break;
+	result = EAS_Render(pEASData, buffer + count,
+			    pLibConfig->mixBufferSize, &numGenerated);
+	if (result != EAS_SUCCESS)
+	    break;
 
-    	count += numGenerated * pLibConfig->numChannels;
+	count += numGenerated * pLibConfig->numChannels;
     }
 
     (*env)->ReleaseShortArrayElements(env, shortArray, buffer, 0);
@@ -145,6 +148,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_write(JNIEnv *env,
 						   jbyteArray byteArray)
 {
     jboolean isCopy;
+    EAS_RESULT result;
     jint length;
     EAS_U8 *buf;
 
@@ -169,12 +173,19 @@ jboolean
 Java_org_billthefarmer_mididriver_MidiDriver_shutdown(JNIEnv *env,
 						      jobject clazz)
 {
+    EAS_RESULT result;
 
     if (pEASData == NULL || midiHandle == NULL)
 	return JNI_FALSE;
 
-    EAS_CloseMIDIStream(pEASData, midiHandle);
-    EAS_Shutdown(pEASData);
+    if ((result = EAS_CloseMIDIStream(pEASData, midiHandle)) != EAS_SUCCESS)
+    {
+	EAS_Shutdown(pEASData);
+	return JNI_FALSE;
+    }
+
+    if ((result = EAS_Shutdown(pEASData)) != EAS_SUCCESS)
+	return JNI_FALSE;
 
     return JNI_TRUE;
 }

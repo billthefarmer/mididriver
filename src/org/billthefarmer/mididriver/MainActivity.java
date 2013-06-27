@@ -183,7 +183,7 @@ public class MainActivity extends Activity
 		player.release();
 	    }
 
-	    player = MediaPlayer.create(this, R.raw.banjos);
+	    player = MediaPlayer.create(this, R.raw.ants);
 	    player.start();
 	    break;
 

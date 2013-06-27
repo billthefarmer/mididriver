@@ -31,15 +31,15 @@ import android.media.AudioTrack;
 
 public class MidiDriver implements Runnable
 {
-    static final int SAMPLE_RATE = 22050;
-    static final int BUFFER_SIZE = 4096;
+    private static final int SAMPLE_RATE = 22050;
+    private static final int BUFFER_SIZE = 4096;
 
     private Thread thread;
     private AudioTrack audioTrack;
 
     private OnMidiStartListener listener;
 
-    private short shortArray[];
+    private short buffer[];
 
     // Constructor
 
@@ -90,7 +90,7 @@ public class MidiDriver implements Runnable
 	if ((size = init()) == 0)
 	    return;
 
-	shortArray = new short[size];
+	buffer = new short[size];
 
 	// Create audio track
 
@@ -119,12 +119,12 @@ public class MidiDriver implements Runnable
 	{
 	    // Render the audio
 
-	    if (render(shortArray) == 0)
+	    if (render(buffer) == 0)
 		break;
 
 	    // Write audio to audiotrack
 
-	    status = audioTrack.write(shortArray, 0, shortArray.length);
+	    status = audioTrack.write(buffer, 0, buffer.length);
 
 	    if (status < 0)
 		break;
@@ -133,8 +133,8 @@ public class MidiDriver implements Runnable
 	// Render and write the last bit of audio
 
 	if (status > 0)
-	    if (render(shortArray) > 0)
-		audioTrack.write(shortArray, 0, shortArray.length);
+	    if (render(buffer) > 0)
+		audioTrack.write(buffer, 0, buffer.length);
 
 	// Shut down audio
 
