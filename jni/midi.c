@@ -34,7 +34,6 @@
 static EAS_DATA_HANDLE pEASData;
 const S_EAS_LIB_CONFIG *pLibConfig;
 static EAS_PCM *buffer;
-// static EAS_RESULT result;
 static EAS_I32 bufferSize;
 static EAS_HANDLE midiHandle;
 
