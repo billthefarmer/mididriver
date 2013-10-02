@@ -18,9 +18,9 @@ Or you can just copy the libmidi.so file from here, but it has
 
 embedded in the native method names.
 
-The NDK toolkit doesn't appear to use anything other than standard windows shell commands and it's own tools, so you don't need Cygwin, despite what the docs say.
+The windows NDK toolkit doesn't appear to use anything other than standard windows shell commands and it's own tools, so you don't need Cygwin, despite what the docs say.
 
-## Methods
+### Methods
 
 	void start()  Start the driver. Call from onResume().
 
@@ -30,7 +30,7 @@ The NDK toolkit doesn't appear to use anything other than standard windows shell
 
 Use the native write(byte[]) method to write midi data.
 
-## Native Methods
+### Native Methods
 
 	int init()  Return buffer size in shorts, or 0 on failure.
 	
