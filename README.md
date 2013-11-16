@@ -44,7 +44,8 @@ Use the native write(byte[]) method to write midi data.
 
 	int render(short buffer[]) Renders a buffer's worth of audio from
 	the Sonivox synthesizer into the buffer provided. The buffer
-	should be an array of shorts of the size returned by init().
+	should be an array of shorts of the size returned by init(). Returns
+	0 on failure, number of shorts renderd on success.
 
 	boolean write(byte buffer[])  Writes midi data to the Sonivox
 	synthesizer. The length of the array should be the exact length of
