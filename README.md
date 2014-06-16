@@ -49,8 +49,7 @@ Use the native write(byte[]) method to write midi data.
 
 	boolean write(byte buffer[])  Writes midi data to the Sonivox
 	synthesizer. The length of the array should be the exact length of
-	the message or messages. It seems to ignore three byte program
-	change messages, for example. Returns true on success, false on
+	the message or messages. Returns true on success, false on
 	faulure.
 
 	boolean shutdown()  Shut down the synthesizer. Returns true on
