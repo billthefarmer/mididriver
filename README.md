@@ -18,9 +18,9 @@ Or you can just copy the libmidi.so file from here, but it has
 
 embedded in the native method names.
 
-The NDK toolkit doesn't appear to use anything other than standard windows shell commands and it's own tools, so you don't need Cygwin, despite what the docs say.
+The windows NDK toolkit doesn't appear to use anything other than standard windows shell commands and it's own tools, so you don't need Cygwin, despite what the docs say.
 
-## Methods
+### Methods
 
 	void start()  Start the driver. Call from onResume().
 
@@ -30,7 +30,7 @@ The NDK toolkit doesn't appear to use anything other than standard windows shell
 
 Use the native write(byte[]) method to write midi data.
 
-## Native Methods
+### Native Methods
 
 	int init()  Return buffer size in shorts, or 0 on failure.
 	
@@ -44,12 +44,12 @@ Use the native write(byte[]) method to write midi data.
 
 	int render(short buffer[]) Renders a buffer's worth of audio from
 	the Sonivox synthesizer into the buffer provided. The buffer
-	should be an array of shorts of the size returned by init().
+	should be an array of shorts of the size returned by init(). Returns
+	0 on failure, number of shorts renderd on success.
 
 	boolean write(byte buffer[])  Writes midi data to the Sonivox
 	synthesizer. The length of the array should be the exact length of
-	the message or messages. It seems to ignore three byte program
-	change messages, for example. Returns true on success, false on
+	the message or messages. Returns true on success, false on
 	faulure.
 
 	boolean shutdown()  Shut down the synthesizer. Returns true on
