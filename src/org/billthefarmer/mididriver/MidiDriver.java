@@ -98,8 +98,21 @@ public class MidiDriver implements Runnable
 				    AudioFormat.CHANNEL_OUT_STEREO,
 				    AudioFormat.ENCODING_PCM_16BIT,
 				    BUFFER_SIZE, AudioTrack.MODE_STREAM);
+	// Check audiotrack
+
 	if (audioTrack == null)
 	{
+	    shutdown();
+	    return;
+	}
+
+	// Check state
+
+	int state = audioTrack.getState();
+
+	if (state != AudioTrack.STATE_INITIALIZED)
+	{
+	    audioTrack.release();
 	    shutdown();
 	    return;
 	}
