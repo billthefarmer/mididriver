@@ -23,8 +23,6 @@
 
 package org.billthefarmer.mididriver;
 
-import org.billthefarmer.mididriver.MidiDriver.OnMidiStartListener;
-
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.app.Activity;
@@ -35,7 +33,7 @@ import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 
 public class MainActivity extends Activity
-    implements OnTouchListener, OnClickListener, OnMidiStartListener
+    implements OnTouchListener, OnClickListener, MidiDriver.OnMidiStartListener
 {
 
     protected MidiDriver midi;
@@ -215,6 +213,6 @@ public class MainActivity extends Activity
 	msg[1] = (byte) n;
 	msg[2] = (byte) v;
 
-	midi.write(msg);
+	midi.queueEvent(msg);
     }
 }
