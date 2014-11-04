@@ -1,0 +1,8 @@
+*.*~
+*.jar
+.*
+bin
+gen
+ant.properties
+local.properties
+obj

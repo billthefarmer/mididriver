@@ -152,7 +152,7 @@ public class MidiDriver implements Runnable
 		    write(queuedEvent);
 		}
 
-		this.queuedEvents.clear();
+		queuedEvents.clear();
 	    }
 
 	    // Render the audio
