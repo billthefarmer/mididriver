@@ -9,7 +9,11 @@ just has a couple of buttons that play a couple of piano notes when
 touched. I've added two more buttons that play and stop a midi file
 using the MediaPlayer to check that there is no interaction
 problem. Added a listener for sending initial midi messages when the
-midi driver has started.
+midi driver has started. This project may be compiled as a library by
+changing the setting in project.properties to android.library=true.
+You will either need to delete the MainActivity.java file or be evil
+and compile it with the about setting set to false before compiling it
+as a library. The compiler is clever enough not to recompile the sources.
 
 To use this driver you need to:
 
