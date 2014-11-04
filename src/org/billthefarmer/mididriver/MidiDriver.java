@@ -87,7 +87,7 @@ public class MidiDriver implements Runnable
     {
 	synchronized (this)
 	{
-	    this.queuedEvents.add(event);
+	    queuedEvents.add(event);
 	}
     }
 
