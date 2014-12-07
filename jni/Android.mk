@@ -17,7 +17,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE    := midi
-LOCAL_SRC_FILES := midi.c
+LOCAL_SRC_FILES := midi.cpp
 # for EAS midi
 LOCAL_LDLIBS    += -lsonivox
 
