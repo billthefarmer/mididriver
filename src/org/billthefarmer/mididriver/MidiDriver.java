@@ -147,10 +147,8 @@ public class MidiDriver implements Runnable
 
 	    synchronized (this)
 	    {
-		for(byte[] queuedEvent: queuedEvents)
-		{
+		for (byte[] queuedEvent: queuedEvents)
 		    write(queuedEvent);
-		}
 
 		queuedEvents.clear();
 	    }
