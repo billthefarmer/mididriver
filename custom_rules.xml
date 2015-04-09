@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="custom_rules" default="debug">
+
+  <!--
+      Delete libmsonivox.so prebuilt shared libraries to prevent them
+      being included in the packaged apk.
+  -->
+
+  <target name="-pre-build">
+    <echo level="info">Deleting prebuilt shared libraries</echo>
+
+    <delete>
+      <fileset dir="libs" includes="*/libsonivox.so"/>
+    </delete>
+  </target>
+
+</project>

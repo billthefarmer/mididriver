@@ -16,9 +16,16 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
+LOCAL_MODULE := sonivox
+LOCAL_SRC_FILES := libs/$(TARGET_ARCH)/libsonivox.so
+
+include $(PREBUILT_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+
 LOCAL_MODULE    := midi
 LOCAL_SRC_FILES := midi.cpp
 # for EAS midi
-LOCAL_LDLIBS    += -lsonivox
+LOCAL_SHARED_LIBRARIES := sonivox
 
 include $(BUILD_SHARED_LIBRARY)
