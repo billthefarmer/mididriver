@@ -12,7 +12,7 @@ problem. Added a listener for sending initial midi messages when the
 midi driver has started. This project may be compiled as a library by
 changing the setting in project.properties to android.library=true.
 You will either need to delete the MainActivity.java file or be evil
-and compile it with the about setting set to false before compiling it
+and compile it with the above setting set to false before compiling it
 as a library. The compiler is clever enough not to recompile the sources.
 
 To use this driver you need to:
@@ -21,9 +21,10 @@ To use this driver you need to:
   * Get the documentation and include files from
     https://github.com/android/platform_external_sonivox.
   * Get a copy of the libsonivox.so library from an Android device or
-    an emulator (in system/lib) and put it with the other libraries in
-    the platforms/android-14/arch-arm/usr/lib folder of the NDK.
-  * Add it to your ~/jni/Android.mk file along with any other libraries.
+    an emulator (in system/lib) and put it in the ~/jni/libs/<arch>
+    folder.
+  * Adjust the ~jni/Application.mk to build the architecture(s) you
+    want.
 
 Or you can just copy the libmidi.so file from here, but it has
 
