@@ -14,6 +14,11 @@
     </delete>
   </target>
 
+  <!--
+      Move MainActivity.java file to a temporary folder when building
+      a library to prevent it being compiled into the library.
+  -->
+
   <target name="-pre-compile">
     <if condition="${project.is.library}">
       <then>
