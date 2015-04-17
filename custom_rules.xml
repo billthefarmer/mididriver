@@ -38,6 +38,8 @@
 	<move todir="${source.absolute.dir}">
 	  <fileset dir="${tmp.dir}" includes="**/MainActivity.java" />
 	</move>
+
+	<delete dir="${tmp.dir}" />
       </then>
     </if>
   </target>
