@@ -10,8 +10,36 @@
     <echo level="info">Deleting prebuilt shared libraries</echo>
 
     <delete>
-      <fileset dir="libs" includes="*/libsonivox.so"/>
+      <fileset dir="libs" includes="*/libsonivox.so" />
     </delete>
+  </target>
+
+  <target name="-pre-compile">
+    <if condition="${project.is.library}">
+      <then>
+        <echo level="info">Moving MainActivity.java file</echo>
+
+	<property name="tmp.dir" location="tmp" />
+	<mkdir dir="${tmp.dir}" />
+
+	<move todir="${tmp.dir}">
+	  <fileset dir="${source.absolute.dir}"
+		   includes="**/MainActivity.java" />
+	</move>
+      </then>
+    </if>
+  </target>
+
+  <target name="-post-compile">
+    <if condition="${project.is.library}">
+      <then>
+        <echo level="info">Moving MainActivity.java file back</echo>
+
+	<move todir="${source.absolute.dir}">
+	  <fileset dir="${tmp.dir}" includes="**/MainActivity.java" />
+	</move>
+      </then>
+    </if>
   </target>
 
 </project>
