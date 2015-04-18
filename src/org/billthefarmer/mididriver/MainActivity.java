@@ -129,10 +129,14 @@ public class MainActivity extends Activity
 	    {
 	    case R.id.button1:
 		sendMidi(0x90, 48, 63);
+		sendMidi(0x90, 52, 63);
+		sendMidi(0x90, 55, 63);
 		break;
 
 	    case R.id.button2:
-		sendMidi(0x90, 56, 63);
+		sendMidi(0x90, 55, 63);
+		sendMidi(0x90, 59, 63);
+		sendMidi(0x90, 62, 63);
 		break;
 
 	    default:
@@ -147,10 +151,14 @@ public class MainActivity extends Activity
 	    {
 	    case R.id.button1:
 		sendMidi(0x80, 48, 0);
+		sendMidi(0x80, 52, 0);
+		sendMidi(0x80, 55, 0);
 		break;
 
 	    case R.id.button2:
-		sendMidi(0x80, 56, 0);
+		sendMidi(0x80, 55, 0);
+		sendMidi(0x80, 59, 0);
+		sendMidi(0x80, 62, 0);
 		break;
 
 	    default:
@@ -162,7 +170,7 @@ public class MainActivity extends Activity
 	    return false;
 	}
 
-	return true;
+	return false;
     }
 
     // On click

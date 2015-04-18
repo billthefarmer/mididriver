@@ -22,7 +22,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/textView1"
-        android:text="Button" />
+        android:text="C" />
 
     <Button
         android:id="@+id/button2"
@@ -30,7 +30,7 @@
         android:layout_height="wrap_content"
         android:layout_alignTop="@+id/button1"
         android:layout_toRightOf="@+id/button1"
-        android:text="Button" />
+        android:text="G" />
 
     <Button
         android:id="@+id/button3"
@@ -39,7 +39,7 @@
         android:layout_alignLeft="@+id/button1"
         android:layout_below="@+id/button1"
         android:layout_marginTop="8dp"
-        android:text="Button" />
+        android:text="Ants" />
 
     <Button
         android:id="@+id/button4"
@@ -48,6 +48,6 @@
         android:layout_alignBaseline="@+id/button3"
         android:layout_alignBottom="@+id/button3"
         android:layout_toRightOf="@+id/button3"
-        android:text="Button" />
+        android:text="!Ants" />
 
 </RelativeLayout>
