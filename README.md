@@ -1,7 +1,8 @@
 Midi Driver
 ===========
 
-Android midi driver using Sonivox EAS library
+Android midi driver using Sonivox EAS library. The app and library are
+available [here](https://github.com/billthefarmer/mididriver/releases).
 
 I have added an event queue as per the comment by akdmia. I have only
 tested this with this app, not with an extended event stream.  The app
