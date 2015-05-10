@@ -10,10 +10,12 @@ just has a couple of buttons that play a couple of piano notes when
 touched. I've added two more buttons that play and stop a midi file
 using the MediaPlayer to check that there is no interaction
 problem. Added a listener for sending initial midi messages when the
-midi driver has started. This project may be compiled as a library by
-changing the setting in project.properties to android.library=true.
-The MainActivity.java source file will be moved to a temporary folder
-so it is not compiled into in the library jar file.
+midi driver has started. Added a handler for the listener so the
+callback is not on the driver thread. This project may be compiled as
+a library by changing the setting in project.properties to
+android.library=true.  The MainActivity.java source file will be moved
+to a temporary folder so it is not compiled into in the library jar
+file.
 
 To use this driver you need to:
 
@@ -45,6 +47,12 @@ Cygwin, despite what the docs say.
 	void addOnMidiStartListener(OnMidiStartListener l);
 
 	void queueEvent(byte[]) Send a midi message
+
+#### Listener
+
+	void onMidiStart() This is called when the driver has started so
+    that program change messages, etc may be sent. Uses a handler so
+    it does not run on the driver thread.
 
 ### Native Methods
 
