@@ -33,7 +33,8 @@ import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 
 public class MainActivity extends Activity
-    implements OnTouchListener, OnClickListener, MidiDriver.OnMidiStartListener
+    implements OnTouchListener, OnClickListener,
+	       MidiDriver.OnMidiStartListener
 {
 
     protected MidiDriver midi;
@@ -201,14 +202,26 @@ public class MainActivity extends Activity
     }
 
     // Listener for sending initial midi messages when the Sonivox
-    // synthesizer has been started, such as program change. Runs on
-    // the MidiDriver thread, so should only be used for sending midi
-    // messages.
+    // synthesizer has been started, such as program change.
 
     @Override
     public void onMidiStart()
     {
-	// TODO
+	// Program change - harpsicord
+
+	sendMidi(0xc0, 6);
+    }
+
+    // Send a midi message
+
+    protected void sendMidi(int m, int p)
+    {
+	byte msg[] = new byte[2];
+
+	msg[0] = (byte) m;
+	msg[1] = (byte) p;
+
+	midi.queueEvent(msg);
     }
 
     // Send a midi message
