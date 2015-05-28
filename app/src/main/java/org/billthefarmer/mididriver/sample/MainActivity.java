@@ -21,7 +21,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-package org.billthefarmer.mididriver;
+package org.billthefarmer.mididriver.sample;
 
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -31,6 +31,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
+
+import org.billthefarmer.mididriver.MidiDriver;
 
 public class MainActivity extends Activity
     implements OnTouchListener, OnClickListener,
