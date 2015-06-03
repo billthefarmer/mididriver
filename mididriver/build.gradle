@@ -1,4 +1,6 @@
 apply plugin: 'com.android.library'
+apply plugin: MyNdkPlugin
+
 
 android {
     compileSdkVersion 22
@@ -9,6 +11,11 @@ android {
         targetSdkVersion 22
         versionCode 1
         versionName "1.0"
+
+        ndk {
+            abiFilters "armeabi","armeabi-v7a","mips","x86"
+
+        }
     }
     buildTypes {
         release {
@@ -21,4 +28,311 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:22.1.1'
+}
+
+class MyNdkPlugin implements Plugin<Project> {
+    static void replaceInDAG(TaskContainer tasks, Task oldTask, Task newTask) {
+        newTask.setDependsOn(oldTask.getDependsOn())
+        oldTask.properties.each { prop, val ->
+            try {
+                if (prop == "onlyIf") return;
+                newTask[prop] = val
+            } catch (Exception e) {
+                println "$prop failed"
+            }
+        }
+
+        tasks.each { task ->
+            def deps = task.getDependsOn()
+            def newDeps = deps.collect { it == oldTask ? newTask : it }
+            task.setDependsOn(newDeps)
+        }
+    }
+
+    void apply(Project project) {
+        project.afterEvaluate {
+            def oldReleaseNdk = project.tasks.findByPath("compileReleaseNdk")
+            def oldDebugNdk = project.tasks.findByPath("compileDebugNdk")
+
+            if (!oldReleaseNdk) {
+                println("No compile release NDK task");
+            } else {
+                def newReleaseNdk = project.tasks.replace('compileDebugNdk', NdkCompile)
+                replaceInDAG(project.tasks, oldReleaseNdk, newReleaseNdk)
+            }
+
+            if (!oldDebugNdk) {
+                println("No compile release NDK task");
+            } else {
+                def newDebugNdk = project.tasks.replace('compileReleaseNdk', NdkCompile)
+                replaceInDAG(project.tasks, oldDebugNdk, newDebugNdk)
+            }
+        }
+    }
+}
+
+// Copied from android gradle plugin sources v 1.2
+import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.incremental.IncrementalTaskInputs
+
+import com.android.build.gradle.internal.core.NdkConfig
+
+
+import com.android.annotations.NonNull
+import com.android.build.gradle.internal.core.NdkConfig
+import com.android.build.gradle.internal.tasks.NdkTask
+import com.android.ide.common.process.ProcessInfoBuilder
+import com.android.sdklib.IAndroidTarget
+import com.google.common.base.Charsets
+import com.google.common.base.Joiner
+import com.google.common.collect.Lists
+import com.google.common.io.Files
+import org.gradle.api.GradleException
+import org.gradle.api.file.FileTree
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.SkipWhenEmpty
+import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.incremental.IncrementalTaskInputs
+import org.gradle.api.tasks.util.PatternSet
+
+import static com.android.SdkConstants.CURRENT_PLATFORM
+import static com.android.SdkConstants.PLATFORM_WINDOWS
+
+class NdkCompile extends NdkTask {
+
+    List<File> sourceFolders
+
+    @OutputFile
+    File generatedMakefile
+
+    @Input
+    boolean debuggable
+
+    @OutputDirectory
+    File soFolder
+
+    @OutputDirectory
+    File objFolder
+
+    @Optional
+    @Input
+    File ndkDirectory
+
+    @Input
+    boolean ndkRenderScriptMode
+
+    @Input
+    boolean ndkCygwinMode
+
+    @SkipWhenEmpty
+    @InputFiles
+    FileTree getSource() {
+        FileTree src = null
+        List<File> sources = getSourceFolders()
+        if (!sources.isEmpty()) {
+            src = getProject().files(new ArrayList<Object>(sources)).getAsFileTree()
+        }
+        return src == null ? getProject().files().getAsFileTree() : src
+    }
+
+    @TaskAction
+    void taskAction(IncrementalTaskInputs inputs) {
+        println("   --- Reusing existing Android.mk ---")
+
+        if (ndkDirectory == null || !ndkDirectory.isDirectory()) {
+            throw new GradleException(
+                    "NDK not configured.\n" +
+                            "Download the NDK from http://developer.android.com/tools/sdk/ndk/." +
+                            "Then add ndk.dir=path/to/ndk in local.properties.\n" +
+                            "(On Windows, make sure you escape backslashes, e.g. C:\\\\ndk rather than C:\\ndk)");
+        }
+
+        FileTree sourceFileTree = getSource()
+
+        Set<File> androidMakefiles = sourceFileTree.matching(new PatternSet().include("**/Android.mk")).files
+        if (androidMakefiles) {
+            println("   --- Reusing existing Android.mk ---")
+            runWithExisingMakefiles(androidMakefiles);
+        } else {
+            runWithGeneratedMakefile(inputs, sourceFileTree)
+        }
+    }
+
+    static boolean  doesContainParent(dirSet, File dir) {
+        dirSet.findResult {
+            it != dir && dir.toPath().startsWith(it.toPath())
+        }
+    }
+
+    void runWithExisingMakefiles(Set<File> androidMakefiles) {
+        def androidMakefileDirs = androidMakefiles.collect { it.getParentFile() }
+        def filteredAndroidMakefileDirs = androidMakefileDirs.findAll {
+            !doesContainParent(androidMakefileDirs, it)
+        }
+
+        filteredAndroidMakefileDirs.each {
+            File mk = new File(it, "Android.mk")
+            runNdkBuild(ndkDirectory, mk)
+        }
+
+    }
+
+    void runWithGeneratedMakefile(IncrementalTaskInputs inputs, FileTree sourceFileTree) {
+
+        Set<File> sourceFiles = sourceFileTree.matching(new PatternSet().exclude("**/*.h")).files
+        File makefile = getGeneratedMakefile()
+
+        if (sourceFiles.isEmpty()) {
+            makefile.delete()
+            emptyFolder(getSoFolder())
+            emptyFolder(getObjFolder())
+            return
+        }
+
+        boolean generateMakefile = false
+
+        if (!inputs.isIncremental()) {
+            project.logger.info("Unable do incremental execution: full task run")
+            generateMakefile = true
+            emptyFolder(getSoFolder())
+            emptyFolder(getObjFolder())
+        } else {
+            // look for added or removed files *only*
+
+            //noinspection GroovyAssignabilityCheck
+            inputs.outOfDate { change ->
+                if (change.isAdded()) {
+                    generateMakefile = true
+                }
+            }
+
+            //noinspection GroovyAssignabilityCheck
+            inputs.removed { change ->
+                generateMakefile = true
+            }
+        }
+
+        if (generateMakefile) {
+            writeMakefile(sourceFiles, makefile)
+        }
+
+        // now build
+        runNdkBuild(ndkDirectory, makefile)
+    }
+
+    private void writeMakefile(@NonNull Set<File> sourceFiles, @NonNull File makefile) {
+        NdkConfig ndk = getNdkConfig()
+
+        StringBuilder sb = new StringBuilder()
+
+        sb.append(
+                'LOCAL_PATH := $(call my-dir)\n' +
+                        'include \$(CLEAR_VARS)\n\n')
+
+        sb.append('LOCAL_MODULE := ').append(ndk.moduleName != null ? ndk.moduleName : project.name).append('\n')
+
+        if (ndk.cFlags != null) {
+            sb.append('LOCAL_CFLAGS := ').append(ndk.cFlags).append('\n')
+        }
+
+        List<String> fullLdlibs = Lists.newArrayList()
+        if (ndk.ldLibs != null) {
+            fullLdlibs.addAll(ndk.ldLibs)
+        }
+        if (getNdkRenderScriptMode()) {
+            fullLdlibs.add("dl")
+            fullLdlibs.add("log")
+            fullLdlibs.add("jnigraphics")
+            fullLdlibs.add("RScpp_static")
+            fullLdlibs.add("cutils")
+        }
+
+        if (!fullLdlibs.isEmpty()) {
+            sb.append('LOCAL_LDLIBS := \\\n')
+            for (String lib : fullLdlibs) {
+                sb.append('\t-l').append(lib).append(' \\\n')
+            }
+            sb.append('\n')
+        }
+
+        sb.append('LOCAL_SRC_FILES := \\\n')
+        for (File sourceFile : sourceFiles) {
+            sb.append('\t').append(sourceFile.absolutePath).append(' \\\n')
+        }
+        sb.append('\n')
+
+        for (File sourceFolder : getSourceFolders()) {
+            sb.append("LOCAL_C_INCLUDES += ${sourceFolder.absolutePath}\n")
+        }
+
+        if (getNdkRenderScriptMode()) {
+            sb.append('LOCAL_LDFLAGS += -L$(call host-path,$(TARGET_C_INCLUDES)/../lib/rs)\n')
+
+            sb.append('LOCAL_C_INCLUDES += $(TARGET_C_INCLUDES)/rs/cpp\n')
+            sb.append('LOCAL_C_INCLUDES += $(TARGET_C_INCLUDES)/rs\n')
+            sb.append('LOCAL_C_INCLUDES += $(TARGET_OBJS)/$(LOCAL_MODULE)\n')
+        }
+
+        sb.append(
+                '\ninclude \$(BUILD_SHARED_LIBRARY)\n')
+
+        Files.write(sb.toString(), makefile, Charsets.UTF_8)
+    }
+
+    void runNdkBuild(@NonNull File ndkLocation, @NonNull File makefile) {
+        NdkConfig ndk = getNdkConfig()
+
+        ProcessInfoBuilder builder = new ProcessInfoBuilder()
+
+        String exe = ndkLocation.absolutePath + File.separator + "ndk-build"
+        if (CURRENT_PLATFORM == PLATFORM_WINDOWS && !ndkCygwinMode) {
+            exe += ".cmd"
+        }
+        builder.setExecutable(exe)
+
+        builder.addArgs(
+                "NDK_PROJECT_PATH=null",
+                "APP_BUILD_SCRIPT=" + makefile.absolutePath)
+
+        // target
+        IAndroidTarget target = getBuilder().getTarget()
+        if (!target.isPlatform()) {
+            target = target.parent
+        }
+        builder.addArgs("APP_PLATFORM=" + target.hashString())
+
+        // temp out
+        builder.addArgs("NDK_OUT=" + getObjFolder().absolutePath)
+
+        // libs out
+        builder.addArgs("NDK_LIBS_OUT=" + getSoFolder().absolutePath)
+
+        // debug builds
+        if (getDebuggable()) {
+            builder.addArgs("NDK_DEBUG=1")
+        }
+
+        if (ndk.getStl() != null) {
+            builder.addArgs("APP_STL=" + ndk.getStl())
+        }
+
+        Set<String> abiFilters = ndk.abiFilters
+        if (abiFilters != null && !abiFilters.isEmpty()) {
+            if (abiFilters.size() == 1) {
+                builder.addArgs("APP_ABI=" + abiFilters.iterator().next())
+            } else {
+                Joiner joiner = Joiner.on(',').skipNulls()
+                builder.addArgs("APP_ABI=" + joiner.join(abiFilters.iterator()))
+            }
+        } else {
+            builder.addArgs("APP_ABI=all")
+        }
+
+        getBuilder().executeProcess(builder.createProcess()).rethrowFailure().assertNormalExitValue()
+    }
 }
