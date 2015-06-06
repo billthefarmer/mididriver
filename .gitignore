@@ -1,7 +1,16 @@
 .gradle
-/local.properties
 /.idea/workspace.xml
 /.idea/libraries
 .DS_Store
 /build
 /captures
+*.*~
+*.jar
+*.log
+*.zip
+.*
+bin
+gen
+ant.properties
+local.properties
+obj
