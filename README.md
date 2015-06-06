@@ -1,6 +1,16 @@
 Midi Driver
 ===========
 
+I have added a
+[jhindin](https://github.com/billthefarmer/mididriver/tree/jhindin)
+branch to this repository which is a merge of
+[jhindin/mididriver](https://github.com/jhindin/mididriver). He has
+made these changes:
+
+  1. The source file tree has been rearranged to fit Android Studio/Gradle integration structure
+  2. Linking with SoniVox library deferred to the launch time - in this way, there is no need to pull sonivox libraries from all potential platforms just to build the system
+
+
 Android midi driver using Sonivox EAS library. The app and library are
 available [here](https://github.com/billthefarmer/mididriver/releases).
 
