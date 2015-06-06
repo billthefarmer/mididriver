@@ -5,7 +5,7 @@
       Delete libmsonivox.so prebuilt shared libraries to prevent them
       being included in the packaged apk.
   -->
-
+  <!--
   <target name="-pre-build">
     <echo level="info">Deleting prebuilt shared libraries</echo>
 
@@ -13,7 +13,7 @@
       <fileset dir="libs" includes="*/libsonivox.so" />
     </delete>
   </target>
-
+  -->
   <!--
       Move MainActivity.java file to a temporary folder when building
       a library to prevent it being compiled into the library.
