@@ -10,7 +10,6 @@ made these changes:
   1. The source file tree has been rearranged to fit Android Studio/Gradle integration structure
   2. Linking with SoniVox library deferred to the launch time - in this way, there is no need to pull sonivox libraries from all potential platforms just to build the system
 
-
 Android midi driver using Sonivox EAS library. The app and library are
 available [here](https://github.com/billthefarmer/mididriver/releases).
 
@@ -25,16 +24,16 @@ callback is not on the driver thread. This project may be compiled as
 a library by changing the setting in project.properties to
 android.library=true.  The MainActivity.java source file will be moved
 to a temporary folder so it is not compiled into in the library jar
-file.
+file. I have made the changes in
+[jhindin/mididriver](https://github.com/jhindin/mididriver) without
+changing the project structure. Copies of the libsonivox.so library are
+no longer required.
 
 To use this driver you need to:
 
   * Get and install the Android NDK toolkit.
   * Get the documentation and include files from
-    https://github.com/android/platform_external_sonivox.
-  * Get a copy of the libsonivox.so library from an Android device or
-    an emulator (in system/lib) and put it in the ~/jni/libs/<arch>
-    folder.
+    [android/platform_external_sonivox](https://github.com/android/platform_external_sonivox).
   * Adjust the ~jni/Application.mk to build the architecture(s) you
     want.
 
