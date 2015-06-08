@@ -36,7 +36,6 @@
 
 // EAS function pointers
 EAS_PUBLIC const S_EAS_LIB_CONFIG *(*pEAS_Config) (void);
-
 EAS_PUBLIC EAS_RESULT (*pEAS_Init) (EAS_DATA_HANDLE *ppEASData);
 EAS_PUBLIC EAS_RESULT (*pEAS_SetParameter) (EAS_DATA_HANDLE pEASData,
 					    EAS_I32 module,
@@ -93,10 +92,10 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
     // open midi stream
     if (result = pEAS_OpenMIDIStream(pEASData, &midiHandle, NULL) !=
         EAS_SUCCESS)
-        {
-            pEAS_Shutdown(pEASData);
-            return 0;
-        }
+    {
+	pEAS_Shutdown(pEASData);
+	return 0;
+    }
 
     return bufferSize;
 }
@@ -153,11 +152,11 @@ Java_org_billthefarmer_mididriver_MidiDriver_render(JNIEnv *env,
 
     count = 0;
     while (count < size)
-        {
-            result = pEAS_Render(pEASData, buffer + count,
-                                 pLibConfig->mixBufferSize, &numGenerated);
-            if (result != EAS_SUCCESS)
-                break;
+    {
+	result = pEAS_Render(pEASData, buffer + count,
+			     pLibConfig->mixBufferSize, &numGenerated);
+	if (result != EAS_SUCCESS)
+	    break;
 
 	count += numGenerated * pLibConfig->numChannels;
     }
@@ -205,10 +204,10 @@ Java_org_billthefarmer_mididriver_MidiDriver_shutdown(JNIEnv *env,
 	return JNI_FALSE;
 
     if ((result = pEAS_CloseMIDIStream(pEASData, midiHandle)) != EAS_SUCCESS)
-        {
-            pEAS_Shutdown(pEASData);
-            return JNI_FALSE;
-        }
+    {
+	pEAS_Shutdown(pEASData);
+	return JNI_FALSE;
+    }
 
     if ((result = pEAS_Shutdown(pEASData)) != EAS_SUCCESS)
         return JNI_FALSE;
@@ -229,13 +228,13 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
         return -1;
     }
 
-    jclass dlExceptionClass =
-	env->FindClass("org/billthefarmer/mididriver/DynamicLinkException");
-    if (dlExceptionClass == NULL)
+    jclass linkageErrorClass =
+	env->FindClass("java/lang/LinkageError");
+    if (linkageErrorClass == NULL)
     {
         __android_log_write(ANDROID_LOG_ERROR,
 			    "org.billthefarmer.mididriver", "Failed to resolve "
-                            "org/billthefarmer/mididriver/DynamicLinkException");
+                            "java/lang/LinkageError");
         return -1;
     }
 
@@ -248,7 +247,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
     libHandler = dlopen("libsonivox.so", RTLD_LAZY);
     if (!libHandler)
     {
-        env->ThrowNew(dlExceptionClass, "dlopen libsonivox.so failed");
+        env->ThrowNew(linkageErrorClass, "dlopen libsonivox.so failed");
         return -1;
     }
 
@@ -263,7 +262,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 	dlsym(libHandler, "EAS_Config");
     if (!pEAS_Config)
     {
-        env->ThrowNew(dlExceptionClass, "EAS_Config resolution failed");
+        env->ThrowNew(linkageErrorClass, "EAS_Config resolution failed");
         return -1;
     }
     
@@ -271,7 +270,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 	dlsym(libHandler, "EAS_Init");
     if (!pEAS_Config)
     {
-        env->ThrowNew(dlExceptionClass, "EAS_Init resolution failed");
+        env->ThrowNew(linkageErrorClass, "EAS_Init resolution failed");
         return -1;
     }
       
@@ -283,7 +282,8 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
         dlsym(libHandler, "EAS_SetParameter");
     if (!pEAS_SetParameter)
     {
-        env->ThrowNew(dlExceptionClass, "EAS_SetParameter resolution failed");
+        env->ThrowNew(linkageErrorClass,
+		      "EAS_SetParameter resolution failed");
         return -1;
     }
     
@@ -294,14 +294,16 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
         dlsym(libHandler, "EAS_OpenMIDIStream");
     if (!pEAS_OpenMIDIStream)
     {
-        env->ThrowNew(dlExceptionClass, "EAS_OpenMIDIStream resolution failed");
+        env->ThrowNew(linkageErrorClass,
+		      "EAS_OpenMIDIStream resolution failed");
         return -1;
     }
 
     pEAS_Shutdown = (EAS_PUBLIC EAS_RESULT (*) (EAS_DATA_HANDLE pEASData))
 	dlsym(libHandler, "EAS_Shutdown");
     if (!pEAS_Shutdown) {
-        env->ThrowNew(dlExceptionClass, "EAS_Shutdown resolution failed");
+        env->ThrowNew(linkageErrorClass,
+		      "EAS_Shutdown resolution failed");
         return -1;
     }
 
@@ -313,7 +315,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
         dlsym(libHandler, "EAS_Render");
     if (!pEAS_Render)
     {
-        env->ThrowNew(dlExceptionClass, "EAS_Render resolution failed");
+        env->ThrowNew(linkageErrorClass, "EAS_Render resolution failed");
         return -1;
     }
     
@@ -324,7 +326,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
         dlsym(libHandler, "EAS_WriteMIDIStream");
     if (!pEAS_WriteMIDIStream)
     {
-        env->ThrowNew(dlExceptionClass,
+        env->ThrowNew(linkageErrorClass,
 		      "EAS_WriteMIDIStream resolution failed");
         return -1;
     }
@@ -334,7 +336,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
         dlsym(libHandler, "EAS_CloseMIDIStream");
     if (!pEAS_CloseMIDIStream
 	) {
-        env->ThrowNew(dlExceptionClass,
+        env->ThrowNew(linkageErrorClass,
 		      "EAS_CloseMIDIStream resolution failed");
         return -1;
     }
