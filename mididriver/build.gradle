@@ -1,4 +1,25 @@
 apply plugin: 'com.android.library'
+apply plugin: 'maven'
+
+group = 'org.billthefarmer.mididriver'
+version = '0.8'
+
+
+artifacts {
+    archives(file('build/outputs/aar/mididriver-release.aar')) {
+        name 'mididriver'
+    }
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository url: 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
+        }
+    }
+}
+
+uploadArchives.mustRunAfter build
 
 android {
     compileSdkVersion 22
