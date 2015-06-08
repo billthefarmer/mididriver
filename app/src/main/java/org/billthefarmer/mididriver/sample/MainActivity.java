@@ -32,6 +32,8 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 
+import org.billthefarmer.mididriver.GeneralMidiConstants;
+import org.billthefarmer.mididriver.MidiConstants;
 import org.billthefarmer.mididriver.MidiDriver;
 
 public class MainActivity extends Activity
@@ -131,15 +133,15 @@ public class MainActivity extends Activity
 	    switch (id)
 	    {
 	    case R.id.button1:
-		sendMidi(0x90, 48, 63);
-		sendMidi(0x90, 52, 63);
-		sendMidi(0x90, 55, 63);
+		sendMidi(MidiConstants.NOTE_ON, 48, 63);
+		sendMidi(MidiConstants.NOTE_ON, 52, 63);
+		sendMidi(MidiConstants.NOTE_ON, 55, 63);
 		break;
 
 	    case R.id.button2:
-		sendMidi(0x90, 55, 63);
-		sendMidi(0x90, 59, 63);
-		sendMidi(0x90, 62, 63);
+		sendMidi(MidiConstants.NOTE_ON, 55, 63);
+		sendMidi(MidiConstants.NOTE_ON, 59, 63);
+		sendMidi(MidiConstants.NOTE_ON, 62, 63);
 		break;
 
 	    default:
@@ -153,15 +155,15 @@ public class MainActivity extends Activity
 	    switch (id)
 	    {
 	    case R.id.button1:
-		sendMidi(0x80, 48, 0);
-		sendMidi(0x80, 52, 0);
-		sendMidi(0x80, 55, 0);
+		sendMidi(MidiConstants.NOTE_OFF, 48, 0);
+		sendMidi(MidiConstants.NOTE_OFF, 52, 0);
+		sendMidi(MidiConstants.NOTE_OFF, 55, 0);
 		break;
 
 	    case R.id.button2:
-		sendMidi(0x80, 55, 0);
-		sendMidi(0x80, 59, 0);
-		sendMidi(0x80, 62, 0);
+		sendMidi(MidiConstants.NOTE_OFF, 55, 0);
+		sendMidi(MidiConstants.NOTE_OFF, 59, 0);
+		sendMidi(MidiConstants.NOTE_OFF, 62, 0);
 		break;
 
 	    default:
@@ -211,7 +213,7 @@ public class MainActivity extends Activity
     {
 	// Program change - harpsicord
 
-	sendMidi(0xc0, 6);
+	sendMidi(MidiConstants.PROGRAM_CHANGE, GeneralMidiConstants.HARPSICHORD);
     }
 
     // Send a midi message
