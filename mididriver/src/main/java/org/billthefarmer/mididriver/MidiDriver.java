@@ -36,8 +36,7 @@ import android.os.Message;
 // MidiDriver
 
 public class MidiDriver
-    implements Handler.Callback
-{
+        implements Handler.Callback {
     private static final int SAMPLE_RATE = 22050;
     private static final int BUFFER_SIZE = 4096;
 
@@ -53,190 +52,176 @@ public class MidiDriver
 
     // Constructor
 
-    public MidiDriver()
-    {
-	queuedEvents = new ArrayList<byte[]>();
-	handler = new Handler(this);
-	
+    public MidiDriver() {
+        queuedEvents = new ArrayList<byte[]>();
+        handler = new Handler(this);
+
     }
 
     // Start midi
 
-    public void start()
-    {
-	driverThread = new DriverThread(this);
-	driverThread.start();
+    public void start() {
+        driverThread = new DriverThread(this);
+        driverThread.start();
     }
 
     // Queue event
 
-    public void queueEvent(byte[] event)
-    {
-	synchronized (this)
-	{
-	    queuedEvents.add(event);
-	}
+    public void queueEvent(byte[] event) {
+        synchronized (this) {
+            queuedEvents.add(event);
+        }
     }
 
     // Stop
 
-    public void stop()
-    {
-	synchronized (this)
-	{
-	    running = false;
-	}
+    public void stop() {
+        synchronized (this) {
+            running = false;
+        }
     }
 
     // Handle message
 
-    public boolean handleMessage(Message msg)
-    {
-	// Call listener
+    public boolean handleMessage(Message msg) {
+        // Call listener
 
-	if (listener != null)
-	    listener.onMidiStart();
+        if (listener != null)
+            listener.onMidiStart();
 
-	return true;
+        return true;
     }
 
     // Set listener
 
-    public void setOnMidiStartListener(OnMidiStartListener l)
-    {
-	listener = l;
+    public void setOnMidiStartListener(OnMidiStartListener l) {
+        listener = l;
     }
 
-    private class DriverThread extends Thread
-    {
-	private static final String TAG = "DriverThread";
+    private class DriverThread extends Thread {
+        private static final String TAG = "DriverThread";
 
-	private MidiDriver driver;
+        private MidiDriver driver;
 
-	// Constructor
+        // Constructor
 
-	public DriverThread(MidiDriver d)
-	{
-	    super(TAG);
+        public DriverThread(MidiDriver d) {
+            super(TAG);
 
-	    driver = d;
-	}
+            driver = d;
+        }
 
-	// Run
+        // Run
 
-	@Override
-	public void run()
-	{
-	    processMidi();
-	}
+        @Override
+        public void run() {
+            processMidi();
+        }
 
-	// Process MidiDriver
+        // Process MidiDriver
 
-	private void processMidi()
-	{
-	    int status = 0;
-	    int size = 0;
+        private void processMidi() {
+            int status = 0;
+            int size = 0;
 
-	    // Init midi
+            // Init midi
 
-	    if ((size = init()) == 0)
-		return;
+            if ((size = init()) == 0)
+                return;
 
-	    buffer = new short[size];
+            buffer = new short[size];
 
-	    // Create audio track
+            // Create audio track
 
-	    audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE,
-					AudioFormat.CHANNEL_OUT_STEREO,
-					AudioFormat.ENCODING_PCM_16BIT,
-					BUFFER_SIZE, AudioTrack.MODE_STREAM);
-	    // Check audiotrack
+            audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE,
+                    AudioFormat.CHANNEL_OUT_STEREO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    BUFFER_SIZE, AudioTrack.MODE_STREAM);
+            // Check audiotrack
 
-	    if (audioTrack == null)
-	    {
-		shutdown();
-		return;
-	    }
+            if (audioTrack == null) {
+                shutdown();
+                return;
+            }
 
-	    // Check state
+            // Check state
 
-	    int state = audioTrack.getState();
+            int state = audioTrack.getState();
 
-	    if (state != AudioTrack.STATE_INITIALIZED)
-	    {
-		audioTrack.release();
-		shutdown();
-		return;
-	    }
+            if (state != AudioTrack.STATE_INITIALIZED) {
+                audioTrack.release();
+                shutdown();
+                return;
+            }
 
-	    // Send message
+            // Send message
 
-	    handler.sendEmptyMessage(0);
+            handler.sendEmptyMessage(0);
 
-	    // Play track
+            // Play track
 
-	    audioTrack.play();
+            audioTrack.play();
 
-	    // Keep running until stopped
+            // Keep running until stopped
 
-	    running = true;
-	    while (running)
-	    {
-		// Write the midi events
+            running = true;
+            while (running) {
+                // Write the midi events
 
-		synchronized (driver)
-		{
-		    for (byte[] queuedEvent: queuedEvents)
-			write(queuedEvent);
+                synchronized (driver) {
+                    for (byte[] queuedEvent : queuedEvents)
+                        write(queuedEvent);
 
-		    queuedEvents.clear();
-		}
+                    queuedEvents.clear();
+                }
 
-		// Render the audio
+                // Render the audio
 
-		if (render(buffer) == 0)
-		    break;
+                if (render(buffer) == 0)
+                    break;
 
-		// Write audio to audiotrack
+                // Write audio to audiotrack
 
-		status = audioTrack.write(buffer, 0, buffer.length);
+                status = audioTrack.write(buffer, 0, buffer.length);
 
-		if (status < 0)
-		    break;
-	    }
+                if (status < 0)
+                    break;
+            }
 
-	    // Render and write the last bit of audio
+            // Render and write the last bit of audio
 
-	    if (status > 0)
-		if (render(buffer) > 0)
-		    audioTrack.write(buffer, 0, buffer.length);
+            if (status > 0)
+                if (render(buffer) > 0)
+                    audioTrack.write(buffer, 0, buffer.length);
 
-	    // Shut down audio
+            // Shut down audio
 
-	    shutdown();
-	    audioTrack.release();
-	}
+            shutdown();
+            audioTrack.release();
+        }
     }
 
     // Listener interface
 
-    public interface OnMidiStartListener
-    {
-	public abstract void onMidiStart();
+    public interface OnMidiStartListener {
+        public abstract void onMidiStart();
     }
 
     // Native midi methods
 
-    private native int     init();
-    public  native int[]   config();
-    private native int     render(short a[]);
+    private native int init();
+
+    public native int[] config();
+
+    private native int render(short a[]);
+
     private native boolean write(byte a[]);
+
     private native boolean shutdown();
 
     // Load midi library
 
-    static
-    {
-	System.loadLibrary("midi");
+    static {
+        System.loadLibrary("midi");
     }
 }
