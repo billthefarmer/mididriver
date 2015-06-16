@@ -118,6 +118,10 @@ public class MidiDriver
             processMidi();
         }
 
+        synchronized  boolean  shouldRun() {
+            return running || !queuedEvents.isEmpty();
+        }
+
         // Process MidiDriver
 
         private void processMidi() {
@@ -165,7 +169,7 @@ public class MidiDriver
             // Keep running until stopped
 
             running = true;
-            while (running) {
+            while (shouldRun()) {
                 // Write the midi events
 
                 synchronized (driver) {
