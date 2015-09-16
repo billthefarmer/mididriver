@@ -109,7 +109,7 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
 }
 
 // create the engine and output mix objects
-void Java_com_example_nativeaudio_NativeAudio_createEngine(JNIEnv* env, jclass clazz)
+void createEngine()
 {
     SLresult result;
 
@@ -123,15 +123,19 @@ void Java_com_example_nativeaudio_NativeAudio_createEngine(JNIEnv* env, jclass c
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
 
-    // get the engine interface, which is needed in order to create other objects
-    result = (*engineObject)->GetInterface(engineObject, SL_IID_ENGINE, &engineEngine);
+    // get the engine interface, which is needed in order to create
+    // other objects
+    result = (*engineObject)->GetInterface(engineObject, SL_IID_ENGINE,
+					   &engineEngine);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
 
-    // create output mix, with environmental reverb specified as a non-required interface
-    const SLInterfaceID ids[1] = {SL_IID_ENVIRONMENTALREVERB};
-    const SLboolean req[1] = {SL_BOOLEAN_FALSE};
-    result = (*engineEngine)->CreateOutputMix(engineEngine, &outputMixObject, 1, ids, req);
+    // const SLInterfaceID ids[1] = {SL_IID_ENVIRONMENTALREVERB};
+    // const SLboolean req[1] = {SL_BOOLEAN_FALSE};
+
+    // create output mix
+    result = (*engineEngine)->CreateOutputMix(engineEngine, &outputMixObject,
+					      0, NULL, NULL);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
 
@@ -139,46 +143,35 @@ void Java_com_example_nativeaudio_NativeAudio_createEngine(JNIEnv* env, jclass c
     result = (*outputMixObject)->Realize(outputMixObject, SL_BOOLEAN_FALSE);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
-
-    // get the environmental reverb interface
-    // this could fail if the environmental reverb effect is not available,
-    // either because the feature is not present, excessive CPU load, or
-    // the required MODIFY_AUDIO_SETTINGS permission was not requested and granted
-    result = (*outputMixObject)->GetInterface(outputMixObject, SL_IID_ENVIRONMENTALREVERB,
-            &outputMixEnvironmentalReverb);
-    if (SL_RESULT_SUCCESS == result) {
-        result = (*outputMixEnvironmentalReverb)->SetEnvironmentalReverbProperties(
-                outputMixEnvironmentalReverb, &reverbSettings);
-        (void)result;
-    }
-    // ignore unsuccessful result codes for environmental reverb, as it is optional for this example
-
 }
 
 // create buffer queue audio player
-void Java_com_example_nativeaudio_NativeAudio_createBufferQueueAudioPlayer(JNIEnv* env,
-        jclass clazz)
+void createBufferQueueAudioPlayer()
 {
     SLresult result;
 
     // configure audio source
-    SLDataLocator_AndroidSimpleBufferQueue loc_bufq = {SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2};
-    SLDataFormat_PCM format_pcm = {SL_DATAFORMAT_PCM, 1, SL_SAMPLINGRATE_8,
-        SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_16,
-        SL_SPEAKER_FRONT_CENTER, SL_BYTEORDER_LITTLEENDIAN};
+    SLDataLocator_AndroidSimpleBufferQueue loc_bufq =
+	{SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2};
+    SLDataFormat_PCM format_pcm =
+	{SL_DATAFORMAT_PCM, 2, SL_SAMPLINGRATE_22_05,
+	 SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_32,
+	 SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT,
+	 SL_BYTEORDER_LITTLEENDIAN};
     SLDataSource audioSrc = {&loc_bufq, &format_pcm};
 
     // configure audio sink
-    SLDataLocator_OutputMix loc_outmix = {SL_DATALOCATOR_OUTPUTMIX, outputMixObject};
+    SLDataLocator_OutputMix loc_outmix =
+	{SL_DATALOCATOR_OUTPUTMIX, outputMixObject};
     SLDataSink audioSnk = {&loc_outmix, NULL};
 
     // create audio player
-    const SLInterfaceID ids[3] = {SL_IID_BUFFERQUEUE, SL_IID_EFFECTSEND,
-            /*SL_IID_MUTESOLO,*/ SL_IID_VOLUME};
-    const SLboolean req[3] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE,
-            /*SL_BOOLEAN_TRUE,*/ SL_BOOLEAN_TRUE};
-    result = (*engineEngine)->CreateAudioPlayer(engineEngine, &bqPlayerObject, &audioSrc, &audioSnk,
-            3, ids, req);
+    const SLInterfaceID ids[1] = {SL_IID_BUFFERQUEUE};
+    const SLboolean req[1] = {SL_BOOLEAN_TRUE};
+    result = (*engineEngine)->CreateAudioPlayer(engineEngine,
+						&bqPlayerObject,
+						&audioSrc, &audioSnk,
+						1, ids, req);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
 
@@ -188,36 +181,20 @@ void Java_com_example_nativeaudio_NativeAudio_createBufferQueueAudioPlayer(JNIEn
     (void)result;
 
     // get the play interface
-    result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_PLAY, &bqPlayerPlay);
+    result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_PLAY,
+					     &bqPlayerPlay);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
 
     // get the buffer queue interface
     result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_BUFFERQUEUE,
-            &bqPlayerBufferQueue);
+					     &bqPlayerBufferQueue);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
 
     // register callback on the buffer queue
-    result = (*bqPlayerBufferQueue)->RegisterCallback(bqPlayerBufferQueue, bqPlayerCallback, NULL);
-    assert(SL_RESULT_SUCCESS == result);
-    (void)result;
-
-    // get the effect send interface
-    result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_EFFECTSEND,
-            &bqPlayerEffectSend);
-    assert(SL_RESULT_SUCCESS == result);
-    (void)result;
-
-#if 0   // mute/solo is not supported for sources that are known to be mono, as this is
-    // get the mute/solo interface
-    result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_MUTESOLO, &bqPlayerMuteSolo);
-    assert(SL_RESULT_SUCCESS == result);
-    (void)result;
-#endif
-
-    // get the volume interface
-    result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_VOLUME, &bqPlayerVolume);
+    result = (*bqPlayerBufferQueue)->RegisterCallback(bqPlayerBufferQueue,
+						      bqPlayerCallback, NULL);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
 
@@ -228,53 +205,22 @@ void Java_com_example_nativeaudio_NativeAudio_createBufferQueueAudioPlayer(JNIEn
 }
 
 // shut down the native audio system
-void Java_com_example_nativeaudio_NativeAudio_shutdown(JNIEnv* env, jclass clazz)
+void shutdown()
 {
 
-    // destroy buffer queue audio player object, and invalidate all associated interfaces
+    // destroy buffer queue audio player object, and invalidate all
+    // associated interfaces
     if (bqPlayerObject != NULL) {
         (*bqPlayerObject)->Destroy(bqPlayerObject);
         bqPlayerObject = NULL;
         bqPlayerPlay = NULL;
         bqPlayerBufferQueue = NULL;
-        bqPlayerEffectSend = NULL;
-        bqPlayerMuteSolo = NULL;
-        bqPlayerVolume = NULL;
-    }
-
-    // destroy file descriptor audio player object, and invalidate all associated interfaces
-    if (fdPlayerObject != NULL) {
-        (*fdPlayerObject)->Destroy(fdPlayerObject);
-        fdPlayerObject = NULL;
-        fdPlayerPlay = NULL;
-        fdPlayerSeek = NULL;
-        fdPlayerMuteSolo = NULL;
-        fdPlayerVolume = NULL;
-    }
-
-    // destroy URI audio player object, and invalidate all associated interfaces
-    if (uriPlayerObject != NULL) {
-        (*uriPlayerObject)->Destroy(uriPlayerObject);
-        uriPlayerObject = NULL;
-        uriPlayerPlay = NULL;
-        uriPlayerSeek = NULL;
-        uriPlayerMuteSolo = NULL;
-        uriPlayerVolume = NULL;
-    }
-
-    // destroy audio recorder object, and invalidate all associated interfaces
-    if (recorderObject != NULL) {
-        (*recorderObject)->Destroy(recorderObject);
-        recorderObject = NULL;
-        recorderRecord = NULL;
-        recorderBufferQueue = NULL;
     }
 
     // destroy output mix object, and invalidate all associated interfaces
     if (outputMixObject != NULL) {
         (*outputMixObject)->Destroy(outputMixObject);
         outputMixObject = NULL;
-        outputMixEnvironmentalReverb = NULL;
     }
 
     // destroy engine object, and invalidate all associated interfaces
