@@ -44,21 +44,16 @@ static SLEngineItf engineEngine;
 
 // output mix interfaces
 static SLObjectItf outputMixObject = NULL;
-static SLEnvironmentalReverbItf outputMixEnvironmentalReverb = NULL;
 
 // buffer queue player interfaces
 static SLObjectItf bqPlayerObject = NULL;
 static SLPlayItf bqPlayerPlay;
 static SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue;
-static SLEffectSendItf bqPlayerEffectSend;
-static SLMuteSoloItf bqPlayerMuteSolo;
-static SLVolumeItf bqPlayerVolume;
 
 // pointer and size of the next player buffer to enqueue, and number
 // of remaining buffers
 static short *nextBuffer;
 static unsigned nextSize;
-static int nextCount;
 
 // EAS function pointers
 EAS_PUBLIC const S_EAS_LIB_CONFIG *(*pEAS_Config) (void);
@@ -109,44 +104,43 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
 }
 
 // create the engine and output mix objects
-void createEngine()
+SLresult createEngine()
 {
     SLresult result;
 
     // create engine
     result = slCreateEngine(&engineObject, 0, NULL, 0, NULL, NULL);
-    assert(SL_RESULT_SUCCESS == result);
-    (void)result;
+    if (SL_RESULT_SUCCESS != result)
+	return result;
 
     // realize the engine
     result = (*engineObject)->Realize(engineObject, SL_BOOLEAN_FALSE);
-    assert(SL_RESULT_SUCCESS == result);
-    (void)result;
+    if (SL_RESULT_SUCCESS != result)
+	return result;
 
     // get the engine interface, which is needed in order to create
     // other objects
     result = (*engineObject)->GetInterface(engineObject, SL_IID_ENGINE,
 					   &engineEngine);
-    assert(SL_RESULT_SUCCESS == result);
-    (void)result;
-
-    // const SLInterfaceID ids[1] = {SL_IID_ENVIRONMENTALREVERB};
-    // const SLboolean req[1] = {SL_BOOLEAN_FALSE};
+    if (SL_RESULT_SUCCESS != result)
+	return result;
 
     // create output mix
     result = (*engineEngine)->CreateOutputMix(engineEngine, &outputMixObject,
 					      0, NULL, NULL);
-    assert(SL_RESULT_SUCCESS == result);
-    (void)result;
+    if (SL_RESULT_SUCCESS != result)
+	return result;
 
     // realize the output mix
     result = (*outputMixObject)->Realize(outputMixObject, SL_BOOLEAN_FALSE);
-    assert(SL_RESULT_SUCCESS == result);
-    (void)result;
+    if (SL_RESULT_SUCCESS != result)
+	return result;
+
+    return SL_RESULT_SUCCESS;
 }
 
 // create buffer queue audio player
-void createBufferQueueAudioPlayer()
+SLresult createBufferQueueAudioPlayer()
 {
     SLresult result;
 
@@ -172,45 +166,47 @@ void createBufferQueueAudioPlayer()
 						&bqPlayerObject,
 						&audioSrc, &audioSnk,
 						1, ids, req);
-    assert(SL_RESULT_SUCCESS == result);
-    (void)result;
+    if (SL_RESULT_SUCCESS != result)
+	return result;
 
     // realize the player
     result = (*bqPlayerObject)->Realize(bqPlayerObject, SL_BOOLEAN_FALSE);
-    assert(SL_RESULT_SUCCESS == result);
-    (void)result;
+    if (SL_RESULT_SUCCESS != result)
+	return result;
 
     // get the play interface
     result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_PLAY,
 					     &bqPlayerPlay);
-    assert(SL_RESULT_SUCCESS == result);
-    (void)result;
+    if (SL_RESULT_SUCCESS != result)
+	return result;
 
     // get the buffer queue interface
     result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_BUFFERQUEUE,
 					     &bqPlayerBufferQueue);
-    assert(SL_RESULT_SUCCESS == result);
-    (void)result;
+    if (SL_RESULT_SUCCESS != result)
+	return result;
 
     // register callback on the buffer queue
     result = (*bqPlayerBufferQueue)->RegisterCallback(bqPlayerBufferQueue,
 						      bqPlayerCallback, NULL);
-    assert(SL_RESULT_SUCCESS == result);
-    (void)result;
+    if (SL_RESULT_SUCCESS != result)
+	return result;
 
     // set the player's state to playing
     result = (*bqPlayerPlay)->SetPlayState(bqPlayerPlay, SL_PLAYSTATE_PLAYING);
-    assert(SL_RESULT_SUCCESS == result);
-    (void)result;
+    if (SL_RESULT_SUCCESS != result)
+	return result;
+
+    return SL_RESULT_SUCCESS;
 }
 
 // shut down the native audio system
-void shutdown()
+void shutdownAudio()
 {
-
     // destroy buffer queue audio player object, and invalidate all
     // associated interfaces
-    if (bqPlayerObject != NULL) {
+    if (bqPlayerObject != NULL)
+    {
         (*bqPlayerObject)->Destroy(bqPlayerObject);
         bqPlayerObject = NULL;
         bqPlayerPlay = NULL;
@@ -218,22 +214,23 @@ void shutdown()
     }
 
     // destroy output mix object, and invalidate all associated interfaces
-    if (outputMixObject != NULL) {
+    if (outputMixObject != NULL)
+    {
         (*outputMixObject)->Destroy(outputMixObject);
         outputMixObject = NULL;
     }
 
     // destroy engine object, and invalidate all associated interfaces
-    if (engineObject != NULL) {
+    if (engineObject != NULL)
+    {
         (*engineObject)->Destroy(engineObject);
         engineObject = NULL;
         engineEngine = NULL;
     }
-
 }
 
 // init EAS midi
-jint
+jboolean
 Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
 						  jobject obj)
 {
@@ -242,7 +239,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
     // get the library configuration
     pLibConfig = pEAS_Config();
     if (pLibConfig == NULL || pLibConfig->libVersion != LIB_VERSION)
-	return 0;
+	return JNI_FALSE;
 
     // calculate buffer size
     bufferSize = pLibConfig->mixBufferSize * pLibConfig->numChannels *
@@ -250,7 +247,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
 
     // init library
     if ((result = pEAS_Init(&pEASData)) != EAS_SUCCESS)
-        return 0;
+        return JNI_FALSE;
 
     // select reverb preset and enable
     pEAS_SetParameter(pEASData, EAS_MODULE_REVERB, EAS_PARAM_REVERB_PRESET,
@@ -263,10 +260,26 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
         EAS_SUCCESS)
     {
 	pEAS_Shutdown(pEASData);
-	return 0;
+	return JNI_FALSE;
     }
 
-    return bufferSize;
+    // create the engine and output mix objects
+    if (result = createEngine() != SL_RESULT_SUCCESS)
+    {
+	pEAS_Shutdown(pEASData);
+	shutdownAudio();
+	return JNI_FALSE;
+    }
+
+    // create buffer queue audio player
+    if (result = createBufferQueueAudioPlayer() != SL_RESULT_SUCCESS)
+    {
+	pEAS_Shutdown(pEASData);
+	shutdownAudio();
+	return JNI_FALSE;
+    }
+
+    return JNI_TRUE;
 }
 
 // midi config
@@ -368,6 +381,8 @@ Java_org_billthefarmer_mididriver_MidiDriver_shutdown(JNIEnv *env,
 						      jobject obj)
 {
     EAS_RESULT result;
+
+    shutdownAudio()
 
     if (pEASData == NULL || midiHandle == NULL)
 	return JNI_FALSE;
