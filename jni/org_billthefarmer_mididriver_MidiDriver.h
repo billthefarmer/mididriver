@@ -16,7 +16,7 @@ extern "C" {
  * Method:    init
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_org_billthefarmer_mididriver_MidiDriver_init
+JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_init
   (JNIEnv *, jobject);
 
 /*
