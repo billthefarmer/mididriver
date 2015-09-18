@@ -37,6 +37,13 @@
 #include "eas.h"
 #include "eas_reverb.h"
 
+#define LOG_TAG "MidiDriver"
+
+#define LOG_D(tag, ...) __android_log_print(ANDROID_LOG_DEBUG, tag, __VA_ARGS__)
+#define LOG_E(tag, ...) __android_log_print(ANDROID_LOG_ERROR, tag, __VA_ARGS__)
+#define LOG_I(tag, ...) __android_log_print(ANDROID_LOG_INFO, tag, __VA_ARGS__)
+#define LOG_V(tag, ...) __android_log_print(ANDROID_LOG_VERBOSE, tag, __VA_ARGS__)
+
 // determines how many EAS buffers to fill a host buffer
 #define NUM_BUFFERS 4
 
@@ -54,11 +61,6 @@ static SLObjectItf outputMixObject = NULL;
 static SLObjectItf bqPlayerObject = NULL;
 static SLPlayItf bqPlayerPlay;
 static SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue;
-
-// pointer and size of the next player buffer to enqueue, and number
-// of remaining buffers
-static short *nextBuffer;
-static unsigned nextSize;
 
 // EAS function pointers
 EAS_PUBLIC const S_EAS_LIB_CONFIG *(*pEAS_Config) (void);
@@ -140,10 +142,14 @@ SLresult createEngine()
     if (SL_RESULT_SUCCESS != result)
 	return result;
 
+    LOG_D(LOG_TAG, "Engine created");
+
     // realize the engine
     result = (*engineObject)->Realize(engineObject, SL_BOOLEAN_FALSE);
     if (SL_RESULT_SUCCESS != result)
 	return result;
+
+    LOG_D(LOG_TAG, "Engine realised");
 
     // get the engine interface, which is needed in order to create
     // other objects
@@ -152,16 +158,22 @@ SLresult createEngine()
     if (SL_RESULT_SUCCESS != result)
 	return result;
 
+    LOG_D(LOG_TAG, "Engine Interface retreived");
+
     // create output mix
     result = (*engineEngine)->CreateOutputMix(engineEngine, &outputMixObject,
 					      0, NULL, NULL);
     if (SL_RESULT_SUCCESS != result)
 	return result;
 
+    LOG_D(LOG_TAG, "Output mix created");
+
     // realize the output mix
     result = (*outputMixObject)->Realize(outputMixObject, SL_BOOLEAN_FALSE);
     if (SL_RESULT_SUCCESS != result)
 	return result;
+
+    LOG_D(LOG_TAG, "Output mix realised");
 
     return SL_RESULT_SUCCESS;
 }
@@ -189,6 +201,7 @@ SLresult createBufferQueueAudioPlayer()
     // create audio player
     const SLInterfaceID ids[1] = {SL_IID_BUFFERQUEUE};
     const SLboolean req[1] = {SL_BOOLEAN_TRUE};
+
     result = (*engineEngine)->CreateAudioPlayer(engineEngine,
 						&bqPlayerObject,
 						&audioSrc, &audioSnk,
@@ -196,10 +209,14 @@ SLresult createBufferQueueAudioPlayer()
     if (SL_RESULT_SUCCESS != result)
 	return result;
 
+    LOG_D(LOG_TAG, "Audio player created");
+
     // realize the player
     result = (*bqPlayerObject)->Realize(bqPlayerObject, SL_BOOLEAN_FALSE);
     if (SL_RESULT_SUCCESS != result)
 	return result;
+
+    LOG_D(LOG_TAG, "Audio player realised");
 
     // get the play interface
     result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_PLAY,
@@ -207,11 +224,15 @@ SLresult createBufferQueueAudioPlayer()
     if (SL_RESULT_SUCCESS != result)
 	return result;
 
+    LOG_D(LOG_TAG, "Play interface retreived");
+
     // get the buffer queue interface
     result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_BUFFERQUEUE,
 					     &bqPlayerBufferQueue);
     if (SL_RESULT_SUCCESS != result)
 	return result;
+
+    LOG_D(LOG_TAG, "Buffer queue interface retreived");
 
     // register callback on the buffer queue
     result = (*bqPlayerBufferQueue)->RegisterCallback(bqPlayerBufferQueue,
@@ -219,10 +240,14 @@ SLresult createBufferQueueAudioPlayer()
     if (SL_RESULT_SUCCESS != result)
 	return result;
 
+    LOG_D(LOG_TAG, "Callback registered");
+
     // set the player's state to playing
     result = (*bqPlayerPlay)->SetPlayState(bqPlayerPlay, SL_PLAYSTATE_PLAYING);
     if (SL_RESULT_SUCCESS != result)
 	return result;
+
+    LOG_D(LOG_TAG, "Audio player set playing");
 
     return SL_RESULT_SUCCESS;
 }
@@ -287,6 +312,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
         EAS_SUCCESS)
     {
 	pEAS_Shutdown(pEASData);
+	pEASData = NULL;
 	return JNI_FALSE;
     }
 
@@ -294,15 +320,20 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
     buffer = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
     if (buffer == NULL)
     {
+	pEAS_CloseMIDIStream(pEASData, midiHandle);
 	pEAS_Shutdown(pEASData);
-	shutdownAudio();
+	midiHandle = NULL;
+	pEASData = NULL;
 	return JNI_FALSE;
     }
 
     // create the engine and output mix objects
     if (result = createEngine() != SL_RESULT_SUCCESS)
     {
+	pEAS_CloseMIDIStream(pEASData, midiHandle);
 	pEAS_Shutdown(pEASData);
+	midiHandle = NULL;
+	pEASData = NULL;
 	shutdownAudio();
 	free(buffer);
 
@@ -312,7 +343,10 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
     // create buffer queue audio player
     if (result = createBufferQueueAudioPlayer() != SL_RESULT_SUCCESS)
     {
+	pEAS_CloseMIDIStream(pEASData, midiHandle);
 	pEAS_Shutdown(pEASData);
+	midiHandle = NULL;
+	pEASData = NULL;
 	shutdownAudio();
 	free(buffer);
 
@@ -344,48 +378,6 @@ Java_org_billthefarmer_mididriver_MidiDriver_config(JNIEnv *env,
     env->ReleaseIntArrayElements(configArray, config, 0);
 
     return configArray;
-}
-
-// midi render
-jint
-Java_org_billthefarmer_mididriver_MidiDriver_render(JNIEnv *env,
-						    jobject obj,
-						    jshortArray shortArray)
-{
-    jboolean isCopy;
-    EAS_RESULT result;
-    EAS_I32 numGenerated;
-    EAS_I32 count;
-    jsize size;
-
-    // jbyte* GetByteArrayElements(jbyteArray array, jboolean* isCopy)
-    // void ReleaseByteArrayElements(jbyteArray array, jbyte* elems,
-
-    // void* GetPrimitiveArrayCritical(JNIEnv*, jarray, jboolean*);
-    // void ReleasePrimitiveArrayCritical(JNIEnv*, jarray, void*, jint);
-
-    if (pEASData == NULL)
-	return 0;
-
-    buffer =
-	(EAS_PCM *)env->GetShortArrayElements(shortArray, &isCopy);
-
-    size = env->GetArrayLength(shortArray);
-
-    count = 0;
-    while (count < size)
-    {
-	result = pEAS_Render(pEASData, buffer + count,
-			     pLibConfig->mixBufferSize, &numGenerated);
-	if (result != EAS_SUCCESS)
-	    break;
-
-	count += numGenerated * pLibConfig->numChannels;
-    }
-
-    env->ReleaseShortArrayElements(shortArray, buffer, 0);
-
-    return count;
 }
 
 // midi write
@@ -463,17 +455,13 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 	env->FindClass("java/lang/LinkageError");
     if (linkageErrorClass == NULL)
     {
-        __android_log_write(ANDROID_LOG_ERROR,
-			    "org.billthefarmer.mididriver", "Failed to resolve "
-                            "java/lang/LinkageError");
+        LOG_E(LOG_TAG, "Failed to resolve java/lang/LinkageError");
         return -1;
     }
 
     void *libHandler;
 
-    __android_log_write(ANDROID_LOG_VERBOSE,
-			"org.billthefarmer.mididriver",
-			"Init function called");
+    LOG_V(LOG_TAG, "Init function called");
 
     libHandler = dlopen("libsonivox.so", RTLD_LAZY);
     if (!libHandler)
@@ -484,9 +472,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 
     else
     {
-        __android_log_write(ANDROID_LOG_VERBOSE,
-			    "org.billthefarmer.mididriver",
-			    "dlopen libsonivox.so passed" );
+        LOG_V(LOG_TAG, "dlopen libsonivox.so passed");
     }
 
     pEAS_Config = (EAS_PUBLIC const S_EAS_LIB_CONFIG *(*) (void))
@@ -572,8 +558,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
         return -1;
     }
 
-    __android_log_write(ANDROID_LOG_VERBOSE,
-			"org.billthefarmer.mididriver", "Init function passed");
+    LOG_I(LOG_TAG, "Init function passed");
 
     return JNI_VERSION_1_6;
 }
