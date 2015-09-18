@@ -209,7 +209,7 @@ public class MainActivity extends Activity
     {
 	// Program change - church organ
 
-	sendMidi(0xc0, 18);
+	sendMidi(0xc0, 19);
     }
 
     // Send a midi message

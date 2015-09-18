@@ -47,6 +47,9 @@
 // determines how many EAS buffers to fill a host buffer
 #define NUM_BUFFERS 4
 
+// thread
+static pthread thread;
+
 // mutex
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -87,48 +90,46 @@ EAS_PUBLIC EAS_RESULT (*pEAS_CloseMIDIStream) (EAS_DATA_HANDLE pEASData,
 // EAS data
 static EAS_DATA_HANDLE pEASData;
 const S_EAS_LIB_CONFIG *pLibConfig;
-static EAS_PCM *buffer;
-static EAS_PCM *buffers[2];
+// static EAS_PCM *buffer;
+static EAS_PCM *buffers[NUM_BUFFERS];
 static EAS_I32 bufferSize;
 static EAS_HANDLE midiHandle;
+static EAS_BOOL flag;
 
 // this callback handler is called every time a buffer finishes playing
 void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
 {
     static int next = 0;
-
+    EAS_PCM *buffer;
     EAS_RESULT result;
-    EAS_I32 numGenerated;
-    EAS_I32 count;
+    // EAS_I32 numGenerated;
+    // EAS_I32 count;
 
     assert(bq == bqPlayerBufferQueue);
     assert(NULL == context);
 
-    // if ((called++ % 64) ==0)
-    // 	LOG_D(LOG_TAG, "BQPlayer callback called: %ld", called);
-
-    // buffer = buffers[next];
-    // next = ++next % 2;
+    buffer = buffers[next];
+    next = ++next % 2;
 
     // for streaming playback, replace this test by logic to find and
     // fill the next buffer
 
-    count = 0;
-    while (count < bufferSize)
-    {
-	// lock
-	pthread_mutex_lock(&mutex);
+    // count = 0;
+    // while (count < bufferSize)
+    // {
+    // 	// lock
+    // 	pthread_mutex_lock(&mutex);
 
-	result = pEAS_Render(pEASData, buffer + count,
-			     pLibConfig->mixBufferSize, &numGenerated);
-	// unlock
-	pthread_mutex_unlock(&mutex);      
+    // 	result = pEAS_Render(pEASData, buffer + count,
+    // 			     pLibConfig->mixBufferSize, &numGenerated);
+    // 	// unlock
+    // 	pthread_mutex_unlock(&mutex);      
 
-	if (result != EAS_SUCCESS)
-	    break;
+    // 	if (result != EAS_SUCCESS)
+    // 	    break;
 
-	count += numGenerated * pLibConfig->numChannels;
-    }
+    // 	count += numGenerated * pLibConfig->numChannels;
+    // }
 
     // enqueue another buffer
     result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue,
@@ -289,6 +290,48 @@ void shutdownAudio()
     }
 }
 
+// render
+void *render(void *data)
+{
+    static EAS_U32 next = 0;
+    EAS_PCM *buffer;
+    EAS_RESULT result;
+    EAS_I32 numGenerated;
+    EAS_I32 count;
+
+    while (flag == EAS_FALSE)
+    {
+	// lock
+	pthread_mutex_lock(&mutex);
+
+	// get buffer
+	buffer = buffers[next];
+
+	// unlock
+	pthread_mutex_unlock(&mutex);      
+
+	// next buffer
+	next = ++next % NUM_BUFFERS;
+
+	count = 0;
+	while (count < bufferSize)
+	{
+	    // lock
+	    pthread_mutex_lock(&mutex);
+
+	    result = pEAS_Render(pEASData, buffer + count,
+				 pLibConfig->mixBufferSize, &numGenerated);
+	    // unlock
+	    pthread_mutex_unlock(&mutex);      
+
+	    if (result != EAS_SUCCESS)
+		break;
+
+	    count += numGenerated * pLibConfig->numChannels;
+	}
+    }
+}
+	
 // init EAS midi
 jboolean
 Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
@@ -325,17 +368,22 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
     }
 
     // allocate buffer in bytes
-    buffer = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
-    // buffers[0] = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
-    // buffers[1] = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
-    if (buffer == NULL)
-    {
+    // buffer = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
+    buffers[0] = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
+    buffers[1] = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
+    buffers[2] = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
+    buffers[3] = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
+    if (buffer[0] == NULL || buffer[1] == NULL ||
+	buffer[2] == NULL || buffer[3] == NULL)
 	pEAS_CloseMIDIStream(pEASData, midiHandle);
 	pEAS_Shutdown(pEASData);
 	midiHandle = NULL;
 	pEASData = NULL;
 	return JNI_FALSE;
     }
+
+    // start rendering thread
+    pthread_create(&thread, NULL, render, NULL);
 
     // create the engine and output mix objects
     if (result = createEngine() != SL_RESULT_SUCCESS)
@@ -438,6 +486,18 @@ Java_org_billthefarmer_mididriver_MidiDriver_shutdown(JNIEnv *env,
 						      jobject obj)
 {
     EAS_RESULT result;
+
+    // lock
+    pthread_mutex_lock(&mutex);
+
+    // set flag
+    flag = EAS_TRUE;
+
+    // unlock
+    pthread_mutex_unlock(&mutex);      
+
+    // join render thread
+    pthread_join(thread, NULL);
 
     shutdownAudio();
 
