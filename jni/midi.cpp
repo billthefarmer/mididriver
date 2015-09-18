@@ -188,7 +188,7 @@ SLresult createBufferQueueAudioPlayer()
 	{SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2};
     SLDataFormat_PCM format_pcm =
 	{SL_DATAFORMAT_PCM, 2, SL_SAMPLINGRATE_22_05,
-	 SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_32,
+	 SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_16,
 	 SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT,
 	 SL_BYTEORDER_LITTLEENDIAN};
     SLDataSource audioSrc = {&loc_bufq, &format_pcm};
@@ -336,6 +336,9 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
 	pEASData = NULL;
 	shutdownAudio();
 	free(buffer);
+	buffer = NULL;
+
+	LOG_E(LOG_TAG, "Create engine failed: %ld", result);
 
 	return JNI_FALSE;
     }
@@ -349,6 +352,9 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
 	pEASData = NULL;
 	shutdownAudio();
 	free(buffer);
+	buffer = NULL;
+
+	LOG_E(LOG_TAG, "Create buffer queue audio player failed: %ld", result);
 
 	return JNI_FALSE;
     }
@@ -421,7 +427,9 @@ Java_org_billthefarmer_mididriver_MidiDriver_shutdown(JNIEnv *env,
     EAS_RESULT result;
 
     shutdownAudio();
-    free(buffer);
+
+    if (buffer != NULL)
+	free(buffer);
 
     if (pEASData == NULL || midiHandle == NULL)
 	return JNI_FALSE;
