@@ -39,7 +39,7 @@ public class MidiDriver
 
     public void start()
     {
-	if (!init())
+	if (init() != true)
 	    return;
 
 	// Call listener

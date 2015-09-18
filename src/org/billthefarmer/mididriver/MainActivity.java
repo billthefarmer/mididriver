@@ -207,9 +207,9 @@ public class MainActivity extends Activity
     @Override
     public void onMidiStart()
     {
-	// Program change - harpsicord
+	// Program change - church organ
 
-	sendMidi(0xc0, 6);
+	sendMidi(0xc0, 18);
     }
 
     // Send a midi message

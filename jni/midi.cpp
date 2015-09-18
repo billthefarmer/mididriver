@@ -95,12 +95,20 @@ static EAS_HANDLE midiHandle;
 // this callback handler is called every time a buffer finishes playing
 void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
 {
+    static int next = 0;
+
     EAS_RESULT result;
     EAS_I32 numGenerated;
     EAS_I32 count;
 
     assert(bq == bqPlayerBufferQueue);
     assert(NULL == context);
+
+    // if ((called++ % 64) ==0)
+    // 	LOG_D(LOG_TAG, "BQPlayer callback called: %ld", called);
+
+    // buffer = buffers[next];
+    // next = ++next % 2;
 
     // for streaming playback, replace this test by logic to find and
     // fill the next buffer
@@ -158,7 +166,7 @@ SLresult createEngine()
     if (SL_RESULT_SUCCESS != result)
 	return result;
 
-    LOG_D(LOG_TAG, "Engine Interface retreived");
+    LOG_D(LOG_TAG, "Engine Interface retrieved");
 
     // create output mix
     result = (*engineEngine)->CreateOutputMix(engineEngine, &outputMixObject,
@@ -185,7 +193,7 @@ SLresult createBufferQueueAudioPlayer()
 
     // configure audio source
     SLDataLocator_AndroidSimpleBufferQueue loc_bufq =
-	{SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2};
+	{SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 4};
     SLDataFormat_PCM format_pcm =
 	{SL_DATAFORMAT_PCM, 2, SL_SAMPLINGRATE_22_05,
 	 SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_16,
@@ -224,7 +232,7 @@ SLresult createBufferQueueAudioPlayer()
     if (SL_RESULT_SUCCESS != result)
 	return result;
 
-    LOG_D(LOG_TAG, "Play interface retreived");
+    LOG_D(LOG_TAG, "Play interface retrieved");
 
     // get the buffer queue interface
     result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_BUFFERQUEUE,
@@ -232,7 +240,7 @@ SLresult createBufferQueueAudioPlayer()
     if (SL_RESULT_SUCCESS != result)
 	return result;
 
-    LOG_D(LOG_TAG, "Buffer queue interface retreived");
+    LOG_D(LOG_TAG, "Buffer queue interface retrieved");
 
     // register callback on the buffer queue
     result = (*bqPlayerBufferQueue)->RegisterCallback(bqPlayerBufferQueue,
@@ -318,6 +326,8 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
 
     // allocate buffer in bytes
     buffer = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
+    // buffers[0] = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
+    // buffers[1] = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
     if (buffer == NULL)
     {
 	pEAS_CloseMIDIStream(pEASData, midiHandle);
@@ -358,6 +368,9 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
 
 	return JNI_FALSE;
     }
+
+    // call the callback to start playing
+    bqPlayerCallback(bqPlayerBufferQueue, NULL);
 
     return JNI_TRUE;
 }
