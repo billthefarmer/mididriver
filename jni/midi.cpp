@@ -25,7 +25,6 @@
 #include <dlfcn.h>
 #include <assert.h>
 #include <pthread.h>
-#include <semaphore.h>
 #include <android/log.h>
 
 // for native audio
@@ -48,14 +47,8 @@
 // determines how many EAS buffers to fill a host buffer
 #define NUM_BUFFERS 4
 
-// thread
-static pthread_t thread;
-
 // mutex
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-
-// semaphore
-static sem_t sem;
 
 // engine interfaces
 static SLObjectItf engineObject = NULL;
@@ -94,45 +87,51 @@ EAS_PUBLIC EAS_RESULT (*pEAS_CloseMIDIStream) (EAS_DATA_HANDLE pEASData,
 // EAS data
 static EAS_DATA_HANDLE pEASData;
 const S_EAS_LIB_CONFIG *pLibConfig;
-// static EAS_PCM *buffer;
-static EAS_PCM *buffers[NUM_BUFFERS];
+static EAS_PCM *buffer;
 static EAS_I32 bufferSize;
 static EAS_HANDLE midiHandle;
-static EAS_BOOL flag;
 
 // this callback handler is called every time a buffer finishes
 // playing
 void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
 {
-    static int next = 0;
-    EAS_PCM *buffer;
     EAS_RESULT result;
+    EAS_I32 numGenerated;
+    EAS_I32 count;
 
     assert(bq == bqPlayerBufferQueue);
     assert(NULL == context);
 
-    // for streaming playback, replace this test by logic to find and
-    // fill the next buffer
+    // for streaming playback, replace this test by logic to fill the
+    // next buffer
 
-    // lock
-    pthread_mutex_lock(&mutex);
+    count = 0;
+    while (count < bufferSize)
+    {
+	// lock
+	pthread_mutex_lock(&mutex);
 
-    buffer = buffers[next];
+	result = pEAS_Render(pEASData, buffer + count,
+			     pLibConfig->mixBufferSize, &numGenerated);
+	// unlock
+	pthread_mutex_unlock(&mutex);      
 
-    // unlock
-    pthread_mutex_unlock(&mutex);      
+	if (result != EAS_SUCCESS)
+	    break;
 
-    next = ++next % NUM_BUFFERS;
+	count += numGenerated * pLibConfig->numChannels;
+    }
 
     // enqueue another buffer
-    result = (*bqPlayerBufferQueue)->Enqueue(bq, buffer, bufferSize);
+    result = (*bqPlayerBufferQueue)->Enqueue(bq, buffer,
+					     bufferSize * sizeof(EAS_PCM));
 
     // the most likely other result is SL_RESULT_BUFFER_INSUFFICIENT,
     // which for this code example would indicate a programming error
     assert(SL_RESULT_SUCCESS == result);
 
     // post semaphore
-    sem_post(&sem);
+    // sem_post(&sem);
 }
 
 // create the engine and output mix objects
@@ -188,7 +187,7 @@ SLresult createBufferQueueAudioPlayer()
 
     // configure audio source
     SLDataLocator_AndroidSimpleBufferQueue loc_bufq =
-	{SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 4};
+	{SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2};
     SLDataFormat_PCM format_pcm =
 	{SL_DATAFORMAT_PCM, 2, SL_SAMPLINGRATE_22_05,
 	 SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_16,
@@ -284,64 +283,6 @@ void shutdownAudio()
     }
 }
 
-// render
-void *render(void *data)
-{
-    static EAS_U32 next = 0;
-    EAS_PCM *buffer;
-    EAS_RESULT result;
-    EAS_I32 numGenerated;
-    EAS_I32 count;
-
-    while (flag == EAS_FALSE)
-    {
-	// lock
-	pthread_mutex_lock(&mutex);
-
-	// get buffer
-	buffer = buffers[next];
-
-	// unlock
-	pthread_mutex_unlock(&mutex);      
-
-	// next buffer
-	next = ++next % NUM_BUFFERS;
-
-	count = 0;
-	while (count < bufferSize)
-	{
-	    // lock
-	    pthread_mutex_lock(&mutex);
-
-	    result = pEAS_Render(pEASData, buffer + count,
-				 pLibConfig->mixBufferSize, &numGenerated);
-	    // unlock
-	    pthread_mutex_unlock(&mutex);      
-
-	    if (result != EAS_SUCCESS)
-		break;
-
-	    count += numGenerated * pLibConfig->numChannels;
-	}
-
-	// Wait on semaphore
-	sem_wait(&sem);
-    }
-}
-
-// free buffers
-void freeBuffers()
-{
-    for (int i = 0; i < NUM_BUFFERS; i++)
-    {
-	if (buffers[i] != NULL)
-	{
-	    free(buffers[i]);
-	    buffers[i] = NULL;
-	}
-    }
-}
-
 // init EAS midi
 jboolean
 Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
@@ -378,15 +319,10 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
     }
 
     // allocate buffer in bytes
-    // buffer = (EAS_PCM *)calloc(bufferSize, sizeof(EAS_PCM));
-    buffers[0] = (EAS_PCM *)calloc(bufferSize, sizeof(EAS_PCM));
-    buffers[1] = (EAS_PCM *)calloc(bufferSize, sizeof(EAS_PCM));
-    buffers[2] = (EAS_PCM *)calloc(bufferSize, sizeof(EAS_PCM));
-    buffers[3] = (EAS_PCM *)calloc(bufferSize, sizeof(EAS_PCM));
-    if (buffers[0] == NULL || buffers[1] == NULL ||
-	buffers[2] == NULL || buffers[3] == NULL)
+    buffer = (EAS_PCM *)calloc(bufferSize, sizeof(EAS_PCM));
+    if (buffer == NULL)
     {
-	freeBuffers();
+	// freeBuffers();
 	pEAS_CloseMIDIStream(pEASData, midiHandle);
 	pEAS_Shutdown(pEASData);
 	midiHandle = NULL;
@@ -397,14 +333,6 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
 	return JNI_FALSE;
     }
 
-    // init semaphore
-    sem_init(&sem, 0, 0);
-
-    // start rendering thread
-    pthread_create(&thread, NULL, render, NULL);
-
-    LOG_D(LOG_TAG, "Render thread started");
-
     // create the engine and output mix objects
     if (result = createEngine() != SL_RESULT_SUCCESS)
     {
@@ -413,7 +341,8 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
 	midiHandle = NULL;
 	pEASData = NULL;
 	shutdownAudio();
-	freeBuffers();
+	free(buffer);
+	buffer = NULL;
 
 	LOG_E(LOG_TAG, "Create engine failed: %ld", result);
 
@@ -428,7 +357,8 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
 	midiHandle = NULL;
 	pEASData = NULL;
 	shutdownAudio();
-	freeBuffers();
+	free(buffer);
+	buffer = NULL;
 
 	LOG_E(LOG_TAG, "Create buffer queue audio player failed: %ld", result);
 
@@ -505,21 +435,10 @@ Java_org_billthefarmer_mididriver_MidiDriver_shutdown(JNIEnv *env,
 {
     EAS_RESULT result;
 
-    // lock
-    pthread_mutex_lock(&mutex);
-
-    // set flag
-    flag = EAS_TRUE;
-
-    // unlock
-    pthread_mutex_unlock(&mutex);      
-
-    // join render thread
-    pthread_join(thread, NULL);
-
     shutdownAudio();
 
-    freeBuffers();
+    free(buffer);
+    buffer = NULL;
 
     if (pEASData == NULL || midiHandle == NULL)
 	return JNI_FALSE;
