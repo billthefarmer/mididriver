@@ -378,11 +378,11 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
     }
 
     // allocate buffer in bytes
-    // buffer = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
-    buffers[0] = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
-    buffers[1] = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
-    buffers[2] = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
-    buffers[3] = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
+    // buffer = (EAS_PCM *)calloc(bufferSize, sizeof(EAS_PCM));
+    buffers[0] = (EAS_PCM *)calloc(bufferSize, sizeof(EAS_PCM));
+    buffers[1] = (EAS_PCM *)calloc(bufferSize, sizeof(EAS_PCM));
+    buffers[2] = (EAS_PCM *)calloc(bufferSize, sizeof(EAS_PCM));
+    buffers[3] = (EAS_PCM *)calloc(bufferSize, sizeof(EAS_PCM));
     if (buffers[0] == NULL || buffers[1] == NULL ||
 	buffers[2] == NULL || buffers[3] == NULL)
     {
