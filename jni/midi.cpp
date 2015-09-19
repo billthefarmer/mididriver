@@ -100,7 +100,8 @@ static EAS_I32 bufferSize;
 static EAS_HANDLE midiHandle;
 static EAS_BOOL flag;
 
-// this callback handler is called every time a buffer finishes playing
+// this callback handler is called every time a buffer finishes
+// playing
 void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
 {
     static int next = 0;
@@ -124,8 +125,7 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
     next = ++next % NUM_BUFFERS;
 
     // enqueue another buffer
-    result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue,
-						 buffer, bufferSize);
+    result = (*bqPlayerBufferQueue)->Enqueue(bq, buffer, bufferSize);
 
     // the most likely other result is SL_RESULT_BUFFER_INSUFFICIENT,
     // which for this code example would indicate a programming error
