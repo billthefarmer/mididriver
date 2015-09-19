@@ -19,7 +19,7 @@ Android midi driver using Sonivox EAS library. The app and library are
 available [here](https://github.com/billthefarmer/mididriver/releases).
 
 I have removed the event queue as per the comment by akdmia because it
-is not necessary. Contention is hadled by using a mutex in the native
+is not necessary. Contention is handled by using a mutex in the native
 code. I have only tested this with this app, not with an extended
 event stream.  The app just has a couple of buttons that play a couple
 of piano notes when touched. I've added two more buttons that play and
