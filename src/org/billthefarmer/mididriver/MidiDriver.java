@@ -80,7 +80,7 @@ public class MidiDriver
 
     private native boolean init();
     public  native int[]   config();
-    private native boolean write(byte a[]);
+    public  native boolean write(byte a[]);
     private native boolean shutdown();
 
     // Load midi library

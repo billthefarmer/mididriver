@@ -25,6 +25,7 @@
 #include <dlfcn.h>
 #include <assert.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <android/log.h>
 
 // for native audio
@@ -48,10 +49,13 @@
 #define NUM_BUFFERS 4
 
 // thread
-static pthread thread;
+static pthread_t thread;
 
 // mutex
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+// semaphore
+static sem_t sem;
 
 // engine interfaces
 static SLObjectItf engineObject = NULL;
@@ -102,34 +106,22 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
     static int next = 0;
     EAS_PCM *buffer;
     EAS_RESULT result;
-    // EAS_I32 numGenerated;
-    // EAS_I32 count;
 
     assert(bq == bqPlayerBufferQueue);
     assert(NULL == context);
 
-    buffer = buffers[next];
-    next = ++next % 2;
-
     // for streaming playback, replace this test by logic to find and
     // fill the next buffer
 
-    // count = 0;
-    // while (count < bufferSize)
-    // {
-    // 	// lock
-    // 	pthread_mutex_lock(&mutex);
+    // lock
+    pthread_mutex_lock(&mutex);
 
-    // 	result = pEAS_Render(pEASData, buffer + count,
-    // 			     pLibConfig->mixBufferSize, &numGenerated);
-    // 	// unlock
-    // 	pthread_mutex_unlock(&mutex);      
+    buffer = buffers[next];
 
-    // 	if (result != EAS_SUCCESS)
-    // 	    break;
+    // unlock
+    pthread_mutex_unlock(&mutex);      
 
-    // 	count += numGenerated * pLibConfig->numChannels;
-    // }
+    next = ++next % NUM_BUFFERS;
 
     // enqueue another buffer
     result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue,
@@ -138,7 +130,9 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
     // the most likely other result is SL_RESULT_BUFFER_INSUFFICIENT,
     // which for this code example would indicate a programming error
     assert(SL_RESULT_SUCCESS == result);
-    (void)result;
+
+    // post semaphore
+    sem_post(&sem);
 }
 
 // create the engine and output mix objects
@@ -329,9 +323,25 @@ void *render(void *data)
 
 	    count += numGenerated * pLibConfig->numChannels;
 	}
+
+	// Wait on semaphore
+	sem_wait(&sem);
     }
 }
-	
+
+// free buffers
+void freeBuffers()
+{
+    for (int i = 0; i < NUM_BUFFERS; i++)
+    {
+	if (buffers[i] != NULL)
+	{
+	    free(buffers[i]);
+	    buffers[i] = NULL;
+	}
+    }
+}
+
 // init EAS midi
 jboolean
 Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
@@ -373,17 +383,27 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
     buffers[1] = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
     buffers[2] = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
     buffers[3] = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
-    if (buffer[0] == NULL || buffer[1] == NULL ||
-	buffer[2] == NULL || buffer[3] == NULL)
+    if (buffers[0] == NULL || buffers[1] == NULL ||
+	buffers[2] == NULL || buffers[3] == NULL)
+    {
+	freeBuffers();
 	pEAS_CloseMIDIStream(pEASData, midiHandle);
 	pEAS_Shutdown(pEASData);
 	midiHandle = NULL;
 	pEASData = NULL;
+
+	LOG_E(LOG_TAG, "Allocate buffers failed");
+
 	return JNI_FALSE;
     }
 
+    // init semaphore
+    sem_init(&sem, 0, 0);
+
     // start rendering thread
     pthread_create(&thread, NULL, render, NULL);
+
+    LOG_D(LOG_TAG, "Render thread started");
 
     // create the engine and output mix objects
     if (result = createEngine() != SL_RESULT_SUCCESS)
@@ -393,8 +413,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
 	midiHandle = NULL;
 	pEASData = NULL;
 	shutdownAudio();
-	free(buffer);
-	buffer = NULL;
+	freeBuffers();
 
 	LOG_E(LOG_TAG, "Create engine failed: %ld", result);
 
@@ -409,8 +428,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
 	midiHandle = NULL;
 	pEASData = NULL;
 	shutdownAudio();
-	free(buffer);
-	buffer = NULL;
+	freeBuffers();
 
 	LOG_E(LOG_TAG, "Create buffer queue audio player failed: %ld", result);
 
@@ -501,8 +519,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_shutdown(JNIEnv *env,
 
     shutdownAudio();
 
-    if (buffer != NULL)
-	free(buffer);
+    freeBuffers();
 
     if (pEASData == NULL || midiHandle == NULL)
 	return JNI_FALSE;
