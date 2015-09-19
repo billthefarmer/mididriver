@@ -36,6 +36,8 @@ To use this driver you need to:
     [android/platform_external_sonivox](https://github.com/android/platform_external_sonivox).
   * Adjust the ~jni/Application.mk to build the architecture(s) you
     want.
+  * Don't build 64 bit versions as Google have included broken 64 bit
+    versions of libsonivox.so in devices and at least one emulator.
 
 Or you can just copy the libmidi.so file from here, but it has
 
