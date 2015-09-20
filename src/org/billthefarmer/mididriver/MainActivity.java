@@ -219,8 +219,8 @@ public class MainActivity extends Activity
 
 	int config[] = midi.config();
 	String format =
-	    "pLibConfig->maxVoices = %d\npLibConfig->numChannels = %d\n" +
-	    "pLibConfig->sampleRate = %d\npLibConfig->mixBufferSize = %d";
+	    "maxVoices = %d\nnumChannels = %d\n" +
+	    "sampleRate = %d\nmixBufferSize = %d";
 
 	String info = String.format(format, config[0], config[1],
 				    config[2], config[3]);
