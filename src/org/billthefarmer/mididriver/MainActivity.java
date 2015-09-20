@@ -207,9 +207,9 @@ public class MainActivity extends Activity
     @Override
     public void onMidiStart()
     {
-	// Program change - church organ
+	// Program change - harpsicord
 
-	sendMidi(0xc0, 19);
+	sendMidi(0xc0, 6);
     }
 
     // Send a midi message
@@ -221,7 +221,7 @@ public class MainActivity extends Activity
 	msg[0] = (byte) m;
 	msg[1] = (byte) p;
 
-	midi.queueEvent(msg);
+	midi.write(msg);
     }
 
     // Send a midi message
@@ -234,6 +234,6 @@ public class MainActivity extends Activity
 	msg[1] = (byte) n;
 	msg[2] = (byte) v;
 
-	midi.queueEvent(msg);
+	midi.write(msg);
     }
 }
