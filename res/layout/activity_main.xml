@@ -15,7 +15,7 @@
         android:layout_marginBottom="8dp"
         android:text="@string/hello_midi"
         android:textAppearance="?android:attr/textAppearanceMedium" />
-    
+
     <Button
         android:id="@+id/button1"
         android:layout_width="wrap_content"
@@ -49,5 +49,14 @@
         android:layout_alignBottom="@+id/button3"
         android:layout_toRightOf="@+id/button3"
         android:text="!Ants" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/button3"
+        android:layout_below="@+id/button3"
+        android:layout_marginTop="8dp"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
 </RelativeLayout>

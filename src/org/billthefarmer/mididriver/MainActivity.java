@@ -31,11 +31,13 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
+import android.widget.TextView;
 
 public class MainActivity extends Activity
     implements OnTouchListener, OnClickListener,
 	       MidiDriver.OnMidiStartListener
 {
+    private TextView text;
 
     protected MidiDriver midi;
     protected MediaPlayer player;
@@ -67,6 +69,8 @@ public class MainActivity extends Activity
 	v = findViewById(R.id.button4);
 	if (v != null)
 	    v.setOnClickListener(this);
+
+	text = (TextView)findViewById(R.id.textView2);
 
 	// Set on midi start listener
 
@@ -210,6 +214,19 @@ public class MainActivity extends Activity
 	// Program change - harpsicord
 
 	sendMidi(0xc0, 6);
+
+	// Get the config
+
+	int config[] = midi.config();
+	String format =
+	    "maxVoices = %d\nnumChannels = %d\n" +
+	    "sampleRate = %d\nmixBufferSize = %d";
+
+	String info = String.format(format, config[0], config[1],
+				    config[2], config[3]);
+
+	if (text != null)
+	    text.setText(info);
     }
 
     // Send a midi message
@@ -221,7 +238,7 @@ public class MainActivity extends Activity
 	msg[0] = (byte) m;
 	msg[1] = (byte) p;
 
-	midi.queueEvent(msg);
+	midi.write(msg);
     }
 
     // Send a midi message
@@ -234,6 +251,6 @@ public class MainActivity extends Activity
 	msg[1] = (byte) n;
 	msg[2] = (byte) v;
 
-	midi.queueEvent(msg);
+	midi.write(msg);
     }
 }

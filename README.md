@@ -1,6 +1,11 @@
 Midi Driver
 ===========
 
+This branch (OpenSLES) contains a purely native version of the driver
+using OpenSLES. This is an attempt to resolve the
+[choppy sound issue](https://github.com/billthefarmer/mididriver/issues/12)
+reported by [smarek](https://github.com/smarek).
+
 I have added a
 [jhindin](https://github.com/billthefarmer/mididriver/tree/jhindin)
 branch to this repository which is a merge of
@@ -13,21 +18,22 @@ made these changes:
 Android midi driver using Sonivox EAS library. The app and library are
 available [here](https://github.com/billthefarmer/mididriver/releases).
 
-I have added an event queue as per the comment by akdmia. I have only
-tested this with this app, not with an extended event stream.  The app
-just has a couple of buttons that play a couple of piano notes when
-touched. I've added two more buttons that play and stop a midi file
-using the MediaPlayer to check that there is no interaction
-problem. Added a listener for sending initial midi messages when the
-midi driver has started. Added a handler for the listener so the
-callback is not on the driver thread. This project may be compiled as
-a library by changing the setting in project.properties to
-android.library=true.  The MainActivity.java source file will be moved
-to a temporary folder so it is not compiled into in the library jar
-file. I have made the changes in
+I have removed the event queue as per the comment by akdmia because it
+is not necessary. Contention is handled by using a mutex in the native
+code. I have only tested this with this app, not with an extended
+event stream.  The app just has a couple of buttons that play a couple
+of piano notes when touched. I've added two more buttons that play and
+stop a midi file using the MediaPlayer to check that there is no
+interaction problem. Added a listener for sending initial midi
+messages when the midi driver has started. Removed the handler for the
+listener as the callback is not on a driver thread. This project may
+be compiled as a library by changing the setting in project.properties
+to android.library=true.  The MainActivity.java source file will be
+moved to a temporary folder so it is not compiled into in the library
+jar file. I have made the changes in
 [jhindin/mididriver](https://github.com/jhindin/mididriver) without
-changing the project structure. Copies of the libsonivox.so library are
-no longer required.
+changing the project structure. Copies of the libsonivox.so library
+are no longer required.
 
 To use this driver you need to:
 
@@ -57,7 +63,8 @@ Cygwin, despite what the docs say.
 
 	void addOnMidiStartListener(OnMidiStartListener l);
 
-	void queueEvent(byte[]) Send a midi message
+	void queueEvent(byte[]) Send a midi message. This method now just
+    calls write()
 
 #### Listener
 
@@ -76,11 +83,6 @@ Cygwin, despite what the docs say.
       config[1] = pLibConfig->numChannels;
       config[2] = pLibConfig->sampleRate;
       config[3] = pLibConfig->mixBufferSize;
-
-	int render(short buffer[]) Renders a buffer's worth of audio from
-	the Sonivox synthesizer into the buffer provided. The buffer
-	should be an array of shorts of the size returned by init(). Returns
-	0 on failure, number of shorts rendered on success.
 
 	boolean write(byte buffer[])  Writes midi data to the Sonivox
 	synthesizer. The length of the array should be the exact length of
