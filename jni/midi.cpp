@@ -338,10 +338,12 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
     {
 	shutdownEAS();
 
-	LOG_E(LOG_TAG, "Init EAS failed");
+	LOG_E(LOG_TAG, "Init EAS failed: %ld", result);
 
 	return JNI_FALSE;
     }
+
+    // LOG_D(LOG_TAG, "Init EAS success, buffer: %ld", bufferSize);
 
     // allocate buffer in bytes
     buffer = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
