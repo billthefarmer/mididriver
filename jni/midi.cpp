@@ -184,7 +184,8 @@ SLresult createBufferQueueAudioPlayer()
     SLDataLocator_AndroidSimpleBufferQueue loc_bufq =
 	{SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2};
     SLDataFormat_PCM format_pcm =
-	{SL_DATAFORMAT_PCM, 2, SL_SAMPLINGRATE_22_05,
+	{SL_DATAFORMAT_PCM, pLibConfig->numChannels,
+	 pLibConfig->sampleRate * 1000,
 	 SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_16,
 	 SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT,
 	 SL_BYTEORDER_LITTLEENDIAN};
