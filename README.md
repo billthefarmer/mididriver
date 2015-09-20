@@ -4,7 +4,7 @@ Midi Driver
 This branch (OpenSLES) contains a purely native version of the driver
 using OpenSLES. This is an attempt to resolve the
 [choppy sound issue](https://github.com/billthefarmer/mididriver/issues/12)
-reported by [smarek](https://github.com/smarek).
+reported by [smarek](https://github.com/smarek). Now merged to master.
 
 I have added a
 [jhindin](https://github.com/billthefarmer/mididriver/tree/jhindin)
