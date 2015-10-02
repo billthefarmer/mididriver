@@ -456,20 +456,11 @@ Java_org_billthefarmer_mididriver_MidiDriver_shutdown(JNIEnv *env,
 
     shutdownAudio();
 
-    free(buffer);
+    if (buffer != NULL)
+	free(buffer);
     buffer = NULL;
 
-    if (pEASData == NULL || midiHandle == NULL)
-	return JNI_FALSE;
-
-    if ((result = pEAS_CloseMIDIStream(pEASData, midiHandle)) != EAS_SUCCESS)
-    {
-	pEAS_Shutdown(pEASData);
-	return JNI_FALSE;
-    }
-
-    if ((result = pEAS_Shutdown(pEASData)) != EAS_SUCCESS)
-        return JNI_FALSE;
+    shutdownEAS();
 
     return JNI_TRUE;
 }
