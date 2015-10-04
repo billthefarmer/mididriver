@@ -465,10 +465,6 @@ Java_org_billthefarmer_mididriver_MidiDriver_shutdown(JNIEnv *env,
     return JNI_TRUE;
 }
 
-extern "C" {
-    jint JNI_OnLoad(JavaVM* vm, void* reserved);
-}
-
 jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
     JNIEnv* env;
