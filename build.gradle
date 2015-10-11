@@ -1,0 +1,52 @@
+buildscript {
+    dependencies {
+        classpath 'com.android.tools.build:gradle-experimental:0.2.0'
+    }
+}
+
+apply plugin: 'com.android.model.application'
+
+model {
+    android {
+        compileSdkVersion = 23
+        buildToolsVersion = "23.0.1"
+
+        defaultConfig.with {
+            applicationId = "org.billthefarmer.mididriver"
+            minSdkVersion.apiLevel = 15
+            targetSdkVersion.apiLevel = 23
+        }
+    }
+
+    compileOptions.with {
+        sourceCompatibility = JavaVersion.VERSION_1_7
+        targetCompatibility = JavaVersion.VERSION_1_7
+    }
+
+    android.ndk {
+        moduleName = "midi"
+        ldLibs = ['log', 'OpenSLES']
+    }
+    android.buildTypes {
+        release {
+            minifyEnabled = false
+            proguardFiles += file('proguard-rules.txt')
+        }
+    }
+    android.productFlavors {
+        create("arm") {
+            ndk.abiFilters += "armeabi"
+        }
+        create("arm7") {
+            ndk.abiFilters += "armeabi-v7a"
+        }
+        create("x86") {
+            ndk.abiFilters += "x86"
+        }
+        create("mips") {
+            ndk.abiFilters += "mips"
+        }
+        // To include all cpu architectures, leaves abiFilters empty
+        create("all")
+    }
+}

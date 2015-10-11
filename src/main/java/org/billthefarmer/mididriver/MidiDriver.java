@@ -23,70 +23,46 @@
 
 package org.billthefarmer.mididriver;
 
-// MidiDriver
-
-public class MidiDriver
-{
+public final class MidiDriver {
     private OnMidiStartListener listener;
 
-    // Constructor
-
-    public MidiDriver()
-    {
+    static {
+        System.loadLibrary("midi");
     }
 
-    // Start midi
-
-    public void start()
-    {
-	if (init() != true)
-	    return;
-
-	// Call listener
-
-	if (listener != null)
-	    listener.onMidiStart();
+    public MidiDriver() {
     }
 
-    // Queue event
+    public void start() {
+        if (!init())
+            return;
 
-    public void queueEvent(byte[] event)
-    {
-	write(event);
+        if (listener != null)
+            listener.onMidiStart();
     }
 
-    // Stop
-
-    public void stop()
-    {
-	shutdown();
+    public void queueEvent(byte[] event) {
+        write(event);
     }
 
-    // Set listener
-
-    public void setOnMidiStartListener(OnMidiStartListener l)
-    {
-	listener = l;
+    public void stop() {
+        shutdown();
     }
 
-    // Listener interface
-
-    public interface OnMidiStartListener
-    {
-	public abstract void onMidiStart();
+    public void setOnMidiStartListener(OnMidiStartListener l) {
+        listener = l;
     }
 
-    // Native midi methods
+    public interface OnMidiStartListener {
+        void onMidiStart();
+    }
 
     private native boolean init();
-    public  native int[]   config();
-    public  native boolean write(byte a[]);
+
+    public native int[] config();
+
+    public native boolean write(byte a[]);
+
     private native boolean shutdown();
 
-    // Load midi library
-
-    static
-    {
-	System.loadLibrary("midi");
-    }
 }
