@@ -1,10 +1,10 @@
 buildscript {
     dependencies {
-        classpath 'com.android.tools.build:gradle-experimental:0.2.0'
+        classpath 'com.android.tools.build:gradle-experimental:0.3.0-alpha7'
     }
 }
 
-apply plugin: 'com.android.model.application'
+apply plugin: 'com.android.model.library'
 
 model {
     android {
@@ -12,7 +12,6 @@ model {
         buildToolsVersion = "23.0.1"
 
         defaultConfig.with {
-            applicationId = "org.billthefarmer.mididriver"
             minSdkVersion.apiLevel = 15
             targetSdkVersion.apiLevel = 23
         }
@@ -25,7 +24,7 @@ model {
 
     android.ndk {
         moduleName = "midi"
-        ldLibs = ['log', 'OpenSLES']
+        ldLibs = ['android', 'log', 'OpenSLES']
     }
     android.buildTypes {
         release {
