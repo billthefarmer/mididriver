@@ -8,3 +8,4 @@ gen
 ant.properties
 local.properties
 obj
+build
