@@ -1,4 +1,7 @@
 buildscript {
+    repositories {
+        jcenter()
+    }
     dependencies {
         classpath 'com.android.tools.build:gradle-experimental:0.3.0-alpha7'
     }
@@ -8,12 +11,12 @@ apply plugin: 'com.android.model.library'
 
 model {
     android {
-        compileSdkVersion = 23
+        compileSdkVersion = 22
         buildToolsVersion = "23.0.1"
 
         defaultConfig.with {
             minSdkVersion.apiLevel = 15
-            targetSdkVersion.apiLevel = 23
+            targetSdkVersion.apiLevel = 22
         }
     }
 
