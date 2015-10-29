@@ -48,7 +48,12 @@ model {
         create("mips") {
             ndk.abiFilters += "mips"
         }
-        // To include all cpu architectures, leaves abiFilters empty
-        create("all")
+        // To include all except 64 bit cpu architectures
+        create("all") {
+            ndk.abiFilters += "armeabi"
+            ndk.abiFilters += "armeabi-v7a"
+            ndk.abiFilters += "x86"
+            ndk.abiFilters += "mips"
+	}	
     }
 }
