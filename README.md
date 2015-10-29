@@ -1,5 +1,4 @@
-Midi Driver
-===========
+# Midi Driver [![Build Status](https://travis-ci.org/billthefarmer/mididriver.svg?branch=master)](https://travis-ci.org/billthefarmer/mididriver)
 
 [smarek](https://github.com/smarek) has made a [fork](https://github.com/smarek/mididriver) of the latest master, merging some of the features from the jhindin branch, and laid out for Gradle. I have merged this into the [smarek](https://github.com/billthefarmer/mididriver/tree/smarek) branch.
 
