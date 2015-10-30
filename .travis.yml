@@ -14,4 +14,6 @@ before_install:
 before_script:
   - chmod +x gradlew
 
-script: ./gradlew build --info
+script:
+  - ./gradlew build
+  - cat $HOME/travis/build/billthefarmer/mididriver/build/outputs/lint-results.xml
