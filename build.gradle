@@ -18,10 +18,6 @@ model {
             minSdkVersion.apiLevel = 15
             targetSdkVersion.apiLevel = 22
         }
-
-        lintOptions {
-          abortOnError false
-          }
     }
 
     compileOptions.with {
@@ -59,5 +55,11 @@ model {
             ndk.abiFilters += "x86"
             ndk.abiFilters += "mips"
 	}	
+    }
+}
+
+android {
+    lintOptions {
+        abortOnError false
     }
 }
