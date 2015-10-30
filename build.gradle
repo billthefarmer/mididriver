@@ -57,9 +57,3 @@ model {
 	}	
     }
 }
-
-android {
-    lintOptions {
-        abortOnError false
-    }
-}
