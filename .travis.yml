@@ -13,4 +13,4 @@ before_install:
 
 script: ./gradlew build
 
-after_script: ls -Rl $HOME/build/billthefarmer/mididriver
+after_script: cat $HOME/build/billthefarmer/mididriver/build/outputs/lint-results.xml
