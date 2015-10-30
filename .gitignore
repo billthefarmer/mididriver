@@ -1,6 +1,7 @@
 *.*~
 *.jar
 *.log
+*.apk
 *.zip
 .*
 bin
