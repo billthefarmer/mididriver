@@ -18,6 +18,10 @@ model {
             minSdkVersion.apiLevel = 15
             targetSdkVersion.apiLevel = 22
         }
+
+        lintOptions {
+          abortOnError false
+          }
     }
 
     compileOptions.with {
