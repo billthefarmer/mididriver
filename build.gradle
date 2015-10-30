@@ -54,7 +54,4 @@ model {
             ndk.abiFilters += "mips"
 	}
     }
-    android.lintOptions {
-        abortOnError false
-    }
 }

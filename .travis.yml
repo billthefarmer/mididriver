@@ -14,5 +14,3 @@ before_install:
   - export ANDROID_NDK_HOME=$HOME/android-ndk-home
 
 script: ./gradlew build
-
-after_script: cat $HOME/build/billthefarmer/mididriver/build/outputs/lint-results.xml
