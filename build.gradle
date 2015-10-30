@@ -19,12 +19,10 @@ model {
             targetSdkVersion.apiLevel = 22
         }
     }
-
     compileOptions.with {
         sourceCompatibility = JavaVersion.VERSION_1_7
         targetCompatibility = JavaVersion.VERSION_1_7
     }
-
     android.ndk {
         moduleName = "midi"
         ldLibs = ['android', 'log', 'OpenSLES']
@@ -54,6 +52,9 @@ model {
             ndk.abiFilters += "armeabi-v7a"
             ndk.abiFilters += "x86"
             ndk.abiFilters += "mips"
-	}	
+	}
+    }
+    android.lintOptions {
+        abortOnError false
     }
 }
