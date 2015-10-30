@@ -17,3 +17,6 @@ before_script:
 script:
   - ./gradlew build
   - cat $HOME/travis/build/billthefarmer/mididriver/build/outputs/lint-results.xml
+
+deploy:
+    skip_cleanup: true
