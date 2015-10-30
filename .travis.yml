@@ -12,3 +12,5 @@ before_install:
   - export ANDROID_NDK_HOME=$HOME/android-ndk-home
 
 script: ./gradlew build
+
+after_script: ls -Rl $HOME/travis/build/billthefarmer/mididriver
