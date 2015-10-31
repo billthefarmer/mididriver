@@ -9,4 +9,10 @@ android:
 
     - android-17
 
-script: ant release
+before_install:
+  - git clone https://github.com/urho3d/android-ndk.git $HOME/android-ndk
+  - export ANDROID_NDK_HOME=$HOME/android-ndk
+
+script:
+  - $ANDROID_NDK_HOME/ndk-build
+  - ant release
