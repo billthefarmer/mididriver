@@ -10,8 +10,8 @@ reported by [smarek](https://github.com/smarek). Now merged to master.
 I have added a
 [jhindin](https://github.com/billthefarmer/mididriver/tree/jhindin)
 branch to this repository which is a merge of
-[jhindin/mididriver](https://github.com/jhindin/mididriver). He has
-made these changes:
+[jhindin/mididriver](https://github.com/jhindin/mididriver). Do not
+use this branch as it is not up to date. He has made these changes:
 
   1. The source file tree has been rearranged to fit Android Studio/Gradle integration structure
   2. Linking with SoniVox library deferred to the launch time - in this way, there is no need to pull sonivox libraries from all potential platforms just to build the system
@@ -70,12 +70,12 @@ Cygwin, despite what the docs say.
 #### Listener
 
 	void onMidiStart() This is called when the driver has started so
-    that program change messages, etc may be sent. Uses a handler so
-    it does not run on the driver thread.
+    that program change messages, etc may be sent. This is now
+    somewhat redundant but has been left in.
 
 ### Native Methods
 
-	int init()  Return buffer size in shorts, or 0 on failure.
+	boolean init()  Return true on success, or false on failure.
 	
 	int[] config()  Return a four element array of ints with part of
 	the EAS onfig:
