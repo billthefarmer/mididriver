@@ -1,6 +1,22 @@
 # Midi Driver [![Build Status](https://travis-ci.org/billthefarmer/mididriver.svg?branch=master)](https://travis-ci.org/billthefarmer/mididriver)
 
-[smarek](https://github.com/smarek) has made a [fork](https://github.com/smarek/mididriver) of the latest master, merging some of the features from the jhindin branch, and laid out for Gradle. I have merged this into the [smarek](https://github.com/billthefarmer/mididriver/tree/smarek) branch.
+Android midi driver using Sonivox EAS library. The app and library are
+available [here](https://github.com/billthefarmer/mididriver/releases).
+
+Do not use or build 64 bit versions of this native library as Google
+have included broken 64 bit versions of libsonivox.so in devices and
+at least one emulator. Do not include other 64 bit native libraries in
+your app as this appears not to work. See
+[#15](https://github.com/billthefarmer/mididriver/issues/15),
+[#14](https://github.com/billthefarmer/mididriver/issues/14),
+[#11](https://github.com/billthefarmer/mididriver/issues/11).
+
+[smarek](https://github.com/smarek) has made a
+[fork](https://github.com/smarek/mididriver) of the latest master,
+merging some of the features from the jhindin branch, and laid out for
+Gradle. I have merged this into the
+[smarek](https://github.com/billthefarmer/mididriver/tree/smarek)
+branch.
 
 This branch (OpenSLES) contains a purely native version of the driver
 using OpenSLES. This is an attempt to resolve the
@@ -13,11 +29,11 @@ branch to this repository which is a merge of
 [jhindin/mididriver](https://github.com/jhindin/mididriver). Do not
 use this branch as it is not up to date. He has made these changes:
 
-  1. The source file tree has been rearranged to fit Android Studio/Gradle integration structure
-  2. Linking with SoniVox library deferred to the launch time - in this way, there is no need to pull sonivox libraries from all potential platforms just to build the system
-
-Android midi driver using Sonivox EAS library. The app and library are
-available [here](https://github.com/billthefarmer/mididriver/releases).
+  1. The source file tree has been rearranged to fit Android
+     Studio/Gradle integration structure
+  2. Linking with SoniVox library deferred to the launch time - in
+     this way, there is no need to pull sonivox libraries from all
+     potential platforms just to build the system
 
 I have removed the event queue as per the comment by akdmia because it
 is not necessary. Contention is handled by using a mutex in the native
