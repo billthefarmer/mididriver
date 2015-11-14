@@ -18,8 +18,10 @@ Gradle. I have merged this into the
 [smarek](https://github.com/billthefarmer/mididriver/tree/smarek)
 branch.
 
-This branch (OpenSLES) contains a purely native version of the driver
-using OpenSLES. This is an attempt to resolve the
+The
+[OpenSLES](https://github.com/billthefarmer/mididriver/tree/OpenSLES)
+branch contains a purely native version of the driver using
+OpenSLES. This is an attempt to resolve the
 [choppy sound issue](https://github.com/billthefarmer/mididriver/issues/12)
 reported by [smarek](https://github.com/smarek). Now merged to master.
 
@@ -36,12 +38,12 @@ use this branch as it is not up to date. He has made these changes:
      potential platforms just to build the system
 
 I have removed the event queue as per the comment by akdmia because it
-is not necessary. Contention is handled by using a mutex in the native
-code. I have only tested this with this app, not with an extended
-event stream.  The app just has a couple of buttons that play a couple
-of piano notes when touched. I've added two more buttons that play and
-stop a midi file using the MediaPlayer to check that there is no
-interaction problem. Added a listener for sending initial midi
+is no longer necessary. Contention is handled by using a mutex in the
+native code. I have only tested this with this app, not with an
+extended event stream.  The app just has a couple of buttons that play
+a couple of piano notes when touched. I've added two more buttons that
+play and stop a midi file using the MediaPlayer to check that there is
+no interaction problem. Added a listener for sending initial midi
 messages when the midi driver has started. Removed the handler for the
 listener as the callback is not on a driver thread. This project may
 be compiled as a library by changing the setting in project.properties
