@@ -3,6 +3,8 @@
 Android midi driver using Sonivox EAS library. The app and library are
 available [here](https://github.com/billthefarmer/mididriver/releases).
 
+Licensed under GPL or Apache license - your choice.
+
 Do not use or build 64 bit versions of this native library as Google
 have included broken 64 bit versions of libsonivox.so in devices and
 at least one emulator. Do not include other 64 bit native libraries in
