@@ -16,6 +16,13 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
+LOCAL_MODULE := libsonivox
+LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/libsonivox.so
+
+include $(PREBUILT_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+
 LOCAL_MODULE    := midi
 LOCAL_SRC_FILES := midi.cpp
 LOCAL_LDLIBS := -lOpenSLES -llog
