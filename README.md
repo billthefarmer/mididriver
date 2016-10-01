@@ -5,6 +5,12 @@ available [here](https://github.com/billthefarmer/mididriver/releases).
 
 Licensed under GPL or Apache license - your choice.
 
+Note that this driver will generate a wrning dialog on Android 7
+Nougat and above. The libsonivox library is no longer directly
+accessible. I have included copies of the library in the driver, but
+this ganerates problems due to use of libutils and libcutils by
+libsonivox.
+
 Do not use or build 64 bit versions of this native library as Google
 have included broken 64 bit versions of libsonivox.so in devices and
 at least one emulator. Do not include other 64 bit native libraries in
