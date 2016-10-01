@@ -5,7 +5,7 @@ available [here](https://github.com/billthefarmer/mididriver/releases).
 
 Licensed under GPL or Apache license - your choice.
 
-Note that this driver will generate a wrning dialog on Android 7
+Note that this driver will generate a warning dialog on Android 7
 Nougat and above. The libsonivox library is no longer directly
 accessible. I have included copies of the library in the driver, but
 this ganerates problems due to use of libutils and libcutils by
