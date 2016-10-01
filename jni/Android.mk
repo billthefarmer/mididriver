@@ -28,3 +28,17 @@ LOCAL_SRC_FILES := midi.cpp
 LOCAL_LDLIBS := -lOpenSLES -llog
 
 include $(BUILD_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE    := utils
+LOCAL_SRC_FILES := utils.cpp
+
+include $(BUILD_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE    := cutils
+LOCAL_SRC_FILES := cutils.cpp
+
+include $(BUILD_SHARED_LIBRARY)
