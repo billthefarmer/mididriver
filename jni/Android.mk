@@ -23,22 +23,36 @@ include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 
+LOCAL_MODULE := libcutils
+LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/libcutils.so
+
+include $(PREBUILT_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := libutils
+LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/libutils.so
+
+include $(PREBUILT_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+
 LOCAL_MODULE    := midi
 LOCAL_SRC_FILES := midi.cpp
 LOCAL_LDLIBS := -lOpenSLES -llog
 
 include $(BUILD_SHARED_LIBRARY)
 
-include $(CLEAR_VARS)
+# include $(CLEAR_VARS)
 
-LOCAL_MODULE    := utils
-LOCAL_SRC_FILES := utils.cpp
+# LOCAL_MODULE    := utils
+# LOCAL_SRC_FILES := utils.cpp
 
-include $(BUILD_SHARED_LIBRARY)
+# include $(BUILD_SHARED_LIBRARY)
 
-include $(CLEAR_VARS)
+# include $(CLEAR_VARS)
 
-LOCAL_MODULE    := cutils
-LOCAL_SRC_FILES := cutils.cpp
+# LOCAL_MODULE    := cutils
+# LOCAL_SRC_FILES := cutils.cpp
 
-include $(BUILD_SHARED_LIBRARY)
+# include $(BUILD_SHARED_LIBRARY)
