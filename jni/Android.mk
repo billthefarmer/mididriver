@@ -117,8 +117,8 @@ LOCAL_COPY_HEADERS := \
 # LOCAL_COPY_HEADERS += lib_src/ARM_synth_constants_gnu.inc
 # endif
 
-LOCAL_SHARED_LIBRARIES := \
-	libutils libcutils
+# LOCAL_SHARED_LIBRARIES := \
+# 	libutils libcutils
 
 include $(BUILD_SHARED_LIBRARY)
 
