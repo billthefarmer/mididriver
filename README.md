@@ -5,11 +5,9 @@ available [here](https://github.com/billthefarmer/mididriver/releases).
 
 Licensed under GPL or Apache license - your choice.
 
-Note that this driver will generate a warning dialog on Android 7
-Nougat and above. The libsonivox library is no longer directly
-accessible. I have included copies of the library in the driver, but
-this ganerates problems due to use of libutils and libcutils by
-libsonivox.
+Includes Sonivox EAS library rebuilt without spurious references to
+libutils and libcutils. The ARM versions have been build without the
+assembler source files as the NDK refuses to assemble one of them.
 
 Do not use or build 64 bit versions of this native library as Google
 have included broken 64 bit versions of libsonivox.so in devices and
@@ -25,25 +23,6 @@ merging some of the features from the jhindin branch, and laid out for
 Gradle. I have merged this into the
 [smarek](https://github.com/billthefarmer/mididriver/tree/smarek)
 branch.
-
-The
-[OpenSLES](https://github.com/billthefarmer/mididriver/tree/OpenSLES)
-branch contains a purely native version of the driver using
-OpenSLES. This is an attempt to resolve the
-[choppy sound issue](https://github.com/billthefarmer/mididriver/issues/12)
-reported by [smarek](https://github.com/smarek). Now merged to master.
-
-I have added a
-[jhindin](https://github.com/billthefarmer/mididriver/tree/jhindin)
-branch to this repository which is a merge of
-[jhindin/mididriver](https://github.com/jhindin/mididriver). Do not
-use this branch as it is not up to date. He has made these changes:
-
-  1. The source file tree has been rearranged to fit Android
-     Studio/Gradle integration structure
-  2. Linking with SoniVox library deferred to the launch time - in
-     this way, there is no need to pull sonivox libraries from all
-     potential platforms just to build the system
 
 I have removed the event queue as per the comment by akdmia because it
 is no longer necessary. Contention is handled by using a mutex in the
