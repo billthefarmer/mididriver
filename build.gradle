@@ -20,35 +20,14 @@ model {
         }
     }
 
-    repositories {
-        libs(PrebuiltLibraries) {
-            sonivox {
-                binaries.withType(SharedLibraryBinary) {
-                    sharedLibraryFile = file("src/main/jni/libs/${targetPlatform.getName()}/libsonivox.so")
-                }
-            }
-        }
-    }
-
-    android.sources {
-        main {
-            jniLibs {
-                dependencies {
-                    library "sonivox"
-                }
-            }
-        }
-    }
-
     android.compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
     }
-    android.ndk {
-        moduleName = "midi"
-        ldLibs.add('android')
-	ldLibs.add('log')
-	ldLibs.add('OpenSLES')
+    android.externalNativeBuild {
+    	ndkBuild {
+       	    path "src/main/jni/Android.mk"
+      	}
     }
     android.buildTypes {
         release {
