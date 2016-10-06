@@ -82,12 +82,12 @@ LOCAL_ARM_MODE := arm
 
 LOCAL_MODULE := libsonivox
 
-LOCAL_COPY_HEADERS_TO := libsonivox
-LOCAL_COPY_HEADERS := \
-	host_src/eas.h \
-	host_src/eas_types.h \
-	host_src/eas_reverb.h \
-	host_src/jet.h
+# LOCAL_COPY_HEADERS_TO := libsonivox
+# LOCAL_COPY_HEADERS := \
+# 	host_src/eas.h \
+# 	host_src/eas_types.h \
+# 	host_src/eas_reverb.h \
+# 	host_src/jet.h
 
 # ifeq ($(TARGET_ARCH),arm)
 # LOCAL_SRC_FILES+= \
@@ -126,6 +126,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := midi
 LOCAL_SRC_FILES := midi.cpp
+LOCAL_SHARED_LIBRARIES := sonivox
 LOCAL_LDLIBS := -lOpenSLES -llog
 
 include $(BUILD_SHARED_LIBRARY)

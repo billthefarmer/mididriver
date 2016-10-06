@@ -74,28 +74,6 @@ static SLObjectItf bqPlayerObject = NULL;
 static SLPlayItf bqPlayerPlay;
 static SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue;
 
-// EAS function pointers
-EAS_PUBLIC const S_EAS_LIB_CONFIG *(*pEAS_Config) (void);
-EAS_PUBLIC EAS_RESULT (*pEAS_Init) (EAS_DATA_HANDLE *ppEASData);
-EAS_PUBLIC EAS_RESULT (*pEAS_SetParameter) (EAS_DATA_HANDLE pEASData,
-					    EAS_I32 module,
-					    EAS_I32 param,
-					    EAS_I32 value);
-EAS_PUBLIC EAS_RESULT (*pEAS_OpenMIDIStream) (EAS_DATA_HANDLE pEASData,
-					      EAS_HANDLE *pStreamHandle,
-                                              EAS_HANDLE streamHandle);
-EAS_PUBLIC EAS_RESULT (*pEAS_Shutdown) (EAS_DATA_HANDLE pEASData);
-EAS_PUBLIC EAS_RESULT (*pEAS_Render) (EAS_DATA_HANDLE pEASData,
-				      EAS_PCM *pOut,
-				      EAS_I32 numRequested,
-                                      EAS_I32 *pNumGenerated);
-EAS_PUBLIC EAS_RESULT (*pEAS_WriteMIDIStream)(EAS_DATA_HANDLE pEASData,
-					      EAS_HANDLE streamHandle,
-					      EAS_U8 *pBuffer,
-                                              EAS_I32 count);
-EAS_PUBLIC EAS_RESULT (*pEAS_CloseMIDIStream) (EAS_DATA_HANDLE pEASData,
-					       EAS_HANDLE streamHandle);
-
 // EAS data
 static EAS_DATA_HANDLE pEASData;
 const S_EAS_LIB_CONFIG *pLibConfig;
@@ -123,7 +101,7 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
 	// lock
 	pthread_mutex_lock(&mutex);
 
-	result = pEAS_Render(pEASData, buffer + count,
+	result = EAS_Render(pEASData, buffer + count,
 			     pLibConfig->mixBufferSize, &numGenerated);
 	// unlock
 	pthread_mutex_unlock(&mutex);      
@@ -298,7 +276,7 @@ EAS_RESULT initEAS()
     EAS_RESULT result;
 
     // get the library configuration
-    pLibConfig = pEAS_Config();
+    pLibConfig = EAS_Config();
     if (pLibConfig == NULL || pLibConfig->libVersion != LIB_VERSION)
 	return EAS_FAILURE;
 
@@ -307,17 +285,17 @@ EAS_RESULT initEAS()
 	NUM_BUFFERS;
 
     // init library
-    if ((result = pEAS_Init(&pEASData)) != EAS_SUCCESS)
+    if ((result = EAS_Init(&pEASData)) != EAS_SUCCESS)
         return result;
 
     // select reverb preset and enable
-    pEAS_SetParameter(pEASData, EAS_MODULE_REVERB, EAS_PARAM_REVERB_PRESET,
+    EAS_SetParameter(pEASData, EAS_MODULE_REVERB, EAS_PARAM_REVERB_PRESET,
                       EAS_PARAM_REVERB_CHAMBER);
-    pEAS_SetParameter(pEASData, EAS_MODULE_REVERB, EAS_PARAM_REVERB_BYPASS,
+    EAS_SetParameter(pEASData, EAS_MODULE_REVERB, EAS_PARAM_REVERB_BYPASS,
                       EAS_FALSE);
 
     // open midi stream
-    if (result = pEAS_OpenMIDIStream(pEASData, &midiHandle, NULL) !=
+    if (result = EAS_OpenMIDIStream(pEASData, &midiHandle, NULL) !=
         EAS_SUCCESS)
 	return result;
 
@@ -330,13 +308,13 @@ void shutdownEAS()
 
     if (midiHandle != NULL)
     {
-	pEAS_CloseMIDIStream(pEASData, midiHandle);
+	EAS_CloseMIDIStream(pEASData, midiHandle);
 	midiHandle = NULL;
     }
 
     if (pEASData != NULL)
     {
-	pEAS_Shutdown(pEASData);
+	EAS_Shutdown(pEASData);
 	pEASData = NULL;
     }
 }
@@ -446,7 +424,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_write(JNIEnv *env,
     // lock
     pthread_mutex_lock(&mutex);
 
-    result = pEAS_WriteMIDIStream(pEASData, midiHandle, buf, length);
+    result = EAS_WriteMIDIStream(pEASData, midiHandle, buf, length);
 
     // unlock
     pthread_mutex_unlock(&mutex);      
@@ -475,125 +453,4 @@ Java_org_billthefarmer_mididriver_MidiDriver_shutdown(JNIEnv *env,
     shutdownEAS();
 
     return JNI_TRUE;
-}
-
-jint JNI_OnLoad(JavaVM* vm, void* reserved)
-{
-    JNIEnv* env;
-
-    if (vm->GetEnv((void **)&env, JNI_VERSION_1_6) != JNI_OK)
-    {
-        return -1;
-    }
-
-    jclass linkageErrorClass =
-	env->FindClass("java/lang/LinkageError");
-    if (linkageErrorClass == NULL)
-    {
-        LOG_E(LOG_TAG, "Failed to resolve java/lang/LinkageError");
-        return -1;
-    }
-
-    void *libHandler;
-
-    LOG_I(LOG_TAG, "Init function called");
-
-    libHandler = dlopen("libsonivox.so", RTLD_LAZY);
-    if (!libHandler)
-    {
-        env->ThrowNew(linkageErrorClass, "dlopen libsonivox.so failed");
-        return -1;
-    }
-
-    else
-    {
-        LOG_I(LOG_TAG, "dlopen libsonivox.so passed");
-    }
-
-    pEAS_Config = (EAS_PUBLIC const S_EAS_LIB_CONFIG *(*) (void))
-	dlsym(libHandler, "EAS_Config");
-    if (!pEAS_Config)
-    {
-        env->ThrowNew(linkageErrorClass, "EAS_Config resolution failed");
-        return -1;
-    }
-    
-    pEAS_Init = (EAS_PUBLIC EAS_RESULT (*) (EAS_DATA_HANDLE *ppEASData))
-	dlsym(libHandler, "EAS_Init");
-    if (!pEAS_Config)
-    {
-        env->ThrowNew(linkageErrorClass, "EAS_Init resolution failed");
-        return -1;
-    }
-      
-    pEAS_SetParameter = 
-        (EAS_PUBLIC EAS_RESULT (*) (EAS_DATA_HANDLE pEASData,
-				    EAS_I32 module,
-				    EAS_I32 param,
-				    EAS_I32 value))
-        dlsym(libHandler, "EAS_SetParameter");
-    if (!pEAS_SetParameter)
-    {
-        env->ThrowNew(linkageErrorClass,
-		      "EAS_SetParameter resolution failed");
-        return -1;
-    }
-    
-    pEAS_OpenMIDIStream = 
-        (EAS_PUBLIC EAS_RESULT (*) (EAS_DATA_HANDLE pEASData,
-				    EAS_HANDLE *pStreamHandle,
-				    EAS_HANDLE streamHandle))
-        dlsym(libHandler, "EAS_OpenMIDIStream");
-    if (!pEAS_OpenMIDIStream)
-    {
-        env->ThrowNew(linkageErrorClass,
-		      "EAS_OpenMIDIStream resolution failed");
-        return -1;
-    }
-
-    pEAS_Shutdown = (EAS_PUBLIC EAS_RESULT (*) (EAS_DATA_HANDLE pEASData))
-	dlsym(libHandler, "EAS_Shutdown");
-    if (!pEAS_Shutdown) {
-        env->ThrowNew(linkageErrorClass,
-		      "EAS_Shutdown resolution failed");
-        return -1;
-    }
-
-    pEAS_Render =
-        (EAS_PUBLIC EAS_RESULT (*) (EAS_DATA_HANDLE pEASData,
-				    EAS_PCM *pOut,
-				    EAS_I32 numRequested,
-                                    EAS_I32 *pNumGenerated))
-        dlsym(libHandler, "EAS_Render");
-    if (!pEAS_Render)
-    {
-        env->ThrowNew(linkageErrorClass, "EAS_Render resolution failed");
-        return -1;
-    }
-    
-    pEAS_WriteMIDIStream = (EAS_PUBLIC EAS_RESULT (*)(EAS_DATA_HANDLE pEASData,
-						      EAS_HANDLE streamHandle,
-						      EAS_U8 *pBuffer,
-                                                      EAS_I32 count))
-        dlsym(libHandler, "EAS_WriteMIDIStream");
-    if (!pEAS_WriteMIDIStream)
-    {
-        env->ThrowNew(linkageErrorClass,
-		      "EAS_WriteMIDIStream resolution failed");
-        return -1;
-    }
-
-    pEAS_CloseMIDIStream = (EAS_PUBLIC EAS_RESULT (*) (EAS_DATA_HANDLE pEASData,
-						       EAS_HANDLE streamHandle))
-        dlsym(libHandler, "EAS_CloseMIDIStream");
-    if (!pEAS_CloseMIDIStream
-	) {
-        env->ThrowNew(linkageErrorClass,
-		      "EAS_CloseMIDIStream resolution failed");
-        return -1;
-    }
-
-    LOG_I(LOG_TAG, "Init function passed");
-
-    return JNI_VERSION_1_6;
 }
