@@ -36,9 +36,9 @@ LOCAL_SRC_FILES = \
 	lib_src/eas_public.c \
 	lib_src/eas_reverb.c \
 	lib_src/eas_reverbdata.c \
-	lib_src/eas_voicemgt.c \
 	lib_src/eas_smf.c \
 	lib_src/eas_smfdata.c \
+	lib_src/eas_voicemgt.c \
 	lib_src/eas_wtengine.c \
 	lib_src/eas_wtsynth.c \
 	lib_src/wt_22khz.c \
