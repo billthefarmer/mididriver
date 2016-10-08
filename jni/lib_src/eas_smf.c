@@ -1049,10 +1049,15 @@ EAS_RESULT SMF_ParseHeader (EAS_HW_DATA_HANDLE hwInstData, S_SMF_DATA *pSMFData)
     EAS_RESULT result;
     EAS_I32 i;
     EAS_U16 division;
+    EAS_U16 numStreams;
     EAS_U32 chunkSize;
     EAS_U32 chunkStart;
     EAS_U32 temp;
     EAS_U32 ticks;
+
+    /* explicitly set numStreams to 0. It will later be used by SMF_Close to
+     * determine whether we have valid streams or not. */
+    pSMFData->numStreams = 0;
 
     /* rewind the file and find the end of the header chunk */
     if ((result = EAS_HWFileSeek(hwInstData, pSMFData->fileHandle, pSMFData->fileOffset + SMF_OFS_HEADER_SIZE)) != EAS_SUCCESS)
@@ -1063,15 +1068,15 @@ EAS_RESULT SMF_ParseHeader (EAS_HW_DATA_HANDLE hwInstData, S_SMF_DATA *pSMFData)
     /* determine the number of tracks */
     if ((result = EAS_HWFileSeek(hwInstData, pSMFData->fileHandle, pSMFData->fileOffset + SMF_OFS_NUM_TRACKS)) != EAS_SUCCESS)
         goto ReadError;
-    if ((result = EAS_HWGetWord(hwInstData, pSMFData->fileHandle, &pSMFData->numStreams, EAS_TRUE)) != EAS_SUCCESS)
+    if ((result = EAS_HWGetWord(hwInstData, pSMFData->fileHandle, &numStreams, EAS_TRUE)) != EAS_SUCCESS)
         goto ReadError;
 
     /* limit the number of tracks */
-    if (pSMFData->numStreams > MAX_SMF_STREAMS)
+    if (numStreams > MAX_SMF_STREAMS)
     {
-        { /* dpp: EAS_ReportEx(_EAS_SEVERITY_WARNING, "SMF file contains %u tracks, playing %d tracks\n", pSMFData->numStreams, MAX_SMF_STREAMS); */ }
-        pSMFData->numStreams = MAX_SMF_STREAMS;
-    } else if (pSMFData->numStreams == 0)
+        { /* dpp: EAS_ReportEx(_EAS_SEVERITY_WARNING, "SMF file contains %u tracks, playing %d tracks\n", numStreams, MAX_SMF_STREAMS); */ }
+        numStreams = MAX_SMF_STREAMS;
+    } else if (numStreams == 0)
     {
         /* avoid 0 sized allocation */
         return EAS_ERROR_PARAMETER_RANGE;
@@ -1092,13 +1097,14 @@ EAS_RESULT SMF_ParseHeader (EAS_HW_DATA_HANDLE hwInstData, S_SMF_DATA *pSMFData)
     /* dynamic memory allocation, allocate memory for streams */
     if (pSMFData->streams == NULL)
     {
-        pSMFData->streams = EAS_HWMalloc(hwInstData,sizeof(S_SMF_STREAM) * pSMFData->numStreams);
+        pSMFData->streams = EAS_HWMalloc(hwInstData,sizeof(S_SMF_STREAM) * numStreams);
         if (pSMFData->streams == NULL)
             return EAS_ERROR_MALLOC_FAILED;
 
         /* zero the memory to insure complete initialization */
-        EAS_HWMemSet((void *)(pSMFData->streams), 0, sizeof(S_SMF_STREAM) * pSMFData->numStreams);
+        EAS_HWMemSet((void *)(pSMFData->streams), 0, sizeof(S_SMF_STREAM) * numStreams);
     }
+    pSMFData->numStreams = numStreams;
 
     /* find the start of each track */
     chunkStart = (EAS_U32) pSMFData->fileOffset;

@@ -25,7 +25,7 @@
 @	PASSED IN: r1
 @****************************************************************
 
-	.include	"ARM_synth_constants_gnu.inc"
+	#include	"ARM_synth_constants_gnu.inc"
 
 	.arm
 	.text

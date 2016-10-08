@@ -123,6 +123,8 @@ LOCAL_MODULE := libsonivox
 # LOCAL_SHARED_LIBRARIES := \
 # 	libutils libcutils
 
+LOCAL_LDLIBS := -llog
+
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)

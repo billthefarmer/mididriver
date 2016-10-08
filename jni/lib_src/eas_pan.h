@@ -31,7 +31,7 @@
  *----------------------------------------------------------------------------
 */
 
-#ifndef EAS_PAN_H
+#ifndef _EAS_PAN_H
 #define _EAS_PAN_H
 
 #include "eas_types.h"
@@ -62,5 +62,5 @@
 */
 void EAS_CalcPanControl (EAS_INT pan, EAS_I16 *pGainLeft, EAS_I16 *pGainRight);
 
-#endif
+#endif /* #ifndef _EAS_PAN_H */
 

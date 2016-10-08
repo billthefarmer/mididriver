@@ -282,10 +282,16 @@ static EAS_RESULT JetParseInfoChunk (EAS_DATA_HANDLE easHandle, EAS_I32 pos, EAS
         switch (infoType)
         {
             case INFO_NUM_SMF_CHUNKS:
+                if (temp >= JET_MAX_SEGMENTS) {
+                    return EAS_ERROR_INCOMPATIBLE_VERSION;
+                }
                 easHandle->jetHandle->numSegments = (EAS_U8) temp;
                 break;
 
             case INFO_NUM_DLS_CHUNKS:
+                if (temp >= JET_MAX_DLS_COLLECTIONS) {
+                    return EAS_ERROR_INCOMPATIBLE_VERSION;
+                }
                 easHandle->jetHandle->numLibraries = (EAS_U8) temp;
                 break;
 

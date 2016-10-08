@@ -835,7 +835,7 @@ void VMUpdateMIPTable (S_VOICE_MGR *pVoiceMgr, S_SYNTH *pSynth)
         /* when 2 or more channels have the same MIP setting, they
          * share a common voice pool
          */
-        if (pChannel->mip == currentMIP)
+        if (pChannel->mip == currentMIP && currentPool != -1)
             pChannel->pool = (EAS_U8) currentPool;
 
         /* new voice pool */

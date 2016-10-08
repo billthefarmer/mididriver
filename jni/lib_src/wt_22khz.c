@@ -1389,7 +1389,8 @@ const S_BANK eas_banks[] =
  *----------------------------------------------------------------------------
 */
 
-const EAS_SAMPLE eas_samples[] =
+/* NOTE: this array should have size of at least eas_sampleOffsets[last_element] + eas_sampleLengths[last_element] */
+const EAS_SAMPLE eas_samples[0x00033cbd + 20] =
 {
        0,    0,   -3,   -4,   -6,   -8,  -10,  -12,  -12,  -11,   -8,   -3,    3,    7,   10,   14,
       16,   16,   15,   12,    9,    4,   -4,  -12,  -18,  -21,  -21,  -19,  -18,  -15,  -10,   -3,
@@ -14647,6 +14648,7 @@ const EAS_SAMPLE eas_samples[] =
      127,  127
 };
 
+/* NOTE: update eas_samples when this array is changed */
 const EAS_U32 eas_sampleLengths[] =
 {
     16820, 16708, 16592, 11754, 10954, 10295, 9922, 7489,
@@ -14670,6 +14672,7 @@ const EAS_U32 eas_sampleLengths[] =
     22, 21, 21, 21, 21, 20
 };
 
+/* NOTE: update eas_samples when this array is changed */
 const EAS_U32 eas_sampleOffsets[] =
 {
     0x00000000, 0x000041b4, 0x000082f8, 0x0000c3c8, 0x0000f1b2, 0x00011c7c, 0x000144b3, 0x00016b75,

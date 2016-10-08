@@ -90,7 +90,7 @@
 @ handle a struct in a compatible fashion. Switching to old fashion EQU
 @
 
-    .ifdef FILTER_ENABLED
+    .if FILTER_ENABLED
 @**************************************
 @ typedef struct s_filter_tag
     .equ    m_z1, 0
@@ -102,7 +102,7 @@
     .equ    m_gainTarget, 0
     .equ    m_phaseIncrement, 4
 
-    .ifdef FILTER_ENABLED
+    .if FILTER_ENABLED
     .equ    m_k, 8
     .equ    m_b1, 12
     .equ    m_b2, 16
@@ -125,7 +125,7 @@
     .equ    m_pPhaseAccum, 8    @ /* points to first sample at start of loop */
     .equ    m_phaseFrac, 12 @ /* points to first sample at start of loop */
 
-    .ifdef STEREO_OUTPUT
+    .if STEREO_OUTPUT
     .equ    m_gainLeft, 16  @ /* current gain, left ch  */
     .equ    m_gainRight, 18 @ /* current gain, right ch */
     .endif
