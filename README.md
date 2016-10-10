@@ -10,7 +10,7 @@ libutils and libcutils. The ARM versions have been build without the
 assembler source files as the NDK refuses to assemble one of them.
 
 Google have fixed the 64 bit reverb bug:
-[mididriver is not working on the device of arm64-v8a #15](https://github.com/billthefarmer/mididriver/issues/15),
+[#15](https://github.com/billthefarmer/mididriver/issues/15) -
 [Fix math functions for 64-bit](https://github.com/android/platform_external_sonivox/commit/d216e303f65f5e36ffba92d342a8c61f753c98d7). The
 driver now works correctly on 64 bit devices.
 
