@@ -61,7 +61,7 @@ LOCAL_SRC_FILES = \
 #	lib_src/eas_wavefile.c \
 #	lib_src/eas_wavefiledata.c \
 
-LOCAL_CFLAGS+= -O2 -std=gnu99 -D UNIFIED_DEBUG_MESSAGES \
+LOCAL_CFLAGS += -O2 -std=gnu99 -D UNIFIED_DEBUG_MESSAGES \
 	-D EAS_WT_SYNTH -D NUM_OUTPUT_CHANNELS=2 \
 	-D _SAMPLE_RATE_22050 -D MAX_SYNTH_VOICES=64 \
 	-D _8_BIT_SAMPLES -D _FILTER_ENABLED \
@@ -77,7 +77,7 @@ LOCAL_CFLAGS+= -O2 -std=gnu99 -D UNIFIED_DEBUG_MESSAGES \
 # -D _IMA_DECODER (needed for IMA-ADPCM wave files)
 # -D _CHORUS_ENABLED
 
-LOCAL_C_INCLUDES:= \
+LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/host_src \
 	$(LOCAL_PATH)/lib_src
 
@@ -85,40 +85,40 @@ LOCAL_ARM_MODE := arm
 
 LOCAL_MODULE := libsonivox
 
-# LOCAL_COPY_HEADERS_TO := libsonivox
-# LOCAL_COPY_HEADERS := \
-# 	host_src/eas.h \
-# 	host_src/eas_types.h \
-# 	host_src/eas_reverb.h \
-# 	host_src/jet.h
+LOCAL_COPY_HEADERS_TO := libsonivox
+LOCAL_COPY_HEADERS := \
+	host_src/eas.h \
+	host_src/eas_types.h \
+	host_src/eas_reverb.h \
+	host_src/jet.h
 
-# ifeq ($(TARGET_ARCH),arm)
-# LOCAL_SRC_FILES+= \
-# 	lib_src/ARM-E_filter_gnu.s \
-# 	lib_src/ARM-E_interpolate_loop_gnu.s \
-# 	lib_src/ARM-E_interpolate_noloop_gnu.s \
-# 	lib_src/ARM-E_mastergain_gnu.s \
-# 	lib_src/ARM-E_voice_gain_gnu.s
+ifeq ($(TARGET_ARCH),arm)
+LOCAL_SRC_FILES += \
+	lib_src/ARM-E_filter_gnu.s \
+	lib_src/ARM-E_interpolate_loop_gnu.s \
+	lib_src/ARM-E_interpolate_noloop_gnu.s \
+	lib_src/ARM-E_mastergain_gnu.s \
+	lib_src/ARM-E_voice_gain_gnu.s
 
-# asm_flags := \
-# 	-I $(LOCAL_PATH)/lib_src \
-# 	--defsym SAMPLE_RATE_22050=1 \
-# 	--defsym STEREO_OUTPUT=1 \
-# 	--defsym FILTER_ENABLED=1 \
-# 	--defsym SAMPLES_8_BIT=1
+asm_flags := \
+	-I $(LOCAL_PATH)/lib_src \
+	--defsym SAMPLE_RATE_22050=1 \
+	--defsym STEREO_OUTPUT=1 \
+	--defsym FILTER_ENABLED=1 \
+	--defsym SAMPLES_8_BIT=1
 
-# LOCAL_ASFLAGS := \
-# 	$(foreach f,$(asm_flags),-Wa,"$(f)")
+LOCAL_CFLAGS += \
+	$(foreach f,$(asm_flags),-Wa,"$(f)")
 
 # .s files not ported for Clang assembler yet.
 # LOCAL_CLANG_ASFLAGS += -no-integrated-as
 
-# asm_flags :=
+asm_flags :=
 
-# LOCAL_CFLAGS += -D NATIVE_EAS_KERNEL
+LOCAL_CFLAGS += -D NATIVE_EAS_KERNEL
 
 # LOCAL_COPY_HEADERS += lib_src/ARM_synth_constants_gnu.inc
-# endif
+endif
 
 # LOCAL_SHARED_LIBRARIES := \
 # 	libutils libcutils
