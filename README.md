@@ -6,8 +6,8 @@ available [here](https://github.com/billthefarmer/mididriver/releases).
 Licensed under GPL or Apache license - your choice.
 
 Includes Sonivox EAS library rebuilt without spurious references to
-libutils and libcutils. The ARM versions have been build without the
-assembler source files as the NDK refuses to assemble one of them.
+libutils and libcutils. The ARM versions have been build with the
+assembler source files.
 
 Google have fixed the 64 bit reverb bug:
 [#15](https://github.com/billthefarmer/mididriver/issues/15) -
