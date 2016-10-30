@@ -131,6 +131,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := midi
 LOCAL_SRC_FILES := midi.cpp
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/host_src
 LOCAL_SHARED_LIBRARIES := sonivox
 LOCAL_LDLIBS := -lOpenSLES -llog
 
