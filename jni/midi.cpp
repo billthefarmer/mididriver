@@ -457,10 +457,10 @@ Java_org_billthefarmer_mididriver_MidiDriver_loadDLS(JNIEnv *env,
     file.length = 0;
 
     if (global)
-	result = pEAS_LoadDLSCollection(pEASData, NULL, &file);
+	result = EAS_LoadDLSCollection(pEASData, NULL, &file);
 
     else
-	result = pEAS_LoadDLSCollection(pEASData, midiHandle, &file);
+	result = EAS_LoadDLSCollection(pEASData, midiHandle, &file);
 
     env->ReleaseStringUTFChars(jpath, file.path);
 
