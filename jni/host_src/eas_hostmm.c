@@ -85,10 +85,11 @@
  */
 typedef struct eas_hw_file_tag
 {
-    int (*readAt)(void *handle, void *buf, int offset, int size);
-    int (*size)(void *handle);
-    int filePos;
-    void *handle;
+    EAS_I32 fileSize;
+    EAS_I32 filePos;
+    EAS_BOOL dup;
+    int fd;
+    EAS_I32 offset;
 } EAS_HW_FILE;
 
 typedef struct eas_hw_inst_data_tag
@@ -120,7 +121,7 @@ EAS_RESULT EAS_HWInit (EAS_HW_DATA_HANDLE *pHWInstData)
     file = (*pHWInstData)->files;
     for (i = 0; i < EAS_MAX_FILE_HANDLES; i++)
     {
-        file->handle = NULL;
+        file->fd = -1;
         file++;
     }
 
@@ -251,12 +252,42 @@ EAS_RESULT EAS_HWOpenFile (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_LOCATOR locat
     for (i = 0; i < EAS_MAX_FILE_HANDLES; i++)
     {
         /* is this slot being used? */
-        if (file->handle == NULL)
+        if (file->fd < 0)
         {
-            file->handle = locator->handle;
-            file->readAt = locator->readAt;
-            file->size = locator->size;
+            if (locator->path) {
+                /* open the file */
+                if ((fd = open(locator->path, O_RDONLY)) < 0) {
+                    return EAS_ERROR_FILE_OPEN_FAILED;
+                }
+            } else {
+                /* else file is already open */
+                fd = dup(locator->fd);
+            }
+
+            /* determine the file size */
+            if (locator->length == 0) {
+                if (lseek(fd, 0, SEEK_END) < 0) {
+                    close(fd);
+                    return EAS_ERROR_FILE_LENGTH;
+                }
+                if ((file->fileSize = lseek(fd, 0, SEEK_CUR)) == -1L) {
+                    close(fd);
+                    return EAS_ERROR_FILE_LENGTH;
+                }
+            }
+
+            // file size was passed in
+            else {
+                file->fileSize = (EAS_I32) locator->length;
+            }
+
+            file->fd = fd;
+            file->offset = locator->offset;
+
+            /* initialize some values */
             file->filePos = 0;
+            file->dup = EAS_FALSE;
+
             *pFile = file;
             return EAS_SUCCESS;
         }
@@ -282,14 +313,14 @@ EAS_RESULT EAS_HWReadFile (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE file, 
     EAS_I32 count;
 
     /* make sure we have a valid handle */
-    if (file->handle == NULL)
+    if (file->fd < 0)
         return EAS_ERROR_INVALID_HANDLE;
 
     if (n < 0)
       return EAS_EOF;
 
     /* calculate the bytes to read */
-    count = file->size(file->handle) - file->filePos;
+    count = file->fileSize - file->filePos;
     if (n < count)
         count = n;
     if (count < 0)
@@ -297,7 +328,8 @@ EAS_RESULT EAS_HWReadFile (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE file, 
 
     /* copy the data to the requested location, and advance the pointer */
     if (count) {
-        count = file->readAt(file->handle, pBuffer, file->filePos, count);
+        lseek(file->fd, file->filePos + file->offset, SEEK_SET);
+        count = read(file->fd, pBuffer, count);
     }
     file->filePos += count;
     *pBytesRead = count;
@@ -398,7 +430,7 @@ EAS_RESULT EAS_HWFilePos (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE file, E
 {
 
     /* make sure we have a valid handle */
-    if (file->handle == NULL)
+    if (file->fd < 0)
         return EAS_ERROR_INVALID_HANDLE;
 
     *pPosition = file->filePos;
@@ -418,11 +450,11 @@ EAS_RESULT EAS_HWFileSeek (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE file, 
 {
 
     /* make sure we have a valid handle */
-    if (file->handle == NULL)
+    if (file->fd < 0)
         return EAS_ERROR_INVALID_HANDLE;
 
     /* validate new position */
-    if ((position < 0) || (position > file->size(file->handle)))
+    if ((position < 0) || (position > file->fileSize))
         return EAS_ERROR_FILE_SEEK;
 
     /* save new position */
@@ -443,12 +475,12 @@ EAS_RESULT EAS_HWFileSeekOfs (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE fil
 {
 
     /* make sure we have a valid handle */
-    if (file->handle == NULL)
+    if (file->fd < 0)
         return EAS_ERROR_INVALID_HANDLE;
 
     /* determine the file position */
     position += file->filePos;
-    if ((position < 0) || (position > file->size(file->handle)))
+    if ((position < 0) || (position > file->fileSize))
         return EAS_ERROR_FILE_SEEK;
 
     /* save new position */
@@ -456,6 +488,25 @@ EAS_RESULT EAS_HWFileSeekOfs (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE fil
     return EAS_SUCCESS;
 }
 
+/*----------------------------------------------------------------------------
+ *
+ * EAS_HWFileLength
+ *
+ * Return the file length
+ *
+ *----------------------------------------------------------------------------
+*/
+/*lint -esym(715, hwInstData) hwInstData available for customer use */
+EAS_RESULT EAS_HWFileLength (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE file, EAS_I32 *pLength)
+{
+
+    /* make sure we have a valid handle */
+    if (file->fd < 0)
+        return EAS_ERROR_INVALID_HANDLE;
+
+    *pLength = file->fileSize;
+    return EAS_SUCCESS;
+}
 
 /*----------------------------------------------------------------------------
  *
@@ -471,7 +522,7 @@ EAS_RESULT EAS_HWDupHandle (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE file,
     int i;
 
     /* make sure we have a valid handle */
-    if (file->handle == NULL)
+    if (file->fd < 0)
         return EAS_ERROR_INVALID_HANDLE;
 
     /* find an empty entry in the file table */
@@ -479,13 +530,16 @@ EAS_RESULT EAS_HWDupHandle (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE file,
     for (i = 0; i < EAS_MAX_FILE_HANDLES; i++)
     {
         /* is this slot being used? */
-        if (dupFile->handle == NULL)
+        if (dupFile->fd < 0)
         {
             /* copy info from the handle to be duplicated */
-            dupFile->handle = file->handle;
             dupFile->filePos = file->filePos;
-            dupFile->readAt = file->readAt;
-            dupFile->size = file->size;
+            dupFile->fileSize = file->fileSize;
+            dupFile->fd = file->fd;
+            dupFile->offset = file->offset;
+
+            /* set the duplicate handle flag */
+            dupFile->dup = file->dup = EAS_TRUE;
 
             *pDupFile = dupFile;
             return EAS_SUCCESS;
@@ -512,10 +566,50 @@ EAS_RESULT EAS_HWCloseFile (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE file1
 
 
     /* make sure we have a valid handle */
-    if (file1->handle == NULL)
+    if (file1->fd < 0)
         return EAS_ERROR_INVALID_HANDLE;
 
-    file1->handle = NULL;
+    /* check for duplicate handle */
+    if (file1->dup)
+    {
+        dupFile = NULL;
+        file2 = hwInstData->files;
+        for (i = 0; i < EAS_MAX_FILE_HANDLES; i++)
+        {
+            /* check for duplicate */
+            if ((file1 != file2) && (file2->fd == file1->fd))
+            {
+                /* is there more than one duplicate? */
+                if (dupFile != NULL)
+                {
+                    /* clear this entry and return */
+                    file1->fd = -1;
+                    return EAS_SUCCESS;
+                }
+
+                /* this is the first duplicate found */
+                else
+                    dupFile = file2;
+            }
+            file2++;
+        }
+
+        /* there is only one duplicate, clear the dup flag */
+        if (dupFile)
+            dupFile->dup = EAS_FALSE;
+        else
+            /* if we get here, there's a serious problem */
+            return EAS_ERROR_HANDLE_INTEGRITY;
+
+        /* clear this entry and return */
+        file1->fd = -1;
+        return EAS_SUCCESS;
+    }
+
+    /* no duplicates - close the file */
+    close(file1->fd);
+    /* clear this entry and return */
+    file1->fd = -1;
     return EAS_SUCCESS;
 }
 
