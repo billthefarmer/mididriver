@@ -94,6 +94,7 @@ public class MidiDriver
     public  native int[]   config();
     public  native boolean write(byte a[]);
     private native boolean shutdown();
+    public  native boolean loadDLS(String path, boolean global);
 
     // Load midi library
 

@@ -39,6 +39,14 @@ JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_write
 JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_shutdown
   (JNIEnv *, jobject);
 
+/*
+ * Class:     org_billthefarmer_mididriver_MidiDriver
+ * Method:    loadDLS
+ * Signature: (Ljava/lang/String;Z)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_loadDLS
+  (JNIEnv *, jobject, jstring, jboolean);
+
 #ifdef __cplusplus
 }
 #endif

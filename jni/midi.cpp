@@ -437,6 +437,42 @@ Java_org_billthefarmer_mididriver_MidiDriver_write(JNIEnv *env,
     return JNI_TRUE;
 }
 
+// midi load dls
+jboolean
+Java_org_billthefarmer_mididriver_MidiDriver_loadDLS(JNIEnv *env,
+						     jobject obj,
+						     jstring jpath,
+						     jboolean global)
+{
+    jboolean isCopy;
+    EAS_RESULT result;
+    EAS_FILE file;
+
+    if (pEASData == NULL || midiHandle == NULL)
+	return JNI_FALSE;
+
+    file.path = env->GetStringUTFChars(jpath, &isCopy);
+    file.fd = 0;
+    file.offset = 0;
+    file.length = 0;
+
+    if (global)
+	result = pEAS_LoadDLSCollection(pEASData, NULL, &file);
+
+    else
+	result = pEAS_LoadDLSCollection(pEASData, midiHandle, &file);
+
+    env->ReleaseStringUTFChars(jpath, file.path);
+
+    if (result != EAS_SUCCESS)
+    {
+	LOG_E(LOG_TAG, "Load DLS collection failed: %ld", result);
+	return JNI_FALSE;
+    }
+
+    return JNI_TRUE;
+}
+
 // shutdown EAS midi
 jboolean
 Java_org_billthefarmer_mididriver_MidiDriver_shutdown(JNIEnv *env,
