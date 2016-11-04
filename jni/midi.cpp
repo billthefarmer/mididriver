@@ -46,6 +46,8 @@
 
 #include "org_billthefarmer_mididriver_MidiDriver.h"
 
+#define DLS_SYNTHESIZER
+
 // for EAS midi
 #include "eas.h"
 #include "eas_reverb.h"
