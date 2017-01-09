@@ -7,11 +7,23 @@ buildscript {
     }
 }
 
-apply plugin: 'android-library'
+apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 'android-17'
-    buildToolsVersion '25.0.0'
+    compileSdkVersion 22
+    buildToolsVersion '24.0.2'
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 22
+    }
+
+    buildTypes {
+	release {
+	    minifyEnabled = false
+	    proguardFiles.add(file('proguard-rules.txt'))
+	}
+    }
 
     externalNativeBuild {
         ndkBuild {

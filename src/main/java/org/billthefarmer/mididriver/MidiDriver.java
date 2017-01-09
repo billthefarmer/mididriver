@@ -51,41 +51,41 @@ public class MidiDriver
 
     public void start()
     {
-	if (init() != true)
-	    return;
+        if (init() != true)
+            return;
 
-	// Call listener
+        // Call listener
 
-	if (listener != null)
-	    listener.onMidiStart();
+        if (listener != null)
+            listener.onMidiStart();
     }
 
     // Queue event
 
     public void queueEvent(byte[] event)
     {
-	write(event);
+        write(event);
     }
 
     // Stop
 
     public void stop()
     {
-	shutdown();
+        shutdown();
     }
 
     // Set listener
 
     public void setOnMidiStartListener(OnMidiStartListener l)
     {
-	listener = l;
+        listener = l;
     }
 
     // Listener interface
 
     public interface OnMidiStartListener
     {
-	public abstract void onMidiStart();
+        public abstract void onMidiStart();
     }
 
     // Native midi methods
@@ -99,6 +99,6 @@ public class MidiDriver
 
     static
     {
-	System.loadLibrary("midi");
+        System.loadLibrary("midi");
     }
 }
