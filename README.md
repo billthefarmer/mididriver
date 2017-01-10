@@ -27,7 +27,7 @@ allprojects {
 and:
 ```gradle
 dependencies {
-    compile 'com.github.billthefarmer:mididriver:1.11'
+  compile 'com.github.billthefarmer:mididriver:v1.11'
 }
 ```
 ### Methods
