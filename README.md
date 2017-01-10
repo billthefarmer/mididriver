@@ -1,8 +1,8 @@
 # Midi Driver [![Build Status](https://travis-ci.org/billthefarmer/mididriver.svg?branch=master)](https://travis-ci.org/billthefarmer/mididriver) [![](https://jitpack.io/v/billthefarmer/mididriver.svg)](https://jitpack.io/#billthefarmer/mididriver)
 
 Android midi driver using Sonivox EAS library. The library is
-available
-[here](https://github.com/billthefarmer/mididriver/releases).
+available in
+[Releases](https://github.com/billthefarmer/mididriver/releases).
 
 Licensed under GPL or Apache license - your choice.
 
@@ -14,6 +14,9 @@ Google have fixed the 64 bit reverb bug:
 [#15](https://github.com/billthefarmer/mididriver/issues/15) -
 [Fix math functions for 64-bit](https://github.com/android/platform_external_sonivox/commit/d216e303f65f5e36ffba92d342a8c61f753c98d7). The
 driver now works correctly on 64 bit devices.
+
+The [MidiTest](https://github.com/billthefarmer/miditest) app is now
+in a separate repository.
 
 Add the driver to your build.gradle with
 ```gradle
