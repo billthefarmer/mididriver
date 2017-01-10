@@ -5,14 +5,13 @@ android:
     - platform-tools
     - tools
 
-    - build-tools-23.0.2
+    - build-tools-24.0.2
 
-    - android-17
+    - android-25
 
 before_install:
-  - git clone https://github.com/urho3d/android-ndk.git $HOME/android-ndk
-  - export ANDROID_NDK_HOME=$HOME/android-ndk
+  - git clone https://github.com/urho3d/android-ndk.git $HOME/android-ndk-home
+  - export ANDROID_NDK_HOME=$HOME/android-ndk-home
 
 script:
-  - $ANDROID_NDK_HOME/ndk-build
-  - ant release
+  - ./gradlew build
