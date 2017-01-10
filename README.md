@@ -18,10 +18,10 @@ driver now works correctly on 64 bit devices.
 Add the driver to your build.gradle with
 ```gradle
 allprojects {
- repositories {
+  repositories {
     jcenter()
     maven { url "https://jitpack.io" }
- }
+  }
 }
 ```
 and:
