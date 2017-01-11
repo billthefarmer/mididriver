@@ -35,7 +35,8 @@
 
 package org.billthefarmer.mididriver;
 
-public class GeneralMidiConstants {
+public class GeneralMidiConstants
+{
 
     public static final byte ACOUSTIC_GRAND_PIANO           = 0;
     public static final byte BRIGHT_ACOUSTIC_PIANO          = 1;
@@ -102,7 +103,7 @@ public class GeneralMidiConstants {
     public static final byte SYNTHBRASS_0                   = 62;
     public static final byte SYNTHBRASS_1                   = 63;
     public static final byte SOPRANO                        = 64;
-    public static final byte ALTO_SAX                       = 65;         
+    public static final byte ALTO_SAX                       = 65;
     public static final byte TENOR_SAX                      = 66;
     public static final byte BARITONE_SAX                   = 67;
     public static final byte OBOE                           = 68;
