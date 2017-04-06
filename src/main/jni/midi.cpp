@@ -297,7 +297,7 @@ EAS_RESULT initEAS()
                      EAS_FALSE);
 
     // open midi stream
-    if (result = EAS_OpenMIDIStream(pEASData, &midiHandle, NULL) !=
+    if ((result = EAS_OpenMIDIStream(pEASData, &midiHandle, NULL)) !=
                  EAS_SUCCESS)
         return result;
 
@@ -328,7 +328,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
 {
     EAS_RESULT result;
 
-    if (result = initEAS() != EAS_SUCCESS)
+    if ((result = initEAS()) != EAS_SUCCESS)
     {
         shutdownEAS();
 
@@ -351,7 +351,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
     }
 
     // create the engine and output mix objects
-    if (result = createEngine() != SL_RESULT_SUCCESS)
+    if ((result = createEngine()) != SL_RESULT_SUCCESS)
     {
         shutdownEAS();
         shutdownAudio();
@@ -364,7 +364,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
     }
 
     // create buffer queue audio player
-    if (result = createBufferQueueAudioPlayer() != SL_RESULT_SUCCESS)
+    if ((result = createBufferQueueAudioPlayer()) != SL_RESULT_SUCCESS)
     {
         shutdownEAS();
         shutdownAudio();
