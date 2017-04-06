@@ -439,6 +439,20 @@ Java_org_billthefarmer_mididriver_MidiDriver_write(JNIEnv *env,
     return JNI_TRUE;
 }
 
+// set eas master volume
+jboolean
+Java_org_billthefarmer_mididriver_MidiDriver_setVolume(JNIEnv *env,
+                                                   jobject obj,
+                                                   jint volume)
+{
+    if (pEASData == NULL || midiHandle == NULL)
+        return JNI_FALSE;
+
+    EAS_SetVolume(pEASData, NULL, (EAS_I32) volume);
+
+    return JNI_TRUE;
+}
+
 // shutdown EAS midi
 jboolean
 Java_org_billthefarmer_mididriver_MidiDriver_shutdown(JNIEnv *env,
