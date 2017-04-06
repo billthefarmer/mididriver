@@ -93,6 +93,13 @@ public class MidiDriver
     private native boolean init();
     public  native int[]   config();
     public  native boolean write(byte a[]);
+
+    /**
+     *
+     * @param volume master volume for EAS synthesizer (between 0 and 100)
+     * @return
+     */
+    public  native boolean setVolume(int volume);
     private native boolean shutdown();
 
     // Load midi library

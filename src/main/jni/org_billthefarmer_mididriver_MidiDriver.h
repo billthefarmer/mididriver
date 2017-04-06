@@ -31,6 +31,9 @@ JNIEXPORT jintArray JNICALL Java_org_billthefarmer_mididriver_MidiDriver_config
 JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_write
   (JNIEnv *, jobject, jbyteArray);
 
+JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_setVolume
+        (JNIEnv *, jobject, jint);
+
 /*
  * Class:     org_billthefarmer_mididriver_MidiDriver
  * Method:    shutdown
