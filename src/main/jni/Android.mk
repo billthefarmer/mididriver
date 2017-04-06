@@ -83,7 +83,7 @@ LOCAL_C_INCLUDES := \
 
 LOCAL_ARM_MODE := arm
 
-LOCAL_MODULE := libsonivox
+LOCAL_MODULE := synth
 
 # LOCAL_COPY_HEADERS_TO := libsonivox
 # LOCAL_COPY_HEADERS := \
@@ -132,7 +132,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE    := midi
 LOCAL_SRC_FILES := midi.cpp
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/host_src
-LOCAL_SHARED_LIBRARIES := sonivox
+LOCAL_SHARED_LIBRARIES := synth
 LOCAL_LDLIBS := -lOpenSLES -llog
 
 include $(BUILD_SHARED_LIBRARY)
