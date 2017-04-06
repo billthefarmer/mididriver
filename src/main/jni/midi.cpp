@@ -324,7 +324,7 @@ void shutdownEAS()
 // init mididriver
 jboolean
 Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
-        jobject obj)
+                                                  jobject obj)
 {
     EAS_RESULT result;
 
@@ -385,7 +385,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
 // midi config
 jintArray
 Java_org_billthefarmer_mididriver_MidiDriver_config(JNIEnv *env,
-        jobject obj)
+                                                    jobject obj)
 {
     jboolean isCopy;
 
@@ -409,8 +409,8 @@ Java_org_billthefarmer_mididriver_MidiDriver_config(JNIEnv *env,
 // midi write
 jboolean
 Java_org_billthefarmer_mididriver_MidiDriver_write(JNIEnv *env,
-        jobject obj,
-        jbyteArray byteArray)
+                                                   jobject obj,
+                                                   jbyteArray byteArray)
 {
     jboolean isCopy;
     EAS_RESULT result;
@@ -439,16 +439,21 @@ Java_org_billthefarmer_mididriver_MidiDriver_write(JNIEnv *env,
     return JNI_TRUE;
 }
 
-// set eas master volume
+// set EAS master volume
 jboolean
 Java_org_billthefarmer_mididriver_MidiDriver_setVolume(JNIEnv *env,
-                                                   jobject obj,
-                                                   jint volume)
+                                                       jobject obj,
+                                                       jint volume)
 {
+    EAS_RESULT result;
+
     if (pEASData == NULL || midiHandle == NULL)
         return JNI_FALSE;
 
-    EAS_SetVolume(pEASData, NULL, (EAS_I32) volume);
+    result = EAS_SetVolume(pEASData, NULL, (EAS_I32) volume);
+
+    if (result != EAS_SUCCESS)
+        return JNI_FALSE;
 
     return JNI_TRUE;
 }
@@ -456,7 +461,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_setVolume(JNIEnv *env,
 // shutdown EAS midi
 jboolean
 Java_org_billthefarmer_mididriver_MidiDriver_shutdown(JNIEnv *env,
-        jobject obj)
+                                                      jobject obj)
 {
     EAS_RESULT result;
 

@@ -31,8 +31,13 @@ JNIEXPORT jintArray JNICALL Java_org_billthefarmer_mididriver_MidiDriver_config
 JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_write
   (JNIEnv *, jobject, jbyteArray);
 
+/*
+ * Class:     org_billthefarmer_mididriver_MidiDriver
+ * Method:    setVolume
+ * Signature: (I)Z
+ */
 JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_setVolume
-        (JNIEnv *, jobject, jint);
+  (JNIEnv *, jobject, jint);
 
 /*
  * Class:     org_billthefarmer_mididriver_MidiDriver
