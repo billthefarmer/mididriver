@@ -67,5 +67,9 @@ dependencies {
 	the message or messages. Returns true on success, false on
 	failure.
 
+    boolean setVolume(int volume)  Set master volume for EAS
+    synthesizer (between 0 and 100). Returns true on success, false on
+    failure.
+
 	boolean shutdown()  Shut down the synthesizer. Returns true on
 	success, false on failure.
