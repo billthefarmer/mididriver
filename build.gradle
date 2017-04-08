@@ -30,6 +30,14 @@ android {
 	    path 'src/main/jni/Android.mk'
 	}
     }
+
+    defaultConfig {
+        externalNativeBuild {
+            ndkBuild {
+                abiFilters 'armeabi', 'armeabi-v7a', 'mips', 'x86'
+            }
+        }
+    }
 }
 
 android {
