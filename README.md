@@ -16,11 +16,18 @@ Google have fixed the 64 bit reverb bug:
 [Fix math functions for 64-bit](https://github.com/android/platform_external_sonivox/commit/d216e303f65f5e36ffba92d342a8c61f753c98d7). The
 driver now works correctly on most 64 bit devices.
 
-Devices running 4.2.2 (API 17) and below can't load a second native library unless it's built in. Devices running 7.0 (API 24) and above don't allow the use of unsupported built in native libraries. Devices running 64 bit 5.01 or 5.1.1 may have a broken 64 bit version of the sonivox native library and may use the broken built in version rather then the fixed version in the driver.
+Devices running 4.2.2 (API 17) and below don't appear to be able to
+load a second native library unless it's built in. Devices running 7.0
+(API 24) and above don't allow the use of unsupported built in native
+libraries. Devices running 64 bit 5.01 or 5.1.1 may have a broken 64
+bit version of the sonivox native library and may use the broken built
+in version rather then the fixed version in the driver.
 
+## App
 The [MidiTest](https://github.com/billthefarmer/miditest) app is now
 in a separate repository.
 
+## Use
 Add the driver to your build.gradle with
 ```gradle
 allprojects {
@@ -36,6 +43,9 @@ dependencies {
   compile 'com.github.billthefarmer:mididriver:v1.12'
 }
 ```
+This will currently add all versions of the native libraries, including
+64 bit.
+
 ### Methods
 
 	void start()  Start the driver. Call from onResume().
