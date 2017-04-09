@@ -43,7 +43,7 @@ dependencies {
   compile 'com.github.billthefarmer:mididriver:v1.12'
 }
 ```
-This will currently add all versions of the native libraries, including
+This will currently add all versions of the native libraries, but not
 64 bit.
 
 ### Methods

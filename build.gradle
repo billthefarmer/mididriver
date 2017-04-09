@@ -18,13 +18,6 @@ android {
     compileSdkVersion 'android-25'
     buildToolsVersion '25.0.2'
 
-    defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 25
-    }
-}
-
-android {
     externalNativeBuild {
         ndkBuild {
 	    path 'src/main/jni/Android.mk'
@@ -32,15 +25,16 @@ android {
     }
 
     defaultConfig {
+        minSdkVersion 14
+        targetSdkVersion 25
+
         externalNativeBuild {
             ndkBuild {
                 abiFilters 'armeabi', 'armeabi-v7a', 'mips', 'x86'
             }
         }
     }
-}
 
-android {
     lintOptions {
 	abortOnError false
     }
