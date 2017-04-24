@@ -49,6 +49,11 @@ android {
         }
     }
 
+    // default build flavour
+    defaultPublishConfig '32Release'
+    // true to publish all flavour artifacts
+    publishNonDefault true
+
     lintOptions {
 	abortOnError false
     }
