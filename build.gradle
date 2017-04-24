@@ -35,6 +35,20 @@ android {
         }
     }
 
+    productFlavors {
+        '32' {
+        }
+
+        '64' {
+            externalNativeBuild {
+                ndkBuild {
+                    abiFilters 'armeabi', 'armeabi-v7a', 'mips', 'x86',
+                    'arm64-v8a', 'mips64', 'x86_64'
+                }
+            }
+        }
+    }
+
     lintOptions {
 	abortOnError false
     }
