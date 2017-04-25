@@ -27,17 +27,16 @@ android {
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 25
-
-        externalNativeBuild {
-            ndkBuild {
-                abiFilters 'armeabi', 'armeabi-v7a', 'mips', 'x86'
-            }
-        }
     }
 
     productFlavors {
         '32' {
-        }
+            externalNativeBuild {
+                ndkBuild {
+                    abiFilters 'armeabi', 'armeabi-v7a', 'mips', 'x86'
+                }
+            }
+       }
 
         '64' {
             externalNativeBuild {
@@ -49,9 +48,7 @@ android {
         }
     }
 
-    // default build flavour
     defaultPublishConfig '32Release'
-    // true to publish all flavour artifacts
     publishNonDefault true
 
     lintOptions {
