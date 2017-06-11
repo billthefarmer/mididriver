@@ -340,7 +340,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
     // LOG_D(LOG_TAG, "Init EAS success, buffer: %ld", bufferSize);
 
     // allocate buffer in bytes
-    buffer = (EAS_PCM *)malloc(bufferSize * sizeof(EAS_PCM));
+    buffer = new EAS_PCM[bufferSize];
     if (buffer == NULL)
     {
         shutdownEAS();
@@ -355,7 +355,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
     {
         shutdownEAS();
         shutdownAudio();
-        free(buffer);
+        delete[] buffer;
         buffer = NULL;
 
         LOG_E(LOG_TAG, "Create engine failed: %ld", result);
@@ -368,7 +368,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
     {
         shutdownEAS();
         shutdownAudio();
-        free(buffer);
+        delete[] buffer;
         buffer = NULL;
 
         LOG_E(LOG_TAG, "Create buffer queue audio player failed: %ld", result);
@@ -468,7 +468,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_shutdown(JNIEnv *env,
     shutdownAudio();
 
     if (buffer != NULL)
-        free(buffer);
+        delete[] buffer;
     buffer = NULL;
 
     shutdownEAS();
