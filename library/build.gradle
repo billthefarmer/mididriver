@@ -17,29 +17,13 @@ android {
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 25
-    }
 
-    productFlavors {
-        '32' {
-            externalNativeBuild {
-                ndkBuild {
-                    abiFilters 'armeabi', 'armeabi-v7a', 'mips', 'x86'
-                }
-            }
-       }
-
-        '64' {
-            externalNativeBuild {
-                ndkBuild {
-                    abiFilters 'armeabi', 'armeabi-v7a', 'mips', 'x86',
-                    'arm64-v8a', 'mips64', 'x86_64'
-                }
+        externalNativeBuild {
+            ndkBuild {
+                abiFilters 'armeabi', 'armeabi-v7a', 'mips', 'x86'
             }
         }
     }
-
-    defaultPublishConfig '32Release'
-    publishNonDefault true
 
     lintOptions {
     	disable 'OldTargetApi'
