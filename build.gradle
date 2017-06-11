@@ -4,54 +4,13 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.2.3'
+        classpath 'com.android.tools.build:gradle:2.2.2'
 	classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
     }
 }
 
-apply plugin: 'com.android.library'
-apply plugin: 'com.github.dcendents.android-maven'
-
-group='com.github.billthefarmer'
-
-android {
-    compileSdkVersion 'android-25'
-    buildToolsVersion '25.0.2'
-
-    externalNativeBuild {
-        ndkBuild {
-	    path 'src/main/jni/Android.mk'
-	}
-    }
-
-    defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 25
-    }
-
-    productFlavors {
-        '32' {
-            externalNativeBuild {
-                ndkBuild {
-                    abiFilters 'armeabi', 'armeabi-v7a', 'mips', 'x86'
-                }
-            }
-       }
-
-        '64' {
-            externalNativeBuild {
-                ndkBuild {
-                    abiFilters 'armeabi', 'armeabi-v7a', 'mips', 'x86',
-                    'arm64-v8a', 'mips64', 'x86_64'
-                }
-            }
-        }
-    }
-
-    defaultPublishConfig '32Release'
-    publishNonDefault true
-
-    lintOptions {
-	abortOnError false
+allprojects {
+    repositories {
+        jcenter()
     }
 }
