@@ -1,0 +1,16 @@
+
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 'android-25'
+    buildToolsVersion '24.0.2'
+
+    lintOptions {
+        abortOnError false
+	disable 'OldTargetApi', 'IconMissingDensityFolder'
+    }
+}
+
+dependencies {
+    compile project (':library')
+}
