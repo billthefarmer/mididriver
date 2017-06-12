@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-  <string name="app_name">MidiTest</string>
+  <string name="app_name">Midi</string>
   <string name="intro">
     To test the midi driver, touch the <b>C chord</b> or <b>G
     chord</b> buttons below. The <b>Ants</b> and <b><u>Ants</u></b>
