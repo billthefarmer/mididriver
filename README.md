@@ -82,5 +82,5 @@ This will currently add all versions of the native library.
                                   // failure.
 
     boolean shutdown() // Shut down the synthesizer. Returns true on
-	                   // success, false on failure.
+                       // success, false on failure.
 ```
