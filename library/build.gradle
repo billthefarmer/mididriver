@@ -1,0 +1,26 @@
+
+apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+
+group='com.github.billthefarmer'
+
+android {
+    compileSdkVersion 'android-25'
+    buildToolsVersion '25.0.2'
+
+    externalNativeBuild {
+        ndkBuild {
+	    path 'src/main/jni/Android.mk'
+	}
+    }
+
+    defaultConfig {
+        minSdkVersion 14
+        targetSdkVersion 25
+    }
+
+    lintOptions {
+    	disable 'OldTargetApi'
+	abortOnError false
+    }
+}
