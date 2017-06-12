@@ -16,6 +16,9 @@ android:
 before_install:
   - git clone https://github.com/urho3d/android-ndk.git $HOME/android-ndk-home
   - export ANDROID_NDK_HOME=$HOME/android-ndk-home
+  - pushd $ANDROID_NDK_HOME
+  - git checkout 9afc86e
+  - popd
 
 script:
   - ./gradlew build
