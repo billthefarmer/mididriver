@@ -19,48 +19,8 @@ android {
         targetSdkVersion 25
     }
 
-    productFlavors {
-        '32' {
-            externalNativeBuild {
-                ndkBuild {
-                    abiFilters 'armeabi', 'armeabi-v7a', 'mips', 'x86'
-                }
-            }
-        }
-
-        '64' {
-            externalNativeBuild {
-                ndkBuild {
-                    abiFilters 'armeabi', 'armeabi-v7a', 'mips', 'x86',
-                    'arm64-v8a', 'mips64', 'x86_64'
-                }
-            }
-        }
-    }
-
-    defaultPublishConfig '32Release'
-    publishNonDefault true
-
     lintOptions {
     	disable 'OldTargetApi'
 	abortOnError false
-    }
-}
-
-// Publish default flavour as main artifact, otherwise the maven pom
-// is not generated
-if (android.productFlavors.size() > 0) {
-    android.libraryVariants.all {
-        variant ->
-        if (android.publishNonDefault &&
-            variant.name == android.defaultPublishConfig) {
-            def bundleTask = tasks["bundle${name.capitalize()}"]
-            artifacts {
-                archives(bundleTask.archivePath) {
-                    classifier null
-                    builtBy bundleTask
-                }
-            }
-        }
     }
 }
