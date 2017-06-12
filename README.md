@@ -42,45 +42,45 @@ This will currently add all versions of the native library.
 
 ### Methods
 ```java
-	void start() // Start the driver. Call from onResume().
+    void start() // Start the driver. Call from onResume().
 
-	void stop()  // Stop the driver. Call from onPause();
+    void stop()  // Stop the driver. Call from onPause();
 
-	void addOnMidiStartListener(OnMidiStartListener l);
+    void addOnMidiStartListener(OnMidiStartListener l);
 
-	void queueEvent(byte[]) // Send a midi message. This method now just
+    void queueEvent(byte[]) // Send a midi message. This method now just
                             // calls write()
 ```
 #### Listener
 ```java
-	void onMidiStart() // This is called when the driver has started so
+    void onMidiStart() // This is called when the driver has started so
                        // that program change messages, etc, may be sent.
                        // This is now somewhat redundant but has been left in.
 ```
 ### Native Methods
 ```C++
-	boolean init()  // Return true on success, or false on failure.
+    boolean init()  // Return true on success, or false on failure.
 	
-	int[] config()  // Return a four element array of ints with part of
-	                // the EAS onfig:
+    int[] config()  // Return a four element array of ints with part of
+                    // the EAS onfig:
 
       config[0] = pLibConfig->maxVoices;
       config[1] = pLibConfig->numChannels;
       config[2] = pLibConfig->sampleRate;
       config[3] = pLibConfig->mixBufferSize;
 
-	boolean write(byte buffer[]) // Writes midi data to the Sonivox
+    boolean write(byte buffer[]) // Writes midi data to the Sonivox
                                  // synthesizer. The length of the array
                                  // should be the exact length of the
-	                             // message or messages. Returns true
+                                 // message or messages. Returns true
                                  // on success, false on
-	                             // failure.
+                                 // failure.
 
     boolean setVolume(int volume) // Set master volume for EAS
                                   // synthesizer (between 0 and 100).
                                   // Returns true on success, false on
                                   // failure.
 
-	boolean shutdown() // Shut down the synthesizer. Returns true on
+    boolean shutdown() // Shut down the synthesizer. Returns true on
 	                   // success, false on failure.
 ```
