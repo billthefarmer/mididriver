@@ -58,7 +58,7 @@ This will currently add all versions of the native library.
                        // This is now somewhat redundant but has been left in.
 ```
 ### Native Methods
-```C++
+```c++
     boolean init()  // Return true on success, or false on failure.
 	
     int[] config()  // Return a four element array of ints with part of
