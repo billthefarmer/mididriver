@@ -38,7 +38,7 @@ android {
         }
 
         defaultPublishConfig "64Release"
-        publishNonDefault true
+        // publishNonDefault true
     }
 
     lintOptions {
