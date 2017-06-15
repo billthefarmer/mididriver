@@ -36,6 +36,9 @@ android {
                 }
             }
         }
+
+        defaultPublishConfig "64Release"
+        publishNonDefault true
     }
 
     lintOptions {
