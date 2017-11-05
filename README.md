@@ -1,5 +1,7 @@
 # ![Logo](app/src/main/res/drawable-mdpi/ic_launcher.png) Midi Driver [![Build Status](https://travis-ci.org/billthefarmer/mididriver.svg?branch=master)](https://travis-ci.org/billthefarmer/mididriver) [![](https://jitpack.io/v/billthefarmer/mididriver.svg)](https://jitpack.io/#billthefarmer/mididriver)
 
+[![Join the chat at https://gitter.im/mididriver/Lobby](https://badges.gitter.im/mididriver/Lobby.svg)](https://gitter.im/mididriver/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Android midi driver using Sonivox EAS library. The library is
 available in
 [Releases](https://github.com/billthefarmer/mididriver/releases).
