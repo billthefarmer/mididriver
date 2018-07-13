@@ -35,9 +35,11 @@
 
 package org.billthefarmer.mididriver;
 
+/**
+ * General midi instrument constants
+ */
 public class GeneralMidiConstants
 {
-
     public static final byte ACOUSTIC_GRAND_PIANO           = 0;
     public static final byte BRIGHT_ACOUSTIC_PIANO          = 1;
     public static final byte ELECTRIC_GRAND_PIANO           = 2;

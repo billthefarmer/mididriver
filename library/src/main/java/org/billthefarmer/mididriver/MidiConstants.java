@@ -35,7 +35,9 @@
 
 package org.billthefarmer.mididriver;
 
-
+/**
+ * Midi event type constants
+ */
 public class MidiConstants
 {
     public static final byte MIDI_TIME_CODE          = (byte)0xF1;

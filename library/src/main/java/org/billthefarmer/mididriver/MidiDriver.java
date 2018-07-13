@@ -35,20 +35,23 @@
 
 package org.billthefarmer.mididriver;
 
-// MidiDriver
-
+/**
+ * MidiDriver class
+ */
 public class MidiDriver
 {
     private OnMidiStartListener listener;
 
-    // Constructor
-
+    /**
+     * Class constructor
+     */
     public MidiDriver()
     {
     }
 
-    // Start midi
-
+    /**
+     * Start midi driver
+     */
     public void start()
     {
         if (init() != true)
@@ -60,29 +63,37 @@ public class MidiDriver
             listener.onMidiStart();
     }
 
-    // Queue event
-
+    /**
+     * Queue midi event or events
+     *
+     * @param byte array of midi events
+     */
     public void queueEvent(byte[] event)
     {
         write(event);
     }
 
-    // Stop
-
+    /**
+     * Stop midi driver
+     */
     public void stop()
     {
         shutdown();
     }
 
-    // Set listener
-
+    /**
+     * Set midi driver start listener
+     *
+     * @param OnMidiStartListener
+     */
     public void setOnMidiStartListener(OnMidiStartListener l)
     {
         listener = l;
     }
 
-    // Listener interface
-
+    /**
+     * Midi start listener interface
+     */
     public interface OnMidiStartListener
     {
         public abstract void onMidiStart();
@@ -90,20 +101,46 @@ public class MidiDriver
 
     // Native midi methods
 
+    /**
+     * Initialise native code
+     *
+     * @return true for success
+     */
     private native boolean init();
+
+    /**
+     * Returm part of EAS config
+     *
+     * @return Int array of part of EAS config
+     *   config[0] = pLibConfig->maxVoices;
+     *   config[1] = pLibConfig->numChannels;
+     *   config[2] = pLibConfig->sampleRate;
+     *   config[3] = pLibConfig->mixBufferSize;
+     */
     public  native int[]   config();
+
+    /**
+     * Write midi event or events
+     *
+     * @param byte array of midi events
+     */
     public  native boolean write(byte a[]);
 
     /**
-     *
+     * Set master volume
      * @param volume master volume for EAS synthesizer (between 0 and 100)
-     * @return
+     * @return true for success
      */
     public  native boolean setVolume(int volume);
+
+    /**
+     * Shut down native code
+     *
+     * @return true for success
+     */
     private native boolean shutdown();
 
     // Load midi library
-
     static
     {
         System.loadLibrary("midi");
