@@ -40,6 +40,9 @@ package org.billthefarmer.mididriver;
  */
 public class MidiDriver
 {
+    /**
+     * Midi start listener
+     */
     private OnMidiStartListener listener;
 
     /**
