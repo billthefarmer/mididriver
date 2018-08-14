@@ -44,11 +44,12 @@
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
 
-#include "org_billthefarmer_mididriver_MidiDriver.h"
-
 // for EAS midi
 #include "eas.h"
 #include "eas_reverb.h"
+
+#include "org_billthefarmer_mididriver_MidiDriver.h"
+#include "midi.h"
 
 #define LOG_TAG "MidiDriver"
 
