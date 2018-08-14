@@ -86,6 +86,8 @@ This will currently add all versions of the native library.
 ```
 ### C/C++ Native Functions
 ```c++
+#include "midi.h"
+
     jboolean midi_init()  // Return true on success, or false on failure.
     jboolean midi_write(EAS_U8 *bytes, jint length)
                                  // Writes midi data to the Sonivox
