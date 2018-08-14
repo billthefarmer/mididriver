@@ -84,3 +84,21 @@ This will currently add all versions of the native library.
     boolean shutdown() // Shut down the synthesizer. Returns true on
                        // success, false on failure.
 ```
+### C/C++ Native Functions
+```c++
+    jboolean midi_init()  // Return true on success, or false on failure.
+    jboolean midi_write(EAS_U8 *bytes, jint length)
+                                 // Writes midi data to the Sonivox
+                                 // synthesizer. The length of the array
+                                 // should be the exact length of the
+                                 // message or messages. Returns true
+                                 // on success, false on
+                                 // failure.
+    jboolean midi_setVolume(jint volume)
+                                  // Set master volume for EAS
+                                  // synthesizer (between 0 and 100).
+                                  // Returns true on success, false on
+                                  // failure.
+    jboolean midi_shutdown() // Shut down the synthesizer. Returns true on
+                             // success, false on failure.
+```
