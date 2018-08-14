@@ -322,9 +322,7 @@ void shutdownEAS()
 }
 
 // init mididriver
-jboolean
-Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
-                                                  jobject obj)
+jboolean midi_init()
 {
     EAS_RESULT result;
 
@@ -382,6 +380,13 @@ Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
     return JNI_TRUE;
 }
 
+jboolean
+Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
+                                                  jobject obj)
+{
+    return midi_init();
+}
+
 // midi config
 jintArray
 Java_org_billthefarmer_mididriver_MidiDriver_config(JNIEnv *env,
@@ -407,31 +412,20 @@ Java_org_billthefarmer_mididriver_MidiDriver_config(JNIEnv *env,
 }
 
 // midi write
-jboolean
-Java_org_billthefarmer_mididriver_MidiDriver_write(JNIEnv *env,
-                                                   jobject obj,
-                                                   jbyteArray byteArray)
+jboolean midi_write(EAS_U8 *bytes, jint length)
 {
-    jboolean isCopy;
     EAS_RESULT result;
-    jint length;
-    EAS_U8 *buf;
 
     if (pEASData == NULL || midiHandle == NULL)
         return JNI_FALSE;
 
-    buf = (EAS_U8 *)env->GetByteArrayElements(byteArray, &isCopy);
-    length = env->GetArrayLength(byteArray);
-
     // lock
     pthread_mutex_lock(&mutex);
 
-    result = EAS_WriteMIDIStream(pEASData, midiHandle, buf, length);
+    result = EAS_WriteMIDIStream(pEASData, midiHandle, bytes, length);
 
     // unlock
     pthread_mutex_unlock(&mutex);
-
-    env->ReleaseByteArrayElements(byteArray, (jbyte *)buf, 0);
 
     if (result != EAS_SUCCESS)
         return JNI_FALSE;
@@ -439,11 +433,28 @@ Java_org_billthefarmer_mididriver_MidiDriver_write(JNIEnv *env,
     return JNI_TRUE;
 }
 
-// set EAS master volume
 jboolean
-Java_org_billthefarmer_mididriver_MidiDriver_setVolume(JNIEnv *env,
-                                                       jobject obj,
-                                                       jint volume)
+Java_org_billthefarmer_mididriver_MidiDriver_write(JNIEnv *env,
+                                                   jobject obj,
+                                                   jbyteArray byteArray)
+{
+    EAS_RESULT result;
+    jboolean isCopy;
+    jint length;
+    EAS_U8 *bytes;
+
+    bytes = (EAS_U8 *)env->GetByteArrayElements(byteArray, &isCopy);
+    length = env->GetArrayLength(byteArray);
+
+    result = midi_write(bytes, length);
+
+    env->ReleaseByteArrayElements(byteArray, (jbyte *)bytes, 0);
+
+    return result;
+}
+
+// set EAS master volume
+jboolean midi_setVolume(jint volume)
 {
     EAS_RESULT result;
 
@@ -458,10 +469,16 @@ Java_org_billthefarmer_mididriver_MidiDriver_setVolume(JNIEnv *env,
     return JNI_TRUE;
 }
 
-// shutdown EAS midi
 jboolean
-Java_org_billthefarmer_mididriver_MidiDriver_shutdown(JNIEnv *env,
-                                                      jobject obj)
+Java_org_billthefarmer_mididriver_MidiDriver_setVolume(JNIEnv *env,
+                                                       jobject obj,
+                                                       jint volume)
+{
+    return midi_setVolume(volume);
+}
+
+// shutdown EAS midi
+jboolean midi_shutdown()
 {
     EAS_RESULT result;
 
@@ -474,4 +491,11 @@ Java_org_billthefarmer_mididriver_MidiDriver_shutdown(JNIEnv *env,
     shutdownEAS();
 
     return JNI_TRUE;
+}
+
+jboolean
+Java_org_billthefarmer_mididriver_MidiDriver_shutdown(JNIEnv *env,
+                                                      jobject obj)
+{
+    return midi_shutdown();
 }
