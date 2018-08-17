@@ -92,7 +92,9 @@ LOCAL_MODULE := sonivox
 # 	host_src/eas_reverb.h \
 # 	host_src/jet.h
 
-ifeq ($(TARGET_ARCH),arm)
+# Remove support for assembler files as GNU compiler support withdrawn
+# from NDK r17b, which must include GNU as.
+ifeq ($(TARGET_ARCH),none)
 LOCAL_SRC_FILES += \
 	lib_src/ARM-E_filter_gnu.s \
 	lib_src/ARM-E_interpolate_loop_gnu.s \
