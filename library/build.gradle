@@ -17,6 +17,10 @@ android {
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 25
+
+        ndk{
+            abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
+        }
     }
 
     lintOptions {
