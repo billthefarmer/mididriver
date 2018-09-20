@@ -174,22 +174,22 @@ SLresult createBufferQueueAudioPlayer()
 
     // configure audio source
     SLDataLocator_AndroidSimpleBufferQueue loc_bufq =
-            {
-                    SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2
-            };
+        {
+         SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2
+        };
     SLDataFormat_PCM format_pcm =
-            {
-                    SL_DATAFORMAT_PCM, pLibConfig->numChannels,
-                    pLibConfig->sampleRate * 1000,
-                    SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_16,
-                    SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT,
-                    SL_BYTEORDER_LITTLEENDIAN
-            };
+        {
+         SL_DATAFORMAT_PCM, static_cast<SLuint32>(pLibConfig->numChannels),
+         static_cast<SLuint32>(pLibConfig->sampleRate * 1000),
+         SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_16,
+         SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT,
+         SL_BYTEORDER_LITTLEENDIAN
+        };
     SLDataSource audioSrc = {&loc_bufq, &format_pcm};
 
     // configure audio sink
     SLDataLocator_OutputMix loc_outmix =
-            {SL_DATALOCATOR_OUTPUTMIX, outputMixObject};
+        {SL_DATALOCATOR_OUTPUTMIX, outputMixObject};
     SLDataSink audioSnk = {&loc_outmix, NULL};
 
     // create audio player
