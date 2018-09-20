@@ -57,7 +57,7 @@ public class MidiDriver
      */
     public void start()
     {
-        if (init() != true)
+        if (!init())
             return;
 
         // Call listener
@@ -99,7 +99,7 @@ public class MidiDriver
      */
     public interface OnMidiStartListener
     {
-        public abstract void onMidiStart();
+        void onMidiStart();
     }
 
     // Native midi methods
