@@ -114,7 +114,7 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
 
     // enqueue another buffer
     result = (*bqPlayerBufferQueue)->Enqueue(bq, buffer,
-             bufferSize * sizeof(EAS_PCM));
+                                             bufferSize * sizeof(EAS_PCM));
 
     // the most likely other result is SL_RESULT_BUFFER_INSUFFICIENT,
     // which for this code example would indicate a programming error
@@ -151,7 +151,7 @@ SLresult createEngine()
 
     // create output mix
     result = (*engineEngine)->CreateOutputMix(engineEngine, &outputMixObject,
-             0, NULL, NULL);
+                                              0, NULL, NULL);
     if (SL_RESULT_SUCCESS != result)
         return result;
 
@@ -174,20 +174,22 @@ SLresult createBufferQueueAudioPlayer()
 
     // configure audio source
     SLDataLocator_AndroidSimpleBufferQueue loc_bufq =
-    {SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2};
+            {
+                    SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2
+            };
     SLDataFormat_PCM format_pcm =
-    {
-        SL_DATAFORMAT_PCM, pLibConfig->numChannels,
-        pLibConfig->sampleRate * 1000,
-        SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_16,
-        SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT,
-        SL_BYTEORDER_LITTLEENDIAN
-    };
+            {
+                    SL_DATAFORMAT_PCM, pLibConfig->numChannels,
+                    pLibConfig->sampleRate * 1000,
+                    SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_16,
+                    SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT,
+                    SL_BYTEORDER_LITTLEENDIAN
+            };
     SLDataSource audioSrc = {&loc_bufq, &format_pcm};
 
     // configure audio sink
     SLDataLocator_OutputMix loc_outmix =
-    {SL_DATALOCATOR_OUTPUTMIX, outputMixObject};
+            {SL_DATALOCATOR_OUTPUTMIX, outputMixObject};
     SLDataSink audioSnk = {&loc_outmix, NULL};
 
     // create audio player
@@ -195,9 +197,9 @@ SLresult createBufferQueueAudioPlayer()
     const SLboolean req[1] = {SL_BOOLEAN_TRUE};
 
     result = (*engineEngine)->CreateAudioPlayer(engineEngine,
-             &bqPlayerObject,
-             &audioSrc, &audioSnk,
-             1, ids, req);
+                                                &bqPlayerObject,
+                                                &audioSrc, &audioSnk,
+                                                1, ids, req);
     if (SL_RESULT_SUCCESS != result)
         return result;
 
@@ -212,7 +214,7 @@ SLresult createBufferQueueAudioPlayer()
 
     // get the play interface
     result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_PLAY,
-             &bqPlayerPlay);
+                                             &bqPlayerPlay);
     if (SL_RESULT_SUCCESS != result)
         return result;
 
@@ -220,7 +222,7 @@ SLresult createBufferQueueAudioPlayer()
 
     // get the buffer queue interface
     result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_BUFFERQUEUE,
-             &bqPlayerBufferQueue);
+                                             &bqPlayerBufferQueue);
     if (SL_RESULT_SUCCESS != result)
         return result;
 
@@ -228,7 +230,7 @@ SLresult createBufferQueueAudioPlayer()
 
     // register callback on the buffer queue
     result = (*bqPlayerBufferQueue)->RegisterCallback(bqPlayerBufferQueue,
-             bqPlayerCallback, NULL);
+                                                      bqPlayerCallback, NULL);
     if (SL_RESULT_SUCCESS != result)
         return result;
 
@@ -284,8 +286,7 @@ EAS_RESULT initEAS()
         return EAS_FAILURE;
 
     // calculate buffer size
-    bufferSize = pLibConfig->mixBufferSize * pLibConfig->numChannels *
-                 NUM_BUFFERS;
+    bufferSize = pLibConfig->mixBufferSize * pLibConfig->numChannels * NUM_BUFFERS;
 
     // init library
     if ((result = EAS_Init(&pEASData)) != EAS_SUCCESS)
@@ -298,8 +299,7 @@ EAS_RESULT initEAS()
                      EAS_FALSE);
 
     // open midi stream
-    if ((result = EAS_OpenMIDIStream(pEASData, &midiHandle, NULL)) !=
-                 EAS_SUCCESS)
+    if ((result = EAS_OpenMIDIStream(pEASData, &midiHandle, NULL)) != EAS_SUCCESS)
         return result;
 
     return EAS_SUCCESS;
@@ -340,8 +340,7 @@ jboolean midi_init()
 
     // allocate buffer in bytes
     buffer = new EAS_PCM[bufferSize];
-    if (buffer == NULL)
-    {
+    if (buffer == NULL) {
         shutdownEAS();
 
         LOG_E(LOG_TAG, "Allocate buffer failed");
@@ -444,12 +443,12 @@ Java_org_billthefarmer_mididriver_MidiDriver_write(JNIEnv *env,
     jint length;
     EAS_U8 *bytes;
 
-    bytes = (EAS_U8 *)env->GetByteArrayElements(byteArray, &isCopy);
+    bytes = (EAS_U8 *) env->GetByteArrayElements(byteArray, &isCopy);
     length = env->GetArrayLength(byteArray);
 
     result = midi_write(bytes, length);
 
-    env->ReleaseByteArrayElements(byteArray, (jbyte *)bytes, 0);
+    env->ReleaseByteArrayElements(byteArray, (jbyte *) bytes, 0);
 
     return result;
 }
@@ -479,8 +478,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_setVolume(JNIEnv *env,
 }
 
 // shutdown EAS midi
-jboolean midi_shutdown()
-{
+jboolean midi_shutdown() {
     EAS_RESULT result;
 
     shutdownAudio();

@@ -35,7 +35,6 @@
 #include "eas_chorus.h"
 #include "eas_config.h"
 #include "eas_host.h"
-#include "eas_report.h"
 
 /* prototypes for effects interface */
 static EAS_RESULT ChorusInit (EAS_DATA_HANDLE pEASData, EAS_VOID_PTR *pInstData);

@@ -40,7 +40,6 @@
 #include "eas_math.h"
 #include "eas_mixer.h"
 #include "eas_config.h"
-#include "eas_report.h"
 
 #ifdef _MAXIMIZER_ENABLED
 EAS_I32 MaximizerProcess (EAS_VOID_PTR pInstData, EAS_I32 *pSrc, EAS_I32 *pDst, EAS_I32 numSamples);

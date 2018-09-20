@@ -5,7 +5,8 @@
 #ifndef _Included_org_billthefarmer_mididriver_MidiDriver
 #define _Included_org_billthefarmer_mididriver_MidiDriver
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 /*
  * Class:     org_billthefarmer_mididriver_MidiDriver
@@ -13,7 +14,7 @@ extern "C" {
  * Signature: ()Z
  */
 JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_init
-  (JNIEnv *, jobject);
+        (JNIEnv *, jobject);
 
 /*
  * Class:     org_billthefarmer_mididriver_MidiDriver
@@ -21,7 +22,7 @@ JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_init
  * Signature: ()[I
  */
 JNIEXPORT jintArray JNICALL Java_org_billthefarmer_mididriver_MidiDriver_config
-  (JNIEnv *, jobject);
+        (JNIEnv *, jobject);
 
 /*
  * Class:     org_billthefarmer_mididriver_MidiDriver
@@ -29,7 +30,7 @@ JNIEXPORT jintArray JNICALL Java_org_billthefarmer_mididriver_MidiDriver_config
  * Signature: ([B)Z
  */
 JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_write
-  (JNIEnv *, jobject, jbyteArray);
+        (JNIEnv *, jobject, jbyteArray);
 
 /*
  * Class:     org_billthefarmer_mididriver_MidiDriver
@@ -37,7 +38,7 @@ JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_write
  * Signature: (I)Z
  */
 JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_setVolume
-  (JNIEnv *, jobject, jint);
+        (JNIEnv *, jobject, jint);
 
 /*
  * Class:     org_billthefarmer_mididriver_MidiDriver
@@ -45,7 +46,7 @@ JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_setVolum
  * Signature: ()Z
  */
 JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_shutdown
-  (JNIEnv *, jobject);
+        (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

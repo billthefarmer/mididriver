@@ -32,10 +32,8 @@
 //#define DEBUG_JET
 
 #include "eas_data.h"
-#include "eas_smf.h"
 #include "jet_data.h"
 #include "eas_host.h"
-#include "eas_report.h"
 
 
 /* default configuration */

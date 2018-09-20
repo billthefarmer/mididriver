@@ -27,11 +27,9 @@
  *----------------------------------------------------------------------------
 */
 
-#include "eas_synthcfg.h"
 #include "eas.h"
 #include "eas_config.h"
 #include "eas_host.h"
-#include "eas_report.h"
 #include "eas_data.h"
 #include "eas_parser.h"
 #include "eas_pcm.h"
@@ -465,19 +463,18 @@ EAS_PUBLIC EAS_RESULT EAS_Init (EAS_DATA_HANDLE *ppEASData)
 */
 EAS_PUBLIC EAS_RESULT EAS_Shutdown (EAS_DATA_HANDLE pEASData)
 {
-    EAS_HW_DATA_HANDLE hwInstData;
-    EAS_RESULT result, reportResult;
-    EAS_INT i;
-
-    /* establish pointers */
-    hwInstData = pEASData->hwInstData;
-
     /* check for NULL handle */
     if (!pEASData)
         return EAS_ERROR_HANDLE_INTEGRITY;
 
+    /* establish pointers */
+    EAS_HW_DATA_HANDLE hwInstData = pEASData->hwInstData;
+
     /* if there are streams open, close them */
-    reportResult = EAS_SUCCESS;
+    EAS_RESULT reportResult = EAS_SUCCESS;
+
+    EAS_RESULT result;
+    EAS_INT i;
     for (i = 0; i < MAX_NUMBER_STREAMS; i++)
     {
         if (pEASData->streams[i].pParserModule && pEASData->streams[i].handle)

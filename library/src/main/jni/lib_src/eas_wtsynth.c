@@ -28,12 +28,12 @@
 */
 
 // includes
-#include "android/log.h"
-// #include "log/log.h"
-// #include <cutils/log.h>
+#define LOG_TAG "SYNTH"
+
+#include "log/log.h"
+#include <cutils/log.h>
 
 #include "eas_data.h"
-#include "eas_report.h"
 #include "eas_host.h"
 #include "eas_math.h"
 #include "eas_synth_protos.h"
@@ -47,9 +47,6 @@
 #ifdef _METRICS_ENABLED
 #include "eas_perf.h"
 #endif
-
-#define ALOGE(a)
-#define android_errorWriteLog(a, b) __android_log_write(ANDROID_LOG_ERROR, "SNET", b)
 
 /* local prototypes */
 static EAS_RESULT WT_Initialize(S_VOICE_MGR *pVoiceMgr);
@@ -561,6 +558,14 @@ static EAS_BOOL WT_UpdateVoice (S_VOICE_MGR *pVoiceMgr, S_SYNTH *pSynth, S_SYNTH
     else
         temp += (pVoice->note + pSynth->globalTranspose) * 100;
     intFrame.frame.phaseIncrement = WT_UpdatePhaseInc(pWTVoice, pArt, pChannel, temp);
+    temp = pWTVoice->loopEnd - pWTVoice->loopStart;
+    if (temp != 0) {
+        temp = temp << NUM_PHASE_FRAC_BITS;
+        if (intFrame.frame.phaseIncrement > temp) {
+            ALOGW("%p phaseIncrement=%d", pWTVoice, (int) intFrame.frame.phaseIncrement);
+            intFrame.frame.phaseIncrement %= temp;
+        }
+    }
 
     /* call into engine to generate samples */
     intFrame.pAudioBuffer = pVoiceMgr->voiceBuffer;

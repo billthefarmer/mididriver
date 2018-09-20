@@ -32,9 +32,8 @@
  * includes
  *------------------------------------
 */
-#include "android/log.h"
-// #include "log/log.h"
-// #include <cutils/log.h>
+#include "log/log.h"
+#include <cutils/log.h>
 
 #include "eas_types.h"
 #include "eas_math.h"
@@ -42,9 +41,6 @@
 #include "eas_sndlib.h"
 #include "eas_wtengine.h"
 #include "eas_mixer.h"
-
-#define ALOGE(a)
-#define android_errorWriteLog(a, b) __android_log_write(ANDROID_LOG_ERROR, "SNET", b)
 
 /*----------------------------------------------------------------------------
  * prototypes

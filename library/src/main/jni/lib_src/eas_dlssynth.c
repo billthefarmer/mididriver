@@ -29,7 +29,6 @@
 
 // includes
 #include "eas_data.h"
-#include "eas_report.h"
 #include "eas_host.h"
 #include "eas_math.h"
 #include "eas_synth_protos.h"

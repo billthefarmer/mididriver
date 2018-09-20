@@ -114,13 +114,14 @@
 /* this define allows us to use the sndlib.h structures as RW memory */
 #define SCNST
 
+#include "log/log.h"
+
 #include "eas_data.h"
 #include "eas_host.h"
 #include "eas_mdls.h"
 #include "eas_math.h"
 #include "dls.h"
 #include "dls2.h"
-#include "eas_report.h"
 
 //2 we should replace log10() function with fixed point routine in ConvertSampleRate()
 /* lint is choking on the ARM math.h file, so we declare the log10 function here */
@@ -602,6 +603,7 @@ EAS_RESULT DLSParser (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE fileHandle,
         if ((dls.regionCount == 0) || (dls.regionCount > DLS_MAX_REGION_COUNT))
         {
             { /* dpp: EAS_ReportEx(_EAS_SEVERITY_ERROR, "DLS file contains invalid #regions [%u]\n", dls.regionCount); */ }
+            EAS_HWFree(dls.hwInstData, dls.wsmpData);
             return EAS_ERROR_FILE_FORMAT;
         }
 
@@ -609,6 +611,7 @@ EAS_RESULT DLSParser (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE fileHandle,
         if ((dls.artCount == 0) || (dls.artCount > DLS_MAX_ART_COUNT))
         {
             { /* dpp: EAS_ReportEx(_EAS_SEVERITY_ERROR, "DLS file contains invalid #articulations [%u]\n", dls.regionCount); */ }
+            EAS_HWFree(dls.hwInstData, dls.wsmpData);
             return EAS_ERROR_FILE_FORMAT;
         }
 
@@ -616,6 +619,7 @@ EAS_RESULT DLSParser (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE fileHandle,
         if ((dls.instCount == 0) || (dls.instCount > DLS_MAX_INST_COUNT))
         {
             { /* dpp: EAS_ReportEx(_EAS_SEVERITY_ERROR, "DLS file contains invalid #instruments [%u]\n", dls.instCount); */ }
+            EAS_HWFree(dls.hwInstData, dls.wsmpData);
             return EAS_ERROR_FILE_FORMAT;
         }
 
@@ -636,6 +640,7 @@ EAS_RESULT DLSParser (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE fileHandle,
         /* calculate final memory size */
         size = (EAS_I32) sizeof(S_EAS) + instSize + rgnPoolSize + artPoolSize + (2 * waveLenSize) + (EAS_I32) dls.wavePoolSize;
         if (size <= 0) {
+            EAS_HWFree(dls.hwInstData, dls.wsmpData);
             return EAS_ERROR_FILE_FORMAT;
         }
 
@@ -644,6 +649,7 @@ EAS_RESULT DLSParser (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE fileHandle,
         if (dls.pDLS == NULL)
         {
             { /* dpp: EAS_ReportEx(_EAS_SEVERITY_ERROR, "EAS_HWMalloc failed for DLS memory allocation size %ld\n", size); */ }
+            EAS_HWFree(dls.hwInstData, dls.wsmpData);
             return EAS_ERROR_MALLOC_FAILED;
         }
         EAS_HWMemSet(dls.pDLS, 0, size);
@@ -784,6 +790,11 @@ static EAS_RESULT NextChunk (SDLS_SYNTHESIZER_DATA *pDLSData, EAS_I32 *pPos, EAS
     /* read the chunk size */
     if ((result = EAS_HWGetDWord(pDLSData->hwInstData, pDLSData->fileHandle, pSize, EAS_FALSE)) != EAS_SUCCESS)
         return result;
+
+    if (*pSize < 0) {
+        ALOGE("b/37093318");
+        return EAS_ERROR_FILE_FORMAT;
+    }
 
     /* get form type for RIFF and LIST types */
     if ((*pChunkType == CHUNK_RIFF) || (*pChunkType == CHUNK_LIST))
@@ -2088,8 +2099,11 @@ static EAS_RESULT PushcdlStack (EAS_U32 *pStack, EAS_INT *pStackPtr, EAS_U32 val
 {
 
     /* stack overflow, return an error */
-    if (*pStackPtr >= CDL_STACK_SIZE)
+    if (*pStackPtr >= (CDL_STACK_SIZE - 1)) {
+        ALOGE("b/34031018, stackPtr(%d)", *pStackPtr);
+        android_errorWriteLog(0x534e4554, "34031018");
         return EAS_ERROR_FILE_FORMAT;
+    }
 
     /* push the value onto the stack */
     *pStackPtr = *pStackPtr + 1;

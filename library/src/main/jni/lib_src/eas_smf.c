@@ -29,10 +29,11 @@
  *----------------------------------------------------------------------------
 */
 
+#include "log/log.h"
+
 #include "eas_data.h"
 #include "eas_miditypes.h"
 #include "eas_parser.h"
-#include "eas_report.h"
 #include "eas_host.h"
 #include "eas_midi.h"
 #include "eas_config.h"
@@ -833,6 +834,20 @@ static EAS_RESULT SMF_ParseMetaEvent (S_EAS_DATA *pEASData, S_SMF_DATA *pSMFData
     /* get the current file position so we can skip the event */
     if ((result = EAS_HWFilePos(pEASData->hwInstData, pSMFStream->fileHandle, &pos)) != EAS_SUCCESS)
         return result;
+
+    /* prevent a large unsigned length from being treated as a negative length */
+    if ((EAS_I32) len < 0) {
+        /* note that EAS_I32 is a long, which can be 64-bits on some computers */
+        ALOGE("b/68953854 SMF_ParseMetaEvent, negative len = %ld\n", (EAS_I32) len);
+        return EAS_ERROR_FILE_FORMAT;
+    }
+    /* prevent numeric overflow caused by a very large len, assume pos > 0 */
+    const EAS_I32 EAS_I32_MAX = 0x7FFFFFFF;
+    if ((EAS_I32) len > (EAS_I32_MAX - pos)) {
+        ALOGE("b/68953854 SMF_ParseMetaEvent, too large len = %ld\n", (EAS_I32) len);
+        return EAS_ERROR_FILE_FORMAT;
+    }
+
     pos += (EAS_I32) len;
 
     /* end of track? */
