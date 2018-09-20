@@ -125,7 +125,7 @@ endif
 # LOCAL_SHARED_LIBRARIES := \
 # 	libutils libcutils
 
-LOCAL_LDLIBS := -llog
+# LOCAL_LDLIBS := -llog
 
 include $(BUILD_STATIC_LIBRARY)
 

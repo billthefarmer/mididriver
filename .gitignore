@@ -5,3 +5,7 @@ build/
 ant.properties
 local.properties
 .externalNativeBuild
+*~
+*.zip
+*.aar
+*.apk
