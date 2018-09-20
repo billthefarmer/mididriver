@@ -39,14 +39,13 @@ import android.app.Activity;
 import android.content.res.Resources;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
 
-import java.util.Locale;
-
 import org.billthefarmer.mididriver.MidiDriver;
+
+import java.util.Locale;
 
 public class MainActivity extends Activity
     implements View.OnTouchListener, View.OnClickListener,
@@ -60,37 +59,37 @@ public class MainActivity extends Activity
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
-	super.onCreate(savedInstanceState);
-	setContentView(R.layout.activity_main);
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-	// Create midi driver
+        // Create midi driver
 
-	midi = new MidiDriver();
+        midi = new MidiDriver();
 
-	// Set on touch listener
+        // Set on touch listener
 
-	View v = findViewById(R.id.c);
-	if (v != null)
-	    v.setOnTouchListener(this);
+        View v = findViewById(R.id.c);
+        if (v != null)
+            v.setOnTouchListener(this);
 
-	v = findViewById(R.id.g);
-	if (v != null)
-	    v.setOnTouchListener(this);
+        v = findViewById(R.id.g);
+        if (v != null)
+            v.setOnTouchListener(this);
 
-	v = findViewById(R.id.ants);
-	if (v != null)
-	    v.setOnClickListener(this);
+        v = findViewById(R.id.ants);
+        if (v != null)
+            v.setOnClickListener(this);
 
-	v = findViewById(R.id.nants);
-	if (v != null)
-	    v.setOnClickListener(this);
+        v = findViewById(R.id.nants);
+        if (v != null)
+            v.setOnClickListener(this);
 
-	text = (TextView)findViewById(R.id.status);
+        text = findViewById(R.id.status);
 
-	// Set on midi start listener
+        // Set on midi start listener
 
-	if (midi != null)
-	    midi.setOnMidiStartListener(this);
+        if (midi != null)
+            midi.setOnMidiStartListener(this);
     }
 
     // On resume
@@ -98,12 +97,12 @@ public class MainActivity extends Activity
     @Override
     protected void onResume()
     {
-	super.onResume();
+        super.onResume();
 
-	// Start midi
+        // Start midi
 
-	if (midi != null)
-	    midi.start();
+        if (midi != null)
+            midi.start();
     }
 
     // On pause
@@ -111,17 +110,17 @@ public class MainActivity extends Activity
     @Override
     protected void onPause()
     {
-	super.onPause();
+        super.onPause();
 
-	// Stop midi
+        // Stop midi
 
-	if (midi != null)
-	    midi.stop();
+        if (midi != null)
+            midi.stop();
 
-	// Stop player
+        // Stop player
 
-	if (player != null)
-	    player.stop();
+        if (player != null)
+            player.stop();
     }
 
     // On touch
@@ -129,62 +128,59 @@ public class MainActivity extends Activity
     @Override
     public boolean onTouch(View v, MotionEvent event)
     {
-	int action = event.getAction();
-	int id = v.getId();
+        int action = event.getAction();
+        int id = v.getId();
 
-	switch (action)
-	{
-	    // Down
+        switch (action) {
+            // Down
 
-	case MotionEvent.ACTION_DOWN:
-	    switch (id)
-	    {
-	    case R.id.c:
-		sendMidi(0x90, 48, 63);
-		sendMidi(0x90, 52, 63);
-		sendMidi(0x90, 55, 63);
-		break;
+            case MotionEvent.ACTION_DOWN:
+                switch (id) {
+                    case R.id.c:
+                        sendMidi(0x90, 48, 63);
+                        sendMidi(0x90, 52, 63);
+                        sendMidi(0x90, 55, 63);
+                        break;
 
-	    case R.id.g:
-		sendMidi(0x90, 55, 63);
-		sendMidi(0x90, 59, 63);
-		sendMidi(0x90, 62, 63);
-		break;
+                    case R.id.g:
+                        sendMidi(0x90, 55, 63);
+                        sendMidi(0x90, 59, 63);
+                        sendMidi(0x90, 62, 63);
+                        break;
 
-	    default:
-		return false;
-	    }
+                    default:
+                        return false;
+                }
 
-	    v.performClick();
-	    break;
+                v.performClick();
+                break;
 
-	    // Up
+            // Up
 
-	case MotionEvent.ACTION_UP:
-	    switch (id)
-	    {
-	    case R.id.c:
-		sendMidi(0x80, 48, 0);
-		sendMidi(0x80, 52, 0);
-		sendMidi(0x80, 55, 0);
-		break;
+            case MotionEvent.ACTION_UP:
+                switch (id) {
+                    case R.id.c:
+                        sendMidi(0x80, 48, 0);
+                        sendMidi(0x80, 52, 0);
+                        sendMidi(0x80, 55, 0);
+                        break;
 
-	    case R.id.g:
-		sendMidi(0x80, 55, 0);
-		sendMidi(0x80, 59, 0);
-		sendMidi(0x80, 62, 0);
-		break;
+                    case R.id.g:
+                        sendMidi(0x80, 55, 0);
+                        sendMidi(0x80, 59, 0);
+                        sendMidi(0x80, 62, 0);
+                        break;
 
-	    default:
-		return false;
-	    }
-	    break;
+                    default:
+                        return false;
+                }
+                break;
 
-	default:
-	    return false;
-	}
+            default:
+                return false;
+        }
 
-	return false;
+        return false;
     }
 
     // On click
@@ -192,26 +188,24 @@ public class MainActivity extends Activity
     @Override
     public void onClick(View v)
     {
-	int id = v.getId();
+        int id = v.getId();
 
-	switch (id)
-	{
-	case R.id.ants:
-	    if (player != null)
-	    {
-		player.stop();
-		player.release();
-	    }
+        switch (id) {
+            case R.id.ants:
+                if (player != null) {
+                    player.stop();
+                    player.release();
+                }
 
-	    player = MediaPlayer.create(this, R.raw.ants);
-	    player.start();
-	    break;
+                player = MediaPlayer.create(this, R.raw.ants);
+                player.start();
+                break;
 
-	case R.id.nants:
-	    if (player != null)
-		player.stop();
-	    break;
-	}
+            case R.id.nants:
+                if (player != null)
+                    player.stop();
+                break;
+        }
     }
 
     // Listener for sending initial midi messages when the Sonivox
@@ -220,46 +214,46 @@ public class MainActivity extends Activity
     @Override
     public void onMidiStart()
     {
-	// Program change - harpsicord
+        // Program change - harpsicord
 
-	sendMidi(0xc0, 6);
+        sendMidi();
 
-	// Get the config
+        // Get the config
 
-	int config[] = midi.config();
+        int config[] = midi.config();
 
-	Resources resources = getResources();
+        Resources resources = getResources();
 
-	String format = resources.getString(R.string.format);
-	String info = String.format(Locale.getDefault(), format, config[0],
-				    config[1], config[2], config[3]);
+        String format = resources.getString(R.string.format);
+        String info = String.format(Locale.getDefault(), format, config[0],
+                config[1], config[2], config[3]);
 
-	if (text != null)
-	    text.setText(info);
+        if (text != null)
+            text.setText(info);
     }
 
     // Send a midi message
 
-    protected void sendMidi(int m, int p)
+    protected void sendMidi()
     {
-	byte msg[] = new byte[2];
+        byte msg[] = new byte[2];
 
-	msg[0] = (byte) m;
-	msg[1] = (byte) p;
+        msg[0] = (byte) 0xc0;
+        msg[1] = (byte) 6;
 
-	midi.write(msg);
+        midi.write(msg);
     }
 
     // Send a midi message
 
     protected void sendMidi(int m, int n, int v)
     {
-	byte msg[] = new byte[3];
+        byte msg[] = new byte[3];
 
-	msg[0] = (byte) m;
-	msg[1] = (byte) n;
-	msg[2] = (byte) v;
+        msg[0] = (byte) m;
+        msg[1] = (byte) n;
+        msg[2] = (byte) v;
 
-	midi.write(msg);
+        midi.write(msg);
     }
 }

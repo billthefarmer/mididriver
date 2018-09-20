@@ -1,16 +1,28 @@
-
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 'android-25'
-    buildToolsVersion '25.0.2'
+    compileSdkVersion 28
+    buildToolsVersion '28.0.2'
+
+    defaultConfig {
+        applicationId "org.billthefarmer.miditest"
+        minSdkVersion 14
+        targetSdkVersion 28
+        versionName "1.0"
+        versionCode 1
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 
     lintOptions {
         abortOnError false
-	disable 'OldTargetApi', 'IconMissingDensityFolder'
+        disable 'OldTargetApi', 'IconMissingDensityFolder'
     }
 }
 
 dependencies {
-    compile project(':library')
+    implementation project(':library')
 }

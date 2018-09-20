@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-  <string name="app_name">Midi</string>
-  <string name="intro">
-    To test the midi driver, touch the <b>C chord</b> or <b>G
-    chord</b> buttons below. The <b>Ants</b> and <b><u>Ants</u></b>
-    buttons play and stop playing a short midi tune file from the
-    Sonivox sources. The chord buttons use the driver, the tune
-    buttons use the standard Android midi file player. They should all
-    work simultaneously.
-  </string>
+    <string name="app_name">Midi</string>
+    <string name="intro">
+        To test the midi driver, touch the <b>C chord</b> or <b>G
+        chord</b> buttons below. The <b>Ants</b> and <b><u>Ants</u></b>
+        buttons play and stop playing a short midi tune file from the
+        Sonivox sources. The chord buttons use the driver, the tune
+        buttons use the standard Android midi file player. They should all
+        work simultaneously.
+    </string>
 
-  <string name="c">C chord</string>
-  <string name="g">G chord</string>
-  <string name="ants">Ants</string>
-  <string name="nants"><u>Ants</u></string>
+    <string name="c">C chord</string>
+    <string name="g">G chord</string>
+    <string name="ants">Ants</string>
+    <string name="nants"><u>Ants</u></string>
 
-  <string name="format" formatted="false">
-    Sonivox synthesizer config:\n
-    maxVoices = %d\nnumChannels = %d\n
-    sampleRate = %d\nmixBufferSize = %d
-  </string>
+    <string name="format" formatted="false">
+        Sonivox synthesizer config:\n
+        maxVoices = %d\nnumChannels = %d\n
+        sampleRate = %d\nmixBufferSize = %d
+    </string>
 
 </resources>
