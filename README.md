@@ -1,4 +1,4 @@
-# ![Logo](app/src/main/res/drawable-mdpi/ic_launcher.png) Midi Driver [![Build Status](https://travis-ci.org/billthefarmer/mididriver.svg?branch=master)](https://travis-ci.org/billthefarmer/mididriver) [![](https://jitpack.io/v/billthefarmer/mididriver.svg)](https://jitpack.io/#billthefarmer/mididriver) [![Join the chat at https://gitter.im/mididriver/Lobby](https://badges.gitter.im/mididriver/Lobby.svg)](https://gitter.im/mididriver/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+# ![Logo](app/src/main/res/drawable-hdpi/ic_launcher.png) Midi Driver [![Build Status](https://travis-ci.org/billthefarmer/mididriver.svg?branch=master)](https://travis-ci.org/billthefarmer/mididriver) [![](https://jitpack.io/v/billthefarmer/mididriver.svg)](https://jitpack.io/#billthefarmer/mididriver) [![Join the chat at https://gitter.im/mididriver/Lobby](https://badges.gitter.im/mididriver/Lobby.svg)](https://gitter.im/mididriver/Lobby)
 
 Android midi driver using Sonivox EAS library. The library is
 available in
@@ -13,12 +13,12 @@ libutils and libcutils. The ARM versions have been build with the
 assembler source files.
 
 ## Bugs
-Google have fixed the 64 bit reverb bug:
+Google has fixed the 64 bit reverb bug:
 [#15](https://github.com/billthefarmer/mididriver/issues/15) -
 [Fix math functions for 64-bit](https://github.com/android/platform_external_sonivox/commit/d216e303f65f5e36ffba92d342a8c61f753c98d7). The
 driver should now work correctly on all 64 bit devices.
 
-The sonivox library is now built as a static library and linked with
+The Sonivox library is now built as a static library and linked with
 the midi library. This should resolve problems with various android
 versions.
 
@@ -26,16 +26,16 @@ versions.
 Add the driver to your build.gradle with
 ```gradle
 allprojects {
-  repositories {
-    jcenter()
-    maven { url "https://jitpack.io" }
-  }
+    repositories {
+        ...
+        maven { url "https://jitpack.io" }
+    }
 }
 ```
 and:
 ```gradle
 dependencies {
-  compile 'com.github.billthefarmer:mididriver:v1.15'
+    implementation 'com.github.billthefarmer:mididriver:v1.15'
 }
 ```
 This will currently add all versions of the native library.
@@ -64,10 +64,10 @@ This will currently add all versions of the native library.
     int[] config()  // Return a four element array of ints with part of
                     // the EAS onfig:
 
-      config[0] = pLibConfig->maxVoices;
-      config[1] = pLibConfig->numChannels;
-      config[2] = pLibConfig->sampleRate;
-      config[3] = pLibConfig->mixBufferSize;
+        config[0] = pLibConfig->maxVoices;
+        config[1] = pLibConfig->numChannels;
+        config[2] = pLibConfig->sampleRate;
+        config[3] = pLibConfig->mixBufferSize;
 
     boolean write(byte buffer[]) // Writes midi data to the Sonivox
                                  // synthesizer. The length of the array
