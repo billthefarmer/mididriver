@@ -10,8 +10,11 @@ android:
     - build-tools-28.0.2
     - android-28
 
-before_install:
+install:
   - echo y | sdkmanager "ndk-bundle"
+
+before_script:
+  - export ANDROID_NDK_HOME=$ANDROID_HOME/ndk-bundle
 
 script:
   - ./gradlew build
