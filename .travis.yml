@@ -12,9 +12,6 @@ android:
 
 before_install:
   - echo y | sdkmanager "ndk-bundle"
-  - export ANDROID_NDK_HOME=$HOME/android-ndk-home
-  - pushd $ANDROID_NDK_HOME
-  - popd
 
 script:
   - ./gradlew build
