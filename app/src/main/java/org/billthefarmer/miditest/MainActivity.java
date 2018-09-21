@@ -43,9 +43,9 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
 
-import org.billthefarmer.mididriver.MidiDriver;
-
 import java.util.Locale;
+
+import org.billthefarmer.mididriver.MidiDriver;
 
 public class MainActivity extends Activity
     implements View.OnTouchListener, View.OnClickListener,
@@ -56,6 +56,7 @@ public class MainActivity extends Activity
     protected MidiDriver midi;
     protected MediaPlayer player;
 
+    // On create
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -63,11 +64,9 @@ public class MainActivity extends Activity
         setContentView(R.layout.activity_main);
 
         // Create midi driver
-
         midi = new MidiDriver();
 
         // Set on touch listener
-
         View v = findViewById(R.id.c);
         if (v != null)
             v.setOnTouchListener(this);
@@ -87,13 +86,11 @@ public class MainActivity extends Activity
         text = findViewById(R.id.status);
 
         // Set on midi start listener
-
         if (midi != null)
             midi.setOnMidiStartListener(this);
     }
 
     // On resume
-
     @Override
     protected void onResume()
     {
@@ -106,25 +103,21 @@ public class MainActivity extends Activity
     }
 
     // On pause
-
     @Override
     protected void onPause()
     {
         super.onPause();
 
         // Stop midi
-
         if (midi != null)
             midi.stop();
 
         // Stop player
-
         if (player != null)
             player.stop();
     }
 
     // On touch
-
     @Override
     public boolean onTouch(View v, MotionEvent event)
     {
@@ -133,119 +126,111 @@ public class MainActivity extends Activity
 
         switch (action) {
             // Down
-
-            case MotionEvent.ACTION_DOWN:
-                switch (id) {
-                    case R.id.c:
-                        sendMidi(0x90, 48, 63);
-                        sendMidi(0x90, 52, 63);
-                        sendMidi(0x90, 55, 63);
-                        break;
-
-                    case R.id.g:
-                        sendMidi(0x90, 55, 63);
-                        sendMidi(0x90, 59, 63);
-                        sendMidi(0x90, 62, 63);
-                        break;
-
-                    default:
-                        return false;
-                }
-
-                v.performClick();
+        case MotionEvent.ACTION_DOWN:
+            switch (id) {
+            case R.id.c:
+                sendMidi(0x90, 48, 63);
+                sendMidi(0x90, 52, 63);
+                sendMidi(0x90, 55, 63);
                 break;
 
-            // Up
-
-            case MotionEvent.ACTION_UP:
-                switch (id) {
-                    case R.id.c:
-                        sendMidi(0x80, 48, 0);
-                        sendMidi(0x80, 52, 0);
-                        sendMidi(0x80, 55, 0);
-                        break;
-
-                    case R.id.g:
-                        sendMidi(0x80, 55, 0);
-                        sendMidi(0x80, 59, 0);
-                        sendMidi(0x80, 62, 0);
-                        break;
-
-                    default:
-                        return false;
-                }
+            case R.id.g:
+                sendMidi(0x90, 55, 63);
+                sendMidi(0x90, 59, 63);
+                sendMidi(0x90, 62, 63);
                 break;
 
             default:
                 return false;
+            }
+
+            v.performClick();
+            break;
+
+            // Up
+        case MotionEvent.ACTION_UP:
+            switch (id) {
+            case R.id.c:
+                sendMidi(0x80, 48, 0);
+                sendMidi(0x80, 52, 0);
+                sendMidi(0x80, 55, 0);
+                break;
+
+            case R.id.g:
+                sendMidi(0x80, 55, 0);
+                sendMidi(0x80, 59, 0);
+                sendMidi(0x80, 62, 0);
+                break;
+
+            default:
+                return false;
+            }
+            break;
+
+        default:
+            return false;
         }
 
         return false;
     }
 
     // On click
-
     @Override
     public void onClick(View v)
     {
         int id = v.getId();
 
         switch (id) {
-            case R.id.ants:
-                if (player != null) {
-                    player.stop();
-                    player.release();
-                }
+        case R.id.ants:
+            if (player != null) {
+                player.stop();
+                player.release();
+            }
 
-                player = MediaPlayer.create(this, R.raw.ants);
-                player.start();
-                break;
+            player = MediaPlayer.create(this, R.raw.ants);
+            player.start();
+            break;
 
-            case R.id.nants:
-                if (player != null)
-                    player.stop();
-                break;
+        case R.id.nants:
+            if (player != null)
+                player.stop();
+            break;
         }
     }
 
     // Listener for sending initial midi messages when the Sonivox
     // synthesizer has been started, such as program change.
-
     @Override
     public void onMidiStart()
     {
         // Program change - harpsicord
-
-        sendMidi();
+        sendMidi(0xc0, 6);
 
         // Get the config
-
         int config[] = midi.config();
 
         Resources resources = getResources();
 
         String format = resources.getString(R.string.format);
         String info = String.format(Locale.getDefault(), format, config[0],
-                config[1], config[2], config[3]);
+                                    config[1], config[2], config[3]);
 
         if (text != null)
             text.setText(info);
     }
 
-    // Send a midi message
-
-    protected void sendMidi()
+    // Send a midi message, 2 bytes
+    protected void sendMidi(int m, int p)
     {
         byte msg[] = new byte[2];
 
-        msg[0] = (byte) 0xc0;
-        msg[1] = (byte) 6;
+        msg[0] = (byte) m;
+        msg[1] = (byte) p;
 
         midi.write(msg);
     }
 
-    // Send a midi message
-
+    // Send a midi message, 3 bytes
     protected void sendMidi(int m, int n, int v)
     {
         byte msg[] = new byte[3];
