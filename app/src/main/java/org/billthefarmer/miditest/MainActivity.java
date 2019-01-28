@@ -43,13 +43,13 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
 
-import java.util.Locale;
-
 import org.billthefarmer.mididriver.MidiDriver;
+
+import java.util.Locale;
 
 public class MainActivity extends Activity
     implements View.OnTouchListener, View.OnClickListener,
-	       MidiDriver.OnMidiStartListener
+            MidiDriver.OnMidiStartListener
 {
     private TextView text;
 
@@ -203,8 +203,8 @@ public class MainActivity extends Activity
     @Override
     public void onMidiStart()
     {
-        // Program change - harpsicord
-        sendMidi(0xc0, 6);
+        // Program change - harpsichord
+        sendMidi();
 
         // Get the config
         int config[] = midi.config();
@@ -220,12 +220,12 @@ public class MainActivity extends Activity
     }
 
     // Send a midi message, 2 bytes
-    protected void sendMidi(int m, int p)
+    protected void sendMidi()
     {
         byte msg[] = new byte[2];
 
-        msg[0] = (byte) m;
-        msg[1] = (byte) p;
+        msg[0] = (byte) 0xc0;
+        msg[1] = (byte) 6;
 
         midi.write(msg);
     }

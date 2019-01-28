@@ -5,7 +5,7 @@ group='com.github.billthefarmer'
 
 android {
     compileSdkVersion 28
-    buildToolsVersion '28.0.2'
+    buildToolsVersion '28.0.3'
 
     externalNativeBuild {
         ndkBuild {
@@ -37,12 +37,8 @@ android {
     }
 
     compileOptions {
+        encoding = 'UTF-8'
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    lintOptions {
-        disable 'OldTargetApi'
-        abortOnError false
     }
 }

@@ -2,24 +2,24 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 28
-    buildToolsVersion '28.0.2'
+    buildToolsVersion '28.0.3'
 
     defaultConfig {
         applicationId "org.billthefarmer.miditest"
         minSdkVersion 14
         targetSdkVersion 28
-        versionName "1.0"
-        versionCode 1
+        versionName "1.17"
+        versionCode 117
     }
 
     compileOptions {
+        encoding = 'UTF-8'
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
     lintOptions {
-        abortOnError false
-        disable 'OldTargetApi', 'IconMissingDensityFolder'
+        disable 'IconMissingDensityFolder', 'GoogleAppIndexingWarning', 'AllowBackup'
     }
 }
 
