@@ -27,7 +27,6 @@ Add the driver to your build.gradle with
 ```gradle
 allprojects {
     repositories {
-        ...
         maven { url "https://jitpack.io" }
     }
 }
@@ -38,7 +37,6 @@ dependencies {
     implementation 'com.github.billthefarmer:mididriver:v1.16'
 }
 ```
-This will currently add all versions of the native library.
 
 ### Methods
 ```java
