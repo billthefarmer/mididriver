@@ -35,7 +35,7 @@ allprojects {
 and:
 ```gradle
 dependencies {
-    implementation 'com.github.billthefarmer:mididriver:v1.15'
+    implementation 'com.github.billthefarmer:mididriver:v1.16'
 }
 ```
 This will currently add all versions of the native library.

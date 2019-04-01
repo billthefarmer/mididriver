@@ -32,8 +32,10 @@
 //#define DEBUG_JET
 
 #include "eas_data.h"
+#include "eas_smf.h"
 #include "jet_data.h"
 #include "eas_host.h"
+#include "eas_report.h"
 
 
 /* default configuration */
@@ -516,11 +518,19 @@ EAS_PUBLIC EAS_RESULT JET_Init (EAS_DATA_HANDLE easHandle, const S_JET_CONFIG *p
 EAS_PUBLIC EAS_RESULT JET_Shutdown (EAS_DATA_HANDLE easHandle)
 {
     EAS_RESULT result;
+    int i;
 
     /* close any open files */
     result = JET_CloseFile(easHandle);
 
     /* free allocated data */
+    for(i = 0 ; i < easHandle->jetHandle->numLibraries ; i++) {
+        if(easHandle->jetHandle->libHandles[i] != NULL) {
+            EAS_HWFree(easHandle->hwInstData, easHandle->jetHandle->libHandles[i]);
+            easHandle->jetHandle->libHandles[i] = NULL;
+        }
+    }
+
     EAS_HWFree(easHandle->hwInstData, easHandle->jetHandle);
     easHandle->jetHandle = NULL;
     return result;
