@@ -34,7 +34,7 @@ allprojects {
 and:
 ```gradle
 dependencies {
-    implementation 'com.github.billthefarmer:mididriver:v1.16'
+    implementation 'com.github.billthefarmer:mididriver:v1.17'
 }
 ```
 
