@@ -29,11 +29,11 @@
 
 // includes
 #define LOG_TAG "SYNTH"
-
 #include "log/log.h"
 #include <cutils/log.h>
 
 #include "eas_data.h"
+#include "eas_report.h"
 #include "eas_host.h"
 #include "eas_math.h"
 #include "eas_synth_protos.h"
@@ -562,7 +562,7 @@ static EAS_BOOL WT_UpdateVoice (S_VOICE_MGR *pVoiceMgr, S_SYNTH *pSynth, S_SYNTH
     if (temp != 0) {
         temp = temp << NUM_PHASE_FRAC_BITS;
         if (intFrame.frame.phaseIncrement > temp) {
-            ALOGW("%p phaseIncrement=%d", pWTVoice, (int) intFrame.frame.phaseIncrement);
+            ALOGW("%p phaseIncrement=%d", pWTVoice, (int)intFrame.frame.phaseIncrement);
             intFrame.frame.phaseIncrement %= temp;
         }
     }

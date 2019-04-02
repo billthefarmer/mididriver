@@ -122,6 +122,7 @@
 #include "eas_math.h"
 #include "dls.h"
 #include "dls2.h"
+#include "eas_report.h"
 
 //2 we should replace log10() function with fixed point routine in ConvertSampleRate()
 /* lint is choking on the ARM math.h file, so we declare the log10 function here */

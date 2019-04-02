@@ -29,6 +29,9 @@
 
 #include "eas_data.h"
 #include "eas_host.h"
+#include "eas_pcm.h"
+#include "eas_math.h"
+#include "eas_report.h"
 
 // #define _DEBUG_IMA_ADPCM_LOCATE
 

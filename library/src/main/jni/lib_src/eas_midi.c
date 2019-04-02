@@ -29,6 +29,7 @@
 */
 
 #include "eas_data.h"
+#include "eas_report.h"
 #include "eas_miditypes.h"
 #include "eas_midi.h"
 #include "eas_vm_protos.h"

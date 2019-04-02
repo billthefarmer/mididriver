@@ -67,10 +67,7 @@ static EAS_RESULT XMF_Resume (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData);
 static EAS_RESULT XMF_SetData (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData, EAS_I32 param, EAS_I32 value);
 static EAS_RESULT XMF_GetData (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData, EAS_I32 param, EAS_I32 *pValue);
 static EAS_RESULT XMF_FindFileContents (EAS_HW_DATA_HANDLE hwInstData, S_XMF_DATA *pXMFData);
-
-static EAS_RESULT
-XMF_ReadNode(EAS_HW_DATA_HANDLE hwInstData, S_XMF_DATA *pXMFData, EAS_I32 nodeOffset,
-             EAS_I32 *pLength, EAS_I32 depth);
+static EAS_RESULT XMF_ReadNode (EAS_HW_DATA_HANDLE hwInstData, S_XMF_DATA *pXMFData, EAS_I32 nodeOffset, EAS_I32 *pLength, EAS_I32 depth);
 static EAS_RESULT XMF_ReadVLQ (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE fileHandle, EAS_I32 *value);
 
 
@@ -507,7 +504,7 @@ static EAS_RESULT XMF_FindFileContents (EAS_HW_DATA_HANDLE hwInstData, S_XMF_DAT
     EAS_RESULT result;
     EAS_I32 value;
     EAS_I32 length;
-    EAS_I32 node_depth = 0;
+    EAS_I32 node_depth = 0 ;
 
     /* initialize offsets */
     pXMFData->dlsOffset = pXMFData->midiOffset = 0;
@@ -556,9 +553,7 @@ static EAS_RESULT XMF_FindFileContents (EAS_HW_DATA_HANDLE hwInstData, S_XMF_DAT
  *
  *----------------------------------------------------------------------------
 */
-static EAS_RESULT
-XMF_ReadNode(EAS_HW_DATA_HANDLE hwInstData, S_XMF_DATA *pXMFData, EAS_I32 nodeOffset,
-             EAS_I32 *pLength, EAS_I32 depth)
+static EAS_RESULT XMF_ReadNode (EAS_HW_DATA_HANDLE hwInstData, S_XMF_DATA *pXMFData, EAS_I32 nodeOffset, EAS_I32 *pLength, EAS_I32 depth)
 {
     EAS_RESULT result;
     EAS_I32 refType;
@@ -569,7 +564,7 @@ XMF_ReadNode(EAS_HW_DATA_HANDLE hwInstData, S_XMF_DATA *pXMFData, EAS_I32 nodeOf
     EAS_U32 chunkType;
 
     /* check the depth of current node*/
-    if (depth > 100)
+    if ( depth > 100 )
         return EAS_ERROR_FILE_FORMAT;
 
     /* seek to start of node */
@@ -666,8 +661,7 @@ XMF_ReadNode(EAS_HW_DATA_HANDLE hwInstData, S_XMF_DATA *pXMFData, EAS_I32 nodeOf
                 return EAS_ERROR_FILE_FORMAT;
             }
 
-            if ((result = XMF_ReadNode(hwInstData, pXMFData, offset, &length, depth + 1)) !=
-                EAS_SUCCESS)
+            if ((result = XMF_ReadNode(hwInstData, pXMFData, offset, &length, depth+1)) != EAS_SUCCESS)
                 return result;
 
             /* seek to start of next item */

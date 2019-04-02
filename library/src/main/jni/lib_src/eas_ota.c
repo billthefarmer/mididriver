@@ -27,6 +27,9 @@
  *----------------------------------------------------------------------------
 */
 
+#define LOG_TAG "Sonivox"
+#include <log/log.h>
+
 #include "eas_data.h"
 #include "eas_miditypes.h"
 #include "eas_parser.h"
@@ -211,6 +214,7 @@ static EAS_RESULT OTA_CheckFileType (S_EAS_DATA *pEASData, EAS_FILE_HANDLE fileH
                 pData->fileOffset = offset;
                 pData->state = EAS_STATE_OPEN;
                 *ppHandle = pData;
+                ALOGD("%s() OTA file recognized", __func__);
                 break;
             }
 
@@ -360,6 +364,7 @@ static EAS_RESULT OTA_Event (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData, EAS_I
         /* check for loop - don't do infinite loops when locating */
         if (pData->loopCount && ((parserMode == eParserModePlay) || (pData->loopCount != OTA_INFINITE_LOOP)))
         {
+            ALOGV("%s() loop backwards, loopCount = %d", __func__, pData->loopCount);
             /* if not infinite loop, decrement loop count */
             if (pData->loopCount != OTA_INFINITE_LOOP)
                 pData->loopCount--;

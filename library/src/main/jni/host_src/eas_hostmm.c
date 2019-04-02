@@ -50,7 +50,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <sys/mman.h>
+#include <errno.h>
 #include <signal.h>
 #include <pthread.h>
 #include <media/MediaPlayerInterface.h>
