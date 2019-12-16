@@ -123,6 +123,7 @@
 #include "dls.h"
 #include "dls2.h"
 #include "eas_report.h"
+#include <string.h>
 
 //2 we should replace log10() function with fixed point routine in ConvertSampleRate()
 /* lint is choking on the ARM math.h file, so we declare the log10 function here */
@@ -1317,7 +1318,56 @@ static EAS_RESULT Parse_data (SDLS_SYNTHESIZER_DATA *pDLSData, EAS_I32 pos, EAS_
     return EAS_SUCCESS;
 }
 #elif defined(_16_BIT_SAMPLES)
-#error "16-bit DLS conversion not implemented yet"
+static EAS_RESULT Parse_data (SDLS_SYNTHESIZER_DATA *pDLSData, EAS_I32 pos, EAS_I32 size, S_WSMP_DATA *pWsmp, EAS_SAMPLE *pSample, EAS_U32 sampleLen)
+{
+    EAS_RESULT result;
+    EAS_U8 convBuf[SAMPLE_CONVERT_CHUNK_SIZE];
+    EAS_I32 count = 0;
+    EAS_I32 i;
+    EAS_I16 *p;
+
+    /* seek to start of chunk */
+    if ((result = EAS_HWFileSeek(pDLSData->hwInstData, pDLSData->fileHandle, pos)) != EAS_SUCCESS)
+        return result;
+
+        p = pSample;
+
+        while (size)
+        {
+            /* read a small chunk of data and convert it */
+            count = (size < SAMPLE_CONVERT_CHUNK_SIZE ? size : SAMPLE_CONVERT_CHUNK_SIZE);
+            if ((result = EAS_HWReadFile(pDLSData->hwInstData, pDLSData->fileHandle, convBuf, count, &count)) != EAS_SUCCESS)
+            {
+                return result;
+            }
+            size -= count;
+            if (pWsmp->bitsPerSample == 16)
+            {
+                memcpy(p, convBuf, count);
+                p += count >> 1;
+            }
+            else
+            {
+                for(i=0; i<count; i++)
+                {
+                    *p++ = (short)((convBuf[i] ^ 0x80) << 8);
+                }
+            }
+
+        }
+    /* for looped samples, copy the last sample to the end */
+    if (pWsmp->loopLength)
+    {
+        if( (pDLSData->wavePoolOffset + pWsmp->loopLength) >= pDLSData->wavePoolSize )
+        {
+            return EAS_SUCCESS;
+        }
+
+        pSample[(pWsmp->loopStart + pWsmp->loopLength)>>1] = pSample[(pWsmp->loopStart)>>1];
+    }
+
+    return EAS_SUCCESS;
+}
 #else
 #error "Must specifiy _8_BIT_SAMPLES or _16_BIT_SAMPLES"
 #endif

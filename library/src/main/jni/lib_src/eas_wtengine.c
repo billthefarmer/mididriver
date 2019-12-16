@@ -60,7 +60,7 @@ extern void WT_Interpolate (S_WT_VOICE *pWTVoice, S_WT_INT_FRAME *pWTIntFrame);
 extern void WT_VoiceFilter (S_FILTER_CONTROL*pFilter, S_WT_INT_FRAME *pWTIntFrame);
 #endif
 
-#if defined(_OPTIMIZED_MONO) || !defined(NATIVE_EAS_KERNEL)
+#if defined(_OPTIMIZED_MONO) || !defined(NATIVE_EAS_KERNEL) || defined(_16_BIT_SAMPLES)
 /*----------------------------------------------------------------------------
  * WT_VoiceGain
  *----------------------------------------------------------------------------
@@ -163,7 +163,7 @@ void WT_VoiceGain (S_WT_VOICE *pWTVoice, S_WT_INT_FRAME *pWTIntFrame)
 }
 #endif
 
-#ifndef NATIVE_EAS_KERNEL
+#if !defined(NATIVE_EAS_KERNEL) || defined(_16_BIT_SAMPLES)
 /*----------------------------------------------------------------------------
  * WT_Interpolate
  *----------------------------------------------------------------------------
@@ -262,7 +262,7 @@ void WT_Interpolate (S_WT_VOICE *pWTVoice, S_WT_INT_FRAME *pWTIntFrame)
 }
 #endif
 
-#ifndef NATIVE_EAS_KERNEL
+#if !defined(NATIVE_EAS_KERNEL) || defined(_16_BIT_SAMPLES)
 /*----------------------------------------------------------------------------
  * WT_InterpolateNoLoop
  *----------------------------------------------------------------------------

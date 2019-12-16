@@ -405,11 +405,21 @@ static EAS_RESULT WT_StartVoice (S_VOICE_MGR *pVoiceMgr, S_SYNTH *pSynth, S_SYNT
 
         if (pRegion->region.keyGroupAndFlags & REGION_FLAG_IS_LOOPED)
         {
+#if defined (_8_BIT_SAMPLES)
             pWTVoice->loopStart = pWTVoice->phaseAccum + pRegion->loopStart;
             pWTVoice->loopEnd = pWTVoice->phaseAccum + pRegion->loopEnd - 1;
+#else //_16_BIT_SAMPLES
+            pWTVoice->loopStart = pWTVoice->phaseAccum + (pRegion->loopStart<<1);
+            pWTVoice->loopEnd = pWTVoice->phaseAccum + (pRegion->loopEnd<<1) - 2;
+#endif
         }
-        else
+        else {
+#if defined (_8_BIT_SAMPLES)
             pWTVoice->loopStart = pWTVoice->loopEnd = pWTVoice->phaseAccum + pSynth->pEAS->pSampleLen[pRegion->waveIndex] - 1;
+#else //_16_BIT_SAMPLES
+            pWTVoice->loopStart = pWTVoice->loopEnd = pWTVoice->phaseAccum + pSynth->pEAS->pSampleLen[pRegion->waveIndex] - 2;
+#endif
+        }
     }
 
 #ifdef EAS_SPLIT_WT_SYNTH
@@ -457,12 +467,19 @@ EAS_BOOL WT_CheckSampleEnd (S_WT_VOICE *pWTVoice, S_WT_INT_FRAME *pWTIntFrame, E
     /* check to see if we hit the end of the waveform this time */
     /*lint -e{703} use shift for performance */
     endPhaseFrac = pWTVoice->phaseFrac + (pWTIntFrame->frame.phaseIncrement << SYNTH_UPDATE_PERIOD_IN_BITS);
+#if defined (_8_BIT_SAMPLES)
     endPhaseAccum = pWTVoice->phaseAccum + GET_PHASE_INT_PART(endPhaseFrac);
+#else //_16_BIT_SAMPLES
+    // Multiply by 2 for 16 bit processing module implementation
+    endPhaseAccum = pWTVoice->phaseAccum + (EAS_U32)(endPhaseFrac >> 14);
+#endif
     if (endPhaseAccum >= pWTVoice->loopEnd)
     {
         /* calculate how far current ptr is from end */
         numSamples = (EAS_I32) (pWTVoice->loopEnd - pWTVoice->phaseAccum);
-
+#if defined (_16_BIT_SAMPLES)
+        numSamples >>= 1;        // Divide by 2 for 16 bit processing module implementation
+#endif
         /* now account for the fractional portion */
         /*lint -e{703} use shift for performance */
         numSamples = (EAS_I32) ((numSamples << NUM_PHASE_FRAC_BITS) - pWTVoice->phaseFrac);
@@ -559,6 +576,9 @@ static EAS_BOOL WT_UpdateVoice (S_VOICE_MGR *pVoiceMgr, S_SYNTH *pSynth, S_SYNTH
         temp += (pVoice->note + pSynth->globalTranspose) * 100;
     intFrame.frame.phaseIncrement = WT_UpdatePhaseInc(pWTVoice, pArt, pChannel, temp);
     temp = pWTVoice->loopEnd - pWTVoice->loopStart;
+#ifdef _16_BIT_SAMPLES
+    temp >>= 1;
+#endif
     if (temp != 0) {
         temp = temp << NUM_PHASE_FRAC_BITS;
         if (intFrame.frame.phaseIncrement > temp) {
