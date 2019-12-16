@@ -2,6 +2,7 @@ build/
 *.iml
 .gradle/
 .idea/
+.cxx/
 ant.properties
 local.properties
 .externalNativeBuild
