@@ -8,8 +8,8 @@ android {
         applicationId "org.billthefarmer.miditest"
         minSdkVersion 14
         targetSdkVersion 28
-        versionName "1.17"
-        versionCode 117
+        versionName "1.18"
+        versionCode 118
     }
 
     compileOptions {

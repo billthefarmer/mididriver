@@ -62,7 +62,6 @@ LOCAL_SRC_FILES = \
 #	lib_src/eas_wavefiledata.c \
 
 LOCAL_CFLAGS += -O2 \
-	-no-integrated-as \
 	-D UNIFIED_DEBUG_MESSAGES \
 	-D EAS_WT_SYNTH \
 	-D NUM_OUTPUT_CHANNELS=2 \
@@ -97,8 +96,6 @@ LOCAL_MODULE := sonivox
 # 	host_src/eas_reverb.h \
 # 	host_src/jet.h
 
-# Remove support for assembler files as GNU compiler support withdrawn
-# from NDK r17b, which must include GNU as.
 ifeq ($(TARGET_ARCH),arm)
 LOCAL_SRC_FILES += \
 	lib_src/ARM-E_filter_gnu.s \
@@ -120,11 +117,12 @@ LOCAL_CFLAGS += \
 	$(foreach f,$(asm_flags),-Wa,"$(f)")
 
 # .s files not ported for Clang assembler yet.
-# LOCAL_CLANG_ASFLAGS += -no-integrated-as
+LOCAL_ASFLAGS += -xassembler-with-cpp
 
 asm_flags :=
 
-LOCAL_CFLAGS += -D NATIVE_EAS_KERNEL
+LOCAL_CFLAGS += -no-integrated-as \
+		-D NATIVE_EAS_KERNEL
 
 # LOCAL_COPY_HEADERS += lib_src/ARM_synth_constants_gnu.inc
 endif
