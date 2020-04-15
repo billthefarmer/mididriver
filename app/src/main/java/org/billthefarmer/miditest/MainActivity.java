@@ -36,7 +36,6 @@
 package org.billthefarmer.miditest;
 
 import android.app.Activity;
-import android.content.res.Resources;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.MotionEvent;
@@ -44,6 +43,8 @@ import android.view.View;
 import android.widget.TextView;
 
 import org.billthefarmer.mididriver.MidiDriver;
+import org.billthefarmer.mididriver.MidiConstants;
+import org.billthefarmer.mididriver.GeneralMidiConstants;
 
 import java.util.Locale;
 
@@ -129,15 +130,15 @@ public class MainActivity extends Activity
         case MotionEvent.ACTION_DOWN:
             switch (id) {
             case R.id.c:
-                sendMidi(0x90, 48, 63);
-                sendMidi(0x90, 52, 63);
-                sendMidi(0x90, 55, 63);
+                sendMidi(MidiConstants.NOTE_ON, 48, 63);
+                sendMidi(MidiConstants.NOTE_ON, 52, 63);
+                sendMidi(MidiConstants.NOTE_ON, 55, 63);
                 break;
 
             case R.id.g:
-                sendMidi(0x90, 55, 63);
-                sendMidi(0x90, 59, 63);
-                sendMidi(0x90, 62, 63);
+                sendMidi(MidiConstants.NOTE_ON, 55, 63);
+                sendMidi(MidiConstants.NOTE_ON, 59, 63);
+                sendMidi(MidiConstants.NOTE_ON, 62, 63);
                 break;
 
             default:
@@ -151,15 +152,15 @@ public class MainActivity extends Activity
         case MotionEvent.ACTION_UP:
             switch (id) {
             case R.id.c:
-                sendMidi(0x80, 48, 0);
-                sendMidi(0x80, 52, 0);
-                sendMidi(0x80, 55, 0);
+                sendMidi(MidiConstants.NOTE_OFF, 48, 0);
+                sendMidi(MidiConstants.NOTE_OFF, 52, 0);
+                sendMidi(MidiConstants.NOTE_OFF, 55, 0);
                 break;
 
             case R.id.g:
-                sendMidi(0x80, 55, 0);
-                sendMidi(0x80, 59, 0);
-                sendMidi(0x80, 62, 0);
+                sendMidi(MidiConstants.NOTE_OFF, 55, 0);
+                sendMidi(MidiConstants.NOTE_OFF, 59, 0);
+                sendMidi(MidiConstants.NOTE_OFF, 62, 0);
                 break;
 
             default:
@@ -204,14 +205,13 @@ public class MainActivity extends Activity
     public void onMidiStart()
     {
         // Program change - harpsichord
-        sendMidi();
+        sendMidi(MidiConstants.PROGRAM_CHANGE,
+                 GeneralMidiConstants.HARPSICHORD);
 
         // Get the config
         int config[] = midi.config();
 
-        Resources resources = getResources();
-
-        String format = resources.getString(R.string.format);
+        String format = getString(R.string.format);
         String info = String.format(Locale.getDefault(), format, config[0],
                                     config[1], config[2], config[3]);
 
@@ -220,12 +220,12 @@ public class MainActivity extends Activity
     }
 
     // Send a midi message, 2 bytes
-    protected void sendMidi()
+    protected void sendMidi(int m, int n)
     {
         byte msg[] = new byte[2];
 
-        msg[0] = (byte) 0xc0;
-        msg[1] = (byte) 6;
+        msg[0] = (byte) m;
+        msg[1] = (byte) n;
 
         midi.write(msg);
     }
