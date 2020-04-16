@@ -45,8 +45,8 @@ extern "C"
 #endif
 
 // ALOGE("b/68953854 SMF_ParseMetaEvent, negative len = %ld\n", (EAS_I32) len);
-#define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, "", __VA_ARGS__)
-#define ALOGW(...) __android_log_print(ANDROID_LOG_WARN, "", __VA_ARGS__)
+#define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, "MidiDriver", __VA_ARGS__)
+#define ALOGW(...) __android_log_print(ANDROID_LOG_WARN, "MidiDriver", __VA_ARGS__)
 
 // android_errorWriteLog(0x534e4554, "34031018");
 #define android_errorWriteLog(a, b) ALOGE(b)
