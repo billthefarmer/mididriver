@@ -6,7 +6,7 @@ available in
 
 ![](https://github.com/billthefarmer/billthefarmer.github.io/raw/master/images/miditest.png)
 
-Licensed under GPL or Apache license - your choice.
+Licensed under Apache license.
 
 Includes Sonivox EAS library rebuilt without spurious references to
 libutils and libcutils. The ARM versions have been build with the
