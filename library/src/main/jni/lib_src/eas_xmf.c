@@ -67,8 +67,8 @@ static EAS_RESULT XMF_Resume (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData);
 static EAS_RESULT XMF_SetData (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData, EAS_I32 param, EAS_I32 value);
 static EAS_RESULT XMF_GetData (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData, EAS_I32 param, EAS_I32 *pValue);
 static EAS_RESULT XMF_FindFileContents (EAS_HW_DATA_HANDLE hwInstData, S_XMF_DATA *pXMFData);
-static EAS_RESULT XMF_ReadNode (EAS_HW_DATA_HANDLE hwInstData, S_XMF_DATA *pXMFData, EAS_I32 nodeOffset, EAS_I32 *pLength, EAS_I32 depth);
-static EAS_RESULT XMF_ReadVLQ (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE fileHandle, EAS_I32 *value);
+static EAS_RESULT XMF_ReadNode (EAS_HW_DATA_HANDLE hwInstData, S_XMF_DATA *pXMFData, EAS_I32 nodeOffset, EAS_I32 endOffset, EAS_I32 *pLength, EAS_I32 depth);
+static EAS_RESULT XMF_ReadVLQ (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE fileHandle, EAS_U32 *remainingBytes, EAS_I32 *value);
 
 
 /*----------------------------------------------------------------------------
@@ -503,26 +503,56 @@ static EAS_RESULT XMF_FindFileContents (EAS_HW_DATA_HANDLE hwInstData, S_XMF_DAT
 {
     EAS_RESULT result;
     EAS_I32 value;
+    EAS_I32 treeStart;
+    EAS_I32 treeEnd;
     EAS_I32 length;
     EAS_I32 node_depth = 0 ;
+    EAS_I32 fileLength;
+    EAS_U32 remainingBytes;
 
     /* initialize offsets */
     pXMFData->dlsOffset = pXMFData->midiOffset = 0;
 
-    /* read file length, ignore it for now */
-    if ((result = XMF_ReadVLQ(hwInstData, pXMFData->fileHandle, &value)) != EAS_SUCCESS)
+    /* read file length. We're arbitrarily limiting the size of this field to
+     * 16 bytes, since we don't yet have an actual limit. Once the field is
+     * read, we correct remainingBytes using the actual value that we had read.
+     * Since upon return from XMF_ReadVLQ(), remainingBytes represents how much
+     * is left unread, it will be set to (16 - size_of_field). Therefore, size
+     * of field is (16 - remainingBytes), which is what we need to subtract from
+     * the total size. */
+    const EAS_U32 kInitialRemainingBytes = 16;
+
+    remainingBytes = kInitialRemainingBytes;
+    if ((result = XMF_ReadVLQ(hwInstData,
+                              pXMFData->fileHandle,
+                              &remainingBytes,
+                              &fileLength)) != EAS_SUCCESS)
         return result;
+    if (fileLength < 0)
+        return EAS_ERROR_FILE_FORMAT;
+    remainingBytes = fileLength + remainingBytes - kInitialRemainingBytes;
 
     /* read MetaDataTypesTable length and skip over it */
-    if ((result = XMF_ReadVLQ(hwInstData, pXMFData->fileHandle, &value)) != EAS_SUCCESS)
+    if ((result = XMF_ReadVLQ(hwInstData, pXMFData->fileHandle, &remainingBytes, &value)) != EAS_SUCCESS)
         return result;
+    if (value > remainingBytes)
+        return EAS_ERROR_FILE_FORMAT;
     if ((result = EAS_HWFileSeekOfs(hwInstData, pXMFData->fileHandle, value)) != EAS_SUCCESS)
         return result;
+    remainingBytes -= value;
 
-    /* get TreeStart offset and jump to it */
-    if ((result = XMF_ReadVLQ(hwInstData, pXMFData->fileHandle, &value)) != EAS_SUCCESS)
+    /* get TreeStart and TreeEnd offsets */
+    if ((result = XMF_ReadVLQ(hwInstData, pXMFData->fileHandle, &remainingBytes, &treeStart)) != EAS_SUCCESS)
         return result;
-    if ((result = XMF_ReadNode(hwInstData, pXMFData, value, &length, node_depth)) != EAS_SUCCESS)
+    if (treeStart < 0)
+        return EAS_ERROR_FILE_FORMAT;
+
+    if ((result = XMF_ReadVLQ(hwInstData, pXMFData->fileHandle, &remainingBytes, &treeEnd)) != EAS_SUCCESS)
+        return result;
+    if (treeEnd < treeStart || treeEnd >= fileLength)
+        return EAS_ERROR_FILE_FORMAT;
+
+    if ((result = XMF_ReadNode(hwInstData, pXMFData, treeStart, treeEnd + 1, &length, node_depth)) != EAS_SUCCESS)
         return result;
 
     /* check for SMF data */
@@ -553,7 +583,7 @@ static EAS_RESULT XMF_FindFileContents (EAS_HW_DATA_HANDLE hwInstData, S_XMF_DAT
  *
  *----------------------------------------------------------------------------
 */
-static EAS_RESULT XMF_ReadNode (EAS_HW_DATA_HANDLE hwInstData, S_XMF_DATA *pXMFData, EAS_I32 nodeOffset, EAS_I32 *pLength, EAS_I32 depth)
+static EAS_RESULT XMF_ReadNode (EAS_HW_DATA_HANDLE hwInstData, S_XMF_DATA *pXMFData, EAS_I32 nodeOffset, EAS_I32 endOffset, EAS_I32 *pLength, EAS_I32 depth)
 {
     EAS_RESULT result;
     EAS_I32 refType;
@@ -562,44 +592,67 @@ static EAS_RESULT XMF_ReadNode (EAS_HW_DATA_HANDLE hwInstData, S_XMF_DATA *pXMFD
     EAS_I32 length;
     EAS_I32 headerLength;
     EAS_U32 chunkType;
+    EAS_U32 remainingInlineBytes;
+    EAS_U32 deltaBytes;
 
     /* check the depth of current node*/
     if ( depth > 100 )
         return EAS_ERROR_FILE_FORMAT;
+
+    /* this will be used to check we don't read past the node limits */
+    remainingInlineBytes = endOffset - nodeOffset;
 
     /* seek to start of node */
     if ((result = EAS_HWFileSeek(hwInstData, pXMFData->fileHandle, nodeOffset)) != EAS_SUCCESS)
         return result;
 
     /* get node length */
-    if ((result = XMF_ReadVLQ(hwInstData, pXMFData->fileHandle, pLength)) != EAS_SUCCESS)
+    if ((result = XMF_ReadVLQ(hwInstData, pXMFData->fileHandle, &remainingInlineBytes, pLength)) != EAS_SUCCESS)
         return result;
+    if ((*pLength < 0) || (*pLength > endOffset - nodeOffset))
+        return EAS_ERROR_FILE_FORMAT;
+
+    /* recalculate our end offset and remaining bytes. */
+    deltaBytes = endOffset - nodeOffset - *pLength;
+    if (remainingInlineBytes < deltaBytes)
+        return EAS_ERROR_FILE_FORMAT;
+
+    remainingInlineBytes -= deltaBytes;
+    endOffset = nodeOffset + *pLength;
 
     /* get number of contained items */
-    if ((result = XMF_ReadVLQ(hwInstData, pXMFData->fileHandle, &numItems)) != EAS_SUCCESS)
+    if ((result = XMF_ReadVLQ(hwInstData, pXMFData->fileHandle, &remainingInlineBytes, &numItems)) != EAS_SUCCESS)
         return result;
+    if (numItems < 0)
+        return EAS_ERROR_FILE_FORMAT;
 
     /* get node header length */
-    if ((result = XMF_ReadVLQ(hwInstData, pXMFData->fileHandle, &headerLength)) != EAS_SUCCESS)
+    if ((result = XMF_ReadVLQ(hwInstData, pXMFData->fileHandle, &remainingInlineBytes, &headerLength)) != EAS_SUCCESS)
         return result;
+    if (headerLength < 0 || headerLength > *pLength)
+        return EAS_ERROR_FILE_FORMAT;
 
     /* get metadata length */
-    if ((result = XMF_ReadVLQ(hwInstData, pXMFData->fileHandle, &length)) != EAS_SUCCESS)
+    if ((result = XMF_ReadVLQ(hwInstData, pXMFData->fileHandle, &remainingInlineBytes, &length)) != EAS_SUCCESS)
         return result;
+    if (length < 0)
+        return EAS_ERROR_FILE_FORMAT;
 
     /* get the current location */
     if ((result = EAS_HWFilePos(hwInstData, pXMFData->fileHandle, &offset)) != EAS_SUCCESS)
         return result;
 
+    /* check that we didn't go past the header. */
     if (offset - nodeOffset > headerLength)
         return EAS_FAILURE;
 
     /* skip to node contents */
     if ((result = EAS_HWFileSeek(hwInstData, pXMFData->fileHandle, nodeOffset + headerLength)) != EAS_SUCCESS)
         return result;
+    remainingInlineBytes = endOffset - (nodeOffset + headerLength);
 
     /* get reference type */
-    if ((result = XMF_ReadVLQ(hwInstData, pXMFData->fileHandle, &refType)) != EAS_SUCCESS)
+    if ((result = XMF_ReadVLQ(hwInstData, pXMFData->fileHandle, &remainingInlineBytes, &refType)) != EAS_SUCCESS)
         return result;
 
     /* get the current location */
@@ -613,7 +666,7 @@ static EAS_RESULT XMF_ReadNode (EAS_HW_DATA_HANDLE hwInstData, S_XMF_DATA *pXMFD
         /* if in-file resource, find out where it is and jump to it */
         if (refType == 2)
         {
-            if ((result = XMF_ReadVLQ(hwInstData, pXMFData->fileHandle, &offset)) != EAS_SUCCESS)
+            if ((result = XMF_ReadVLQ(hwInstData, pXMFData->fileHandle, &remainingInlineBytes, &offset)) != EAS_SUCCESS)
                 return result;
             offset += pXMFData->fileOffset;
             if ((result = EAS_HWFileSeek(hwInstData, pXMFData->fileHandle, offset)) != EAS_SUCCESS)
@@ -626,6 +679,8 @@ static EAS_RESULT XMF_ReadNode (EAS_HW_DATA_HANDLE hwInstData, S_XMF_DATA *pXMFD
             { /* dpp: EAS_ReportEx(_EAS_SEVERITY_ERROR, "Unexpected reference type %d\n", refType); */ }
             return EAS_ERROR_FILE_FORMAT;
         }
+
+        /* at this point we stop enforcing reading past the node. */
 
         /* get the chunk type */
         if ((result = EAS_HWGetDWord(hwInstData, pXMFData->fileHandle, &chunkType, EAS_TRUE)) != EAS_SUCCESS)
@@ -656,12 +711,7 @@ static EAS_RESULT XMF_ReadNode (EAS_HW_DATA_HANDLE hwInstData, S_XMF_DATA *pXMFD
         for ( ; numItems > 0; numItems--)
         {
             /* process this item */
-            if (offset <= nodeOffset) {
-                ALOGE("b/36725407: parser did not advance");
-                return EAS_ERROR_FILE_FORMAT;
-            }
-
-            if ((result = XMF_ReadNode(hwInstData, pXMFData, offset, &length, depth+1)) != EAS_SUCCESS)
+            if ((result = XMF_ReadNode(hwInstData, pXMFData, offset, endOffset, &length, depth+1)) != EAS_SUCCESS)
                 return result;
 
             /* seek to start of next item */
@@ -849,12 +899,14 @@ static EAS_RESULT XMF_FindFileContents(S_EAS_DATA *pEASData, S_XMF_DATA *pXMFDat
  *
  *----------------------------------------------------------------------------
 */
-static EAS_RESULT XMF_ReadVLQ (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE fileHandle, EAS_I32 *value)
+static EAS_RESULT XMF_ReadVLQ (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE fileHandle, EAS_U32 *remainingBytes, EAS_I32 *value)
 {
     EAS_RESULT result;
     EAS_U8 c;
-
     *value = 0;
+
+    if ((*remainingBytes)-- == 0)
+        return EAS_ERROR_FILE_FORMAT;
 
     if ((result = EAS_HWGetByte(hwInstData, fileHandle, &c)) != EAS_SUCCESS)
         return result;
@@ -863,6 +915,9 @@ static EAS_RESULT XMF_ReadVLQ (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE fi
     {
         /*lint -e{703} shift for performance */
         *value = (*value << 7) | (c & 0x7F);
+
+        if ((*remainingBytes)-- == 0)
+            return EAS_ERROR_FILE_FORMAT;
 
         if ((result = EAS_HWGetByte(hwInstData, fileHandle, &c)) != EAS_SUCCESS)
             return result;
