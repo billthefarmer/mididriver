@@ -72,7 +72,7 @@ dependencies {
                        // This is now somewhat redundant but has been left in.
 ```
 ### Native Methods
-```c++
+```java
     boolean init()  // Return true on success, or false on failure.
 	
     int[] config()  // Return a four element array of ints with part of
