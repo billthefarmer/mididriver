@@ -540,7 +540,6 @@ static EAS_BOOL WT_UpdateVoice (S_VOICE_MGR *pVoiceMgr, S_SYNTH *pSynth, S_SYNTH
     if (pVoice->regionIndex & FLAG_RGN_IDX_DLS_SYNTH)
         return DLS_UpdateVoice(pVoiceMgr, pSynth, pVoice, voiceNum, pMixBuffer, numSamples);
 #endif
-
     /* establish pointers to critical data */
     pWTVoice = &pVoiceMgr->wtVoices[voiceNum];
     pWTRegion = &pSynth->pEAS->pWTRegions[pVoice->regionIndex & REGION_INDEX_MASK];
@@ -575,7 +574,11 @@ static EAS_BOOL WT_UpdateVoice (S_VOICE_MGR *pVoiceMgr, S_SYNTH *pSynth, S_SYNTH
     else
         temp += (pVoice->note + pSynth->globalTranspose) * 100;
     intFrame.frame.phaseIncrement = WT_UpdatePhaseInc(pWTVoice, pArt, pChannel, temp);
-    temp = pWTVoice->loopEnd - pWTVoice->loopStart;
+    if (pWTVoice->loopStart == WT_NOISE_GENERATOR) {
+        temp = 0;
+    } else {
+        temp = pWTVoice->loopEnd - pWTVoice->loopStart;
+    }
 #ifdef _16_BIT_SAMPLES
     temp >>= 1;
 #endif

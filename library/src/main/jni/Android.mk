@@ -17,13 +17,10 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES = \
-	lib_src/eas_chorus.c \
-	lib_src/eas_chorusdata.c \
+	eas_midi.c \
 	lib_src/eas_data.c \
 	lib_src/eas_dlssynth.c \
 	lib_src/eas_flog.c \
-	lib_src/eas_ima_tables.c \
-	lib_src/eas_imaadpcm.c \
 	lib_src/eas_math.c \
 	lib_src/eas_mdls.c \
 	lib_src/eas_midi.c \
@@ -42,14 +39,17 @@ LOCAL_SRC_FILES = \
 	lib_src/eas_wtengine.c \
 	lib_src/eas_wtsynth.c \
 	lib_src/wt_22khz.c \
-	lib_src/jet.c \
 	host_src/eas_config.c \
 	host_src/eas_hostmm.c \
 	host_src/eas_report.c
 
 # not using these modules
+#	lib_src/eas_chorus.c \
+#	lib_src/eas_chorusdata.c \
 #	lib_src/eas_imelody.c \
 #	lib_src/eas_imelodydata.c \
+#	lib_src/eas_ima_tables.c \
+#	lib_src/eas_imaadpcm.c \
 #	lib_src/eas_ota.c \
 #	lib_src/eas_otadata.c \
 #	lib_src/eas_rtttl.c \
@@ -60,6 +60,7 @@ LOCAL_SRC_FILES = \
 #	host_src/eas_wave.c \
 #	lib_src/eas_wavefile.c \
 #	lib_src/eas_wavefiledata.c \
+#	lib_src/jet.c \
 
 LOCAL_CFLAGS += -O2 \
 	-D UNIFIED_DEBUG_MESSAGES \
@@ -70,7 +71,10 @@ LOCAL_CFLAGS += -O2 \
 	-D _16_BIT_SAMPLES \
 	-D _FILTER_ENABLED \
 	-D DLS_SYNTHESIZER \
-	-D _REVERB_ENABLED
+	-D _REVERB_ENABLED \
+	-D false=0 \
+	-Wno-unused-parameter \
+        -Werror
 
 # not using these options
 # -D _IMELODY_PARSER

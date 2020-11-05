@@ -466,6 +466,7 @@ EAS_RESULT DLSParser (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE fileHandle,
     EAS_RESULT result;
     SDLS_SYNTHESIZER_DATA dls;
     EAS_U32 temp;
+    uint32_t chunk_type;
     EAS_I32 pos;
     EAS_I32 chunkPos;
     EAS_I32 size;
@@ -495,11 +496,11 @@ EAS_RESULT DLSParser (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_HANDLE fileHandle,
     /* seek to start of DLS and read in RIFF tag and set processor endian flag */
     if ((result = EAS_HWFileSeek(dls.hwInstData, dls.fileHandle, offset)) != EAS_SUCCESS)
         return result;
-    if ((result = EAS_HWReadFile(dls.hwInstData, dls.fileHandle, &temp, sizeof(temp), &size)) != EAS_SUCCESS)
+    if ((result = EAS_HWReadFile(dls.hwInstData, dls.fileHandle, &chunk_type, sizeof(chunk_type), &size)) != EAS_SUCCESS)
         return result;
 
     /* check for processor endian-ness */
-    dls.bigEndian = (temp == CHUNK_RIFF);
+    dls.bigEndian = (chunk_type == CHUNK_RIFF);
 
     /* first chunk should be DLS */
     pos = offset;
@@ -850,6 +851,15 @@ static EAS_RESULT Parse_ptbl (SDLS_SYNTHESIZER_DATA *pDLSData, EAS_I32 pos, EAS_
     /* get the number of waves */
     if ((result = EAS_HWGetDWord(pDLSData->hwInstData, pDLSData->fileHandle, &pDLSData->waveCount, EAS_FALSE)) != EAS_SUCCESS)
         return result;
+
+    /* if second pass, ensure waveCount matches with the value parsed in first pass */
+    if (pDLSData->pDLS)
+    {
+        if (pDLSData->waveCount != pDLSData->pDLS->numDLSSamples)
+        {
+            return EAS_ERROR_DATA_INCONSISTENCY;
+        }
+    }
 
 #if 0
     /* just need the wave count on the first pass */
@@ -1411,6 +1421,15 @@ static EAS_RESULT Parse_lins (SDLS_SYNTHESIZER_DATA *pDLSData, EAS_I32 pos, EAS_
         if (temp != CHUNK_INS)
             continue;
 
+        /* if second pass, ensure instCount is less than numDLSPrograms */
+        if (pDLSData->pDLS)
+        {
+            if (pDLSData->instCount >= pDLSData->pDLS->numDLSPrograms)
+            {
+                return EAS_ERROR_DATA_INCONSISTENCY;
+            }
+        }
+
         if ((result = Parse_ins(pDLSData, chunkPos + 12, size)) != EAS_SUCCESS)
             return result;
     }
@@ -1646,6 +1665,14 @@ static EAS_RESULT Parse_lrgn (SDLS_SYNTHESIZER_DATA *pDLSData, EAS_I32 pos, EAS_
                 { /* dpp: EAS_ReportEx(_EAS_SEVERITY_WARNING, "DLS region count exceeded cRegions value in insh, extra region ignored\n"); */ }
                 return EAS_SUCCESS;
             }
+            /* if second pass, ensure regionCount is less than numDLSRegions */
+            if (pDLSData->pDLS)
+            {
+                if (pDLSData->regionCount >= pDLSData->pDLS->numDLSRegions)
+                {
+                    return EAS_ERROR_DATA_INCONSISTENCY;
+                }
+            }
             if ((result = Parse_rgn(pDLSData, chunkPos + 12, size, artIndex)) != EAS_SUCCESS)
                 return result;
             regionCount++;
@@ -1793,6 +1820,12 @@ static EAS_RESULT Parse_rgn (SDLS_SYNTHESIZER_DATA *pDLSData, EAS_I32 pos, EAS_I
         /* if local data was found convert it */
         if (art.values[PARAM_MODIFIED] == EAS_TRUE)
         {
+            /* ensure artCount is less than numDLSArticulations */
+            if (pDLSData->artCount >= pDLSData->pDLS->numDLSArticulations)
+            {
+                return EAS_ERROR_DATA_INCONSISTENCY;
+            }
+
             Convert_art(pDLSData, &art, (EAS_U16) pDLSData->artCount);
             artIndex = (EAS_U16) pDLSData->artCount;
         }
@@ -2044,9 +2077,9 @@ static EAS_RESULT Parse_art (SDLS_SYNTHESIZER_DATA *pDLSData, EAS_I32 pos, S_DLS
     if ((result = EAS_HWFileSeek(pDLSData->hwInstData, pDLSData->fileHandle, pos)) != EAS_SUCCESS)
         return result;
 
-    while (numConnections--)
+    while (numConnections)
     {
-
+        numConnections--;
         /* read the connection data */
         if ((result = EAS_HWGetWord(pDLSData->hwInstData, pDLSData->fileHandle, &source, EAS_FALSE)) != EAS_SUCCESS)
             return result;

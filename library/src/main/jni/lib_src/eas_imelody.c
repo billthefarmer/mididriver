@@ -160,8 +160,13 @@ const S_FILE_PARSER_INTERFACE EAS_iMelody_Parser =
     IMY_State,
     IMY_Close,
     IMY_Reset,
+#ifdef JET_INTERFACE
     IMY_Pause,
     IMY_Resume,
+#else
+    NULL,
+    NULL,
+#endif
     NULL,
     IMY_SetData,
     IMY_GetData,
@@ -706,6 +711,7 @@ static EAS_RESULT IMY_Reset (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData)
     return EAS_SUCCESS;
 }
 
+#ifdef JET_INTERFACE
 /*----------------------------------------------------------------------------
  * IMY_Pause()
  *----------------------------------------------------------------------------
@@ -777,6 +783,7 @@ static EAS_RESULT IMY_Resume (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData)
     pData->state = EAS_STATE_PLAY;
     return EAS_SUCCESS;
 }
+#endif
 
 /*----------------------------------------------------------------------------
  * IMY_SetData()

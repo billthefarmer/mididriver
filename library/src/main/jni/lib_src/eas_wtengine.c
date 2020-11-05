@@ -60,6 +60,10 @@ extern void WT_Interpolate (S_WT_VOICE *pWTVoice, S_WT_INT_FRAME *pWTIntFrame);
 extern void WT_VoiceFilter (S_FILTER_CONTROL*pFilter, S_WT_INT_FRAME *pWTIntFrame);
 #endif
 
+// The PRNG in WT_NoiseGenerator relies on modulo math
+#undef  NO_INT_OVERFLOW_CHECKS
+#define NO_INT_OVERFLOW_CHECKS __attribute__((no_sanitize("integer")))
+
 #if defined(_OPTIMIZED_MONO) || !defined(NATIVE_EAS_KERNEL) || defined(_16_BIT_SAMPLES)
 /*----------------------------------------------------------------------------
  * WT_VoiceGain
@@ -99,12 +103,10 @@ void WT_VoiceGain (S_WT_VOICE *pWTVoice, S_WT_INT_FRAME *pWTIntFrame)
     pMixBuffer = pWTIntFrame->pMixBuffer;
     pInputBuffer = pWTIntFrame->pAudioBuffer;
 
-    /*lint -e{703} <avoid multiply for performance>*/
-    gainIncrement = (pWTIntFrame->frame.gainTarget - pWTIntFrame->prevGain) << (16 - SYNTH_UPDATE_PERIOD_IN_BITS);
+    gainIncrement = (pWTIntFrame->frame.gainTarget - pWTIntFrame->prevGain) * (1 << (16 - SYNTH_UPDATE_PERIOD_IN_BITS));
     if (gainIncrement < 0)
         gainIncrement++;
-    /*lint -e{703} <avoid multiply for performance>*/
-    gain = pWTIntFrame->prevGain << 16;
+    gain = pWTIntFrame->prevGain * (1 << 16);
 
 #if (NUM_OUTPUT_CHANNELS == 2)
     gainLeft = pWTVoice->gainLeft;
@@ -438,7 +440,7 @@ void WT_VoiceFilter (S_FILTER_CONTROL *pFilter, S_WT_INT_FRAME *pWTIntFrame)
  * or more.
  *----------------------------------------------------------------------------
 */
- void WT_NoiseGenerator (S_WT_VOICE *pWTVoice, S_WT_INT_FRAME *pWTIntFrame)
+ void NO_INT_OVERFLOW_CHECKS WT_NoiseGenerator (S_WT_VOICE *pWTVoice, S_WT_INT_FRAME *pWTIntFrame)
  {
     EAS_PCM *pOutputBuffer;
     EAS_I32 phaseInc;
@@ -605,10 +607,10 @@ void WT_InterpolateMono (S_WT_VOICE *pWTVoice, S_WT_INT_FRAME *pWTIntFrame)
     pMixBuffer = pWTIntFrame->pMixBuffer;
 
     /* calculate gain increment */
-    gainIncrement = (pWTIntFrame->gainTarget - pWTIntFrame->prevGain) << (16 - SYNTH_UPDATE_PERIOD_IN_BITS);
+    gainIncrement = (pWTIntFrame->gainTarget - pWTIntFrame->prevGain) * (1 << (16 - SYNTH_UPDATE_PERIOD_IN_BITS));
     if (gainIncrement < 0)
         gainIncrement++;
-    gain = pWTIntFrame->prevGain << 16;
+    gain = pWTIntFrame->prevGain * (1 << 16);
 
     pCurrentPhaseInt = pWTVoice->pPhaseAccum;
     currentPhaseFrac = pWTVoice->phaseFrac;

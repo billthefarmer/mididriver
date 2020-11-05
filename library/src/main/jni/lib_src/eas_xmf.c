@@ -87,8 +87,13 @@ const S_FILE_PARSER_INTERFACE EAS_XMF_Parser =
     XMF_State,
     XMF_Close,
     XMF_Reset,
+#ifdef JET_INTERFACE
     XMF_Pause,
     XMF_Resume,
+#else
+    NULL,
+    NULL,
+#endif
     NULL,
     XMF_SetData,
     XMF_GetData,
@@ -176,19 +181,26 @@ static EAS_RESULT XMF_CheckFileType (S_EAS_DATA *pEASData, EAS_FILE_HANDLE fileH
 
     pXMFData->fileHandle = fileHandle;
     pXMFData->fileOffset = offset;
-    *ppHandle = pXMFData;
 
     /* locate the SMF and DLS contents */
     if ((result = XMF_FindFileContents(pEASData->hwInstData, pXMFData)) != EAS_SUCCESS)
     {
         { /* dpp: EAS_ReportEx(_EAS_SEVERITY_ERROR, "No SMF data found in XMF file\n"); */ }
+        EAS_HWFree(pEASData->hwInstData, pXMFData);
         return result;
     }
 
     /* let the SMF parser take over */
-    if ((result = EAS_HWFileSeek(pEASData->hwInstData, fileHandle, pXMFData->midiOffset)) != EAS_SUCCESS)
+    if ((result = EAS_HWFileSeek(pEASData->hwInstData, fileHandle, pXMFData->midiOffset)) != EAS_SUCCESS) {
+        EAS_HWFree(pEASData->hwInstData, pXMFData);
         return result;
-    return SMF_CheckFileType(pEASData, fileHandle, &pXMFData->pSMFData, pXMFData->midiOffset);
+    }
+    if ((result = SMF_CheckFileType(pEASData, fileHandle, &pXMFData->pSMFData, pXMFData->midiOffset)) != EAS_SUCCESS) {
+        EAS_HWFree(pEASData->hwInstData, pXMFData);
+        return result;
+    }
+    *ppHandle = pXMFData;
+    return EAS_SUCCESS;
 }
 
 /*----------------------------------------------------------------------------
@@ -374,6 +386,7 @@ static EAS_RESULT XMF_Reset (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData)
     return SMF_Reset(pEASData, ((S_XMF_DATA*) pInstData)->pSMFData);
 }
 
+#ifdef JET_INTERFACE
 /*----------------------------------------------------------------------------
  * XMF_Pause()
  *----------------------------------------------------------------------------
@@ -417,6 +430,7 @@ static EAS_RESULT XMF_Resume (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData)
 {
     return SMF_Resume(pEASData, ((S_XMF_DATA*) pInstData)->pSMFData);
 }
+#endif
 
 /*----------------------------------------------------------------------------
  * XMF_SetData()
@@ -690,7 +704,7 @@ static EAS_RESULT XMF_ReadNode (EAS_HW_DATA_HANDLE hwInstData, S_XMF_DATA *pXMFD
         if (chunkType == XMF_RIFF_CHUNK)
         {
             /* skip length */
-            if ((result = EAS_HWFileSeekOfs(hwInstData, pXMFData->fileHandle, sizeof(EAS_I32))) != EAS_SUCCESS)
+            if ((result = EAS_HWFileSeekOfs(hwInstData, pXMFData->fileHandle, 4)) != EAS_SUCCESS)
                 return result;
 
             /* get RIFF file type */

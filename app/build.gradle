@@ -19,8 +19,8 @@ android {
     }
 
     lintOptions {
-        disable 'IconMissingDensityFolder', 'GoogleAppIndexingWarning', 'AllowBackup',
-		'OldTargetApi'
+        disable 'IconMissingDensityFolder', 'GoogleAppIndexingWarning',
+            'AllowBackup', 'OldTargetApi', 'NonConstantResourceId'
     }
 }
 

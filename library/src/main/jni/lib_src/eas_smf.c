@@ -79,8 +79,13 @@ const S_FILE_PARSER_INTERFACE EAS_SMF_Parser =
     SMF_State,
     SMF_Close,
     SMF_Reset,
+#ifdef JET_INTERFACE
     SMF_Pause,
     SMF_Resume,
+#else
+    NULL,
+    NULL,
+#endif
     NULL,
     SMF_SetData,
     SMF_GetData,
@@ -114,6 +119,7 @@ EAS_RESULT SMF_CheckFileType (S_EAS_DATA *pEASData, EAS_FILE_HANDLE fileHandle, 
     if ((result = EAS_HWFileSeek(pEASData->hwInstData, fileHandle, offset)) != EAS_SUCCESS)
         return result;
 
+#ifdef FILE_HEADER_SEARCH
     /* search through file for header - slow method */
     if (pEASData->searchHeaderFlag)
     {
@@ -123,7 +129,9 @@ EAS_RESULT SMF_CheckFileType (S_EAS_DATA *pEASData, EAS_FILE_HANDLE fileHandle, 
     }
 
     /* read the first 4 bytes of the file - quick method */
-    else {
+    else
+#endif
+    {
         EAS_U8 header[4];
         EAS_I32 count;
         if ((result = EAS_HWReadFile(pEASData->hwInstData, fileHandle, header, sizeof(header), &count)) != EAS_SUCCESS)
@@ -525,6 +533,7 @@ EAS_RESULT SMF_Reset (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData)
     return EAS_SUCCESS;
 }
 
+#ifdef JET_INTERFACE
 /*----------------------------------------------------------------------------
  * SMF_Pause()
  *----------------------------------------------------------------------------
@@ -588,6 +597,7 @@ EAS_RESULT SMF_Resume (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData)
     pSMFData->state = EAS_STATE_PLAY;
     return EAS_SUCCESS;
 }
+#endif
 
 /*----------------------------------------------------------------------------
  * SMF_SetData()
@@ -798,6 +808,10 @@ static EAS_RESULT SMF_GetDeltaTime (EAS_HW_DATA_HANDLE hwInstData, S_SMF_STREAM 
     if ((result = SMF_GetVarLenData(hwInstData, pSMFStream->fileHandle, &ticks)) != EAS_SUCCESS)
         return result;
 
+    /* number of ticks must not exceed 32-bits */
+    if (ticks > (UINT32_MAX - pSMFStream->ticks))
+        return EAS_ERROR_FILE_FORMAT;
+
     pSMFStream->ticks += ticks;
     return EAS_SUCCESS;
 }
@@ -867,14 +881,27 @@ static EAS_RESULT SMF_ParseMetaEvent (S_EAS_DATA *pEASData, S_SMF_DATA *pSMFData
     {
         /* read the 3-byte timebase value */
         temp = 0;
-        while (len--)
+        while (len)
         {
+            len--;
             if ((result = EAS_HWGetByte(pEASData->hwInstData, pSMFStream->fileHandle, &c)) != EAS_SUCCESS)
                 return result;
             temp = (temp << 8) | c;
         }
-
-        pSMFData->tickConv = (EAS_U16) (((temp * 1024) / pSMFData->ppqn + 500) / 1000);
+        {
+            // pSMFData->tickConv = (EAS_U16) (((temp * 1024) / pSMFData->ppqn + 500) / 1000);
+            uint64_t temp64;
+            if (__builtin_mul_overflow(temp, 1024u, &temp64) ||
+                    pSMFData->ppqn == 0 ||
+                    (temp64 /= pSMFData->ppqn, false) ||
+                    __builtin_add_overflow(temp64, 500, &temp64) ||
+                    (temp64 /= 1000, false) ||
+                    temp64 > 65535) {
+                pSMFData->tickConv = 65535;
+            } else {
+                pSMFData->tickConv = (EAS_U16) temp64;
+            }
+        }
         pSMFData->flags |= SMF_FLAGS_HAS_TEMPO;
     }
 
@@ -956,8 +983,9 @@ static EAS_RESULT SMF_ParseSysEx (S_EAS_DATA *pEASData, S_SMF_DATA *pSMFData, S_
     }
 
     /* feed the SysEx to the stream parser */
-    while (len--)
+    while (len)
     {
+        len--;
         if ((result = EAS_HWGetByte(pEASData->hwInstData, pSMFStream->fileHandle, &c)) != EAS_SUCCESS)
             return result;
         if ((result = EAS_ParseMIDIStream(pEASData, pSMFData->pSynth, &pSMFStream->midiStream, c, parserMode)) != EAS_SUCCESS)

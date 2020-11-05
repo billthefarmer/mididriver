@@ -400,17 +400,6 @@ EAS_RESULT VMInitMIDI (S_EAS_DATA *pEASData, S_SYNTH **ppSynth)
 }
 
 /*----------------------------------------------------------------------------
- * VMIncRefCount()
- *----------------------------------------------------------------------------
- * Increment reference count for virtual synth
- *----------------------------------------------------------------------------
-*/
-void VMIncRefCount (S_SYNTH *pSynth)
-{
-    pSynth->refCount++;
-}
-
-/*----------------------------------------------------------------------------
  * VMReset()
  *----------------------------------------------------------------------------
  * Purpose:
@@ -3017,206 +3006,6 @@ EAS_I32 VMActiveVoices (S_SYNTH *pSynth)
 }
 
 /*----------------------------------------------------------------------------
- * VMSetSynthPolyphony()
- *----------------------------------------------------------------------------
- * Purpose:
- * Set the synth to a new polyphony value. Value must be >= 1 and
- * <= MAX_SYNTH_VOICES. This function will pin the polyphony at those limits
- *
- * Inputs:
- * pVoiceMgr        pointer to synthesizer data
- * polyphonyCount   desired polyphony count
- * synth            synthesizer number (0 = onboard, 1 = DSP)
- *
- * Outputs:
- * Returns error code
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-EAS_RESULT VMSetSynthPolyphony (S_VOICE_MGR *pVoiceMgr, EAS_I32 synth, EAS_I32 polyphonyCount)
-{
-    EAS_INT i;
-    EAS_INT activeVoices;
-
-    /* lower limit */
-    if (polyphonyCount < 1)
-        polyphonyCount = 1;
-
-    /* split architecture */
-#if defined(_SECONDARY_SYNTH) || defined(EAS_SPLIT_WT_SYNTH)
-    if (synth == EAS_MCU_SYNTH)
-    {
-        if (polyphonyCount > NUM_PRIMARY_VOICES)
-            polyphonyCount = NUM_PRIMARY_VOICES;
-        if (pVoiceMgr->maxPolyphonyPrimary == polyphonyCount)
-            return EAS_SUCCESS;
-        pVoiceMgr->maxPolyphonyPrimary = (EAS_U16) polyphonyCount;
-    }
-    else if (synth == EAS_DSP_SYNTH)
-    {
-        if (polyphonyCount > NUM_SECONDARY_VOICES)
-            polyphonyCount = NUM_SECONDARY_VOICES;
-        if (pVoiceMgr->maxPolyphonySecondary == polyphonyCount)
-            return EAS_SUCCESS;
-        pVoiceMgr->maxPolyphonySecondary = (EAS_U16) polyphonyCount;
-    }
-    else
-        return EAS_ERROR_PARAMETER_RANGE;
-
-    /* setting for SP-MIDI */
-    pVoiceMgr->maxPolyphony = pVoiceMgr->maxPolyphonyPrimary + pVoiceMgr->maxPolyphonySecondary;
-
-    /* standard architecture */
-#else
-    if (synth != EAS_MCU_SYNTH)
-        return EAS_ERROR_PARAMETER_RANGE;
-
-    /* pin desired value to possible limits */
-    if (polyphonyCount > MAX_SYNTH_VOICES)
-        polyphonyCount = MAX_SYNTH_VOICES;
-
-    /* set polyphony, if value is different than current value */
-    if (pVoiceMgr->maxPolyphony == polyphonyCount)
-        return EAS_SUCCESS;
-
-    pVoiceMgr->maxPolyphony = (EAS_U16) polyphonyCount;
-#endif
-
-    /* if SPMIDI enabled, update channel masking based on new polyphony */
-    for (i = 0; i < MAX_VIRTUAL_SYNTHESIZERS; i++)
-    {
-        if (pVoiceMgr->pSynth[i])
-        {
-            if (pVoiceMgr->pSynth[i]->synthFlags & SYNTH_FLAG_SP_MIDI_ON)
-                VMMIPUpdateChannelMuting(pVoiceMgr, pVoiceMgr->pSynth[i]);
-            else
-                pVoiceMgr->pSynth[i]->poolAlloc[0] = (EAS_U8) polyphonyCount;
-        }
-    }
-
-    /* are we under polyphony limit? */
-    if (pVoiceMgr->activeVoices <= polyphonyCount)
-        return EAS_SUCCESS;
-
-    /* count the number of active voices */
-    activeVoices = 0;
-    for (i = 0; i < MAX_SYNTH_VOICES; i++)
-    {
-
-        /* is voice active? */
-        if ((pVoiceMgr->voices[i].voiceState != eVoiceStateFree) && (pVoiceMgr->voices[i].voiceState != eVoiceStateMuting))
-            activeVoices++;
-    }
-
-    /* we may have to mute voices to reach new target */
-    while (activeVoices > polyphonyCount)
-    {
-        S_SYNTH *pSynth;
-        S_SYNTH_VOICE *pVoice;
-        EAS_I32 currentPriority, bestPriority;
-        EAS_INT bestCandidate;
-
-        /* find the lowest priority voice */
-        bestPriority = bestCandidate = -1;
-        for (i = 0; i < MAX_SYNTH_VOICES; i++)
-        {
-
-            pVoice = &pVoiceMgr->voices[i];
-
-            /* ignore free and muting voices */
-            if ((pVoice->voiceState == eVoiceStateFree) || (pVoice->voiceState == eVoiceStateMuting))
-                continue;
-
-            pSynth = pVoiceMgr->pSynth[GET_VSYNTH(pVoice->channel)];
-
-            /* if voice is stolen or just started, reduce the likelihood it will be stolen */
-            if (( pVoice->voiceState == eVoiceStateStolen) || (pVoice->voiceFlags & VOICE_FLAG_NO_SAMPLES_SYNTHESIZED_YET))
-            {
-                /* include velocity */
-                currentPriority = 128 - pVoice->nextVelocity;
-
-                /* include channel priority */
-                currentPriority += pSynth->channels[GET_CHANNEL(pVoice->nextChannel)].pool << CHANNEL_PRIORITY_STEAL_WEIGHT;
-            }
-            else
-            {
-                /* include age */
-                currentPriority = (EAS_I32) pVoice->age << NOTE_AGE_STEAL_WEIGHT;
-
-                /* include note gain -higher gain is lower steal value */
-                /*lint -e{704} use shift for performance */
-                currentPriority += ((32768 >> (12 - NOTE_GAIN_STEAL_WEIGHT)) + 256) -
-                    ((EAS_I32) pVoice->gain >> (12 - NOTE_GAIN_STEAL_WEIGHT));
-
-                /* include channel priority */
-                currentPriority += pSynth->channels[GET_CHANNEL(pVoice->channel)].pool << CHANNEL_PRIORITY_STEAL_WEIGHT;
-            }
-
-            /* include synth priority */
-            currentPriority += pSynth->priority << SYNTH_PRIORITY_WEIGHT;
-
-            /* is this the best choice so far? */
-            if (currentPriority > bestPriority)
-            {
-                bestPriority = currentPriority;
-                bestCandidate = i;
-            }
-        }
-
-        /* shutdown best candidate */
-        if (bestCandidate < 0)
-        {
-            { /* dpp: EAS_ReportEx(_EAS_SEVERITY_WARNING, "VMSetPolyphony: Unable to reduce polyphony\n"); */ }
-            break;
-        }
-
-        /* shut down this voice */
-        /*lint -e{771} pSynth is initialized if bestCandidate >= 0 */
-        VMMuteVoice(pVoiceMgr, bestCandidate);
-        activeVoices--;
-    }
-
-    return EAS_SUCCESS;
-}
-
-/*----------------------------------------------------------------------------
- * VMGetSynthPolyphony()
- *----------------------------------------------------------------------------
- * Purpose:
- * Returns the current polyphony setting
- *
- * Inputs:
- * pVoiceMgr        pointer to synthesizer data
- * synth            synthesizer number (0 = onboard, 1 = DSP)
- *
- * Outputs:
- * Returns actual polyphony value set, as pinned by limits
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-EAS_RESULT VMGetSynthPolyphony (S_VOICE_MGR *pVoiceMgr, EAS_I32 synth, EAS_I32 *pPolyphonyCount)
-{
-
-#if defined(_SECONDARY_SYNTH) || defined(EAS_SPLIT_WT_SYNTH)
-    if (synth == EAS_MCU_SYNTH)
-        *pPolyphonyCount = pVoiceMgr->maxPolyphonyPrimary;
-    else if (synth == EAS_DSP_SYNTH)
-        *pPolyphonyCount = pVoiceMgr->maxPolyphonySecondary;
-    else
-        return EAS_ERROR_PARAMETER_RANGE;
-#else
-    if (synth != EAS_MCU_SYNTH)
-        return EAS_ERROR_PARAMETER_RANGE;
-    *pPolyphonyCount = pVoiceMgr->maxPolyphony;
-#endif
-    return EAS_SUCCESS;
-}
-
-/*----------------------------------------------------------------------------
  * VMSetPolyphony()
  *----------------------------------------------------------------------------
  * Purpose:
@@ -3345,31 +3134,6 @@ EAS_RESULT VMSetPolyphony (S_VOICE_MGR *pVoiceMgr, S_SYNTH *pSynth, EAS_I32 poly
 }
 
 /*----------------------------------------------------------------------------
- * VMGetPolyphony()
- *----------------------------------------------------------------------------
- * Purpose:
- * Get the virtual synth polyphony
- *
- * Inputs:
- * pVoiceMgr        pointer to synthesizer data
- * pPolyphonyCount  pointer to variable to hold polyphony count
- * pSynth           pointer to virtual synth
- *
- * Outputs:
- * Returns error code
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-/*lint -esym(715, pVoiceMgr) reserved for future use */
-EAS_RESULT VMGetPolyphony (S_VOICE_MGR *pVoiceMgr, S_SYNTH *pSynth, EAS_I32 *pPolyphonyCount)
-{
-    *pPolyphonyCount = (EAS_U16) pSynth->maxPolyphony;
-    return EAS_SUCCESS;
-}
-
-/*----------------------------------------------------------------------------
  * VMSetPriority()
  *----------------------------------------------------------------------------
  * Purpose:
@@ -3391,31 +3155,6 @@ EAS_RESULT VMGetPolyphony (S_VOICE_MGR *pVoiceMgr, S_SYNTH *pSynth, EAS_I32 *pPo
 EAS_RESULT VMSetPriority (S_VOICE_MGR *pVoiceMgr, S_SYNTH *pSynth, EAS_I32 priority)
 {
     pSynth->priority = (EAS_U8) priority ;
-    return EAS_SUCCESS;
-}
-
-/*----------------------------------------------------------------------------
- * VMGetPriority()
- *----------------------------------------------------------------------------
- * Purpose:
- * Get the virtual synth priority
- *
- * Inputs:
- * pVoiceMgr        pointer to synthesizer data
- * pPriority        pointer to variable to hold priority
- * pSynth           pointer to virtual synth
- *
- * Outputs:
- * Returns error code
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-/*lint -esym(715, pVoiceMgr) reserved for future use */
-EAS_RESULT VMGetPriority (S_VOICE_MGR *pVoiceMgr, S_SYNTH *pSynth, EAS_I32 *pPriority)
-{
-    *pPriority = pSynth->priority;
     return EAS_SUCCESS;
 }
 
@@ -3505,34 +3244,6 @@ EAS_RESULT VMValidateEASLib (EAS_SNDLIB_HANDLE pEAS)
 }
 
 /*----------------------------------------------------------------------------
- * VMSetGlobalEASLib()
- *----------------------------------------------------------------------------
- * Purpose:
- * Sets the EAS library to be used by the synthesizer
- *
- * Inputs:
- * psEASData - pointer to overall EAS data structure
- *
- * Outputs:
- *
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-EAS_RESULT VMSetGlobalEASLib (S_VOICE_MGR *pVoiceMgr, EAS_SNDLIB_HANDLE pEAS)
-{
-    EAS_RESULT result;
-
-    result = VMValidateEASLib(pEAS);
-    if (result != EAS_SUCCESS)
-        return result;
-
-    pVoiceMgr->pGlobalEAS = pEAS;
-    return EAS_SUCCESS;
-}
-
-/*----------------------------------------------------------------------------
  * VMSetEASLib()
  *----------------------------------------------------------------------------
  * Purpose:
@@ -3561,32 +3272,6 @@ EAS_RESULT VMSetEASLib (S_SYNTH *pSynth, EAS_SNDLIB_HANDLE pEAS)
 }
 
 #ifdef DLS_SYNTHESIZER
-/*----------------------------------------------------------------------------
- * VMSetGlobalDLSLib()
- *----------------------------------------------------------------------------
- * Purpose:
- * Sets the DLS library to be used by the synthesizer
- *
- * Inputs:
- * psEASData - pointer to overall EAS data structure
- *
- * Outputs:
- *
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-EAS_RESULT VMSetGlobalDLSLib (EAS_DATA_HANDLE pEASData, EAS_DLSLIB_HANDLE pDLS)
-{
-
-    if (pEASData->pVoiceMgr->pGlobalDLS)
-        DLSCleanup(pEASData->hwInstData, pEASData->pVoiceMgr->pGlobalDLS);
-
-    pEASData->pVoiceMgr->pGlobalDLS = pDLS;
-    return EAS_SUCCESS;
-}
-
 /*----------------------------------------------------------------------------
  * VMSetDLSLib()
  *----------------------------------------------------------------------------
@@ -3631,40 +3316,6 @@ EAS_RESULT VMSetDLSLib (S_SYNTH *pSynth, EAS_DLSLIB_HANDLE pDLS)
 void VMSetTranposition (S_SYNTH *pSynth, EAS_I32 transposition)
 {
     pSynth->globalTranspose = (EAS_I8) transposition;
-}
-
-/*----------------------------------------------------------------------------
- * VMGetTranposition()
- *----------------------------------------------------------------------------
- * Purpose:
- * Gets the global key transposition used by the synthesizer.
- * Transposes all melodic instruments up or down by the specified
- * amount. Range is limited to +/-12 semitones.
- *
- * Inputs:
- * psEASData - pointer to overall EAS data structure
- *
- * Outputs:
- *
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-void VMGetTranposition (S_SYNTH *pSynth, EAS_I32 *pTransposition)
-{
-    *pTransposition = pSynth->globalTranspose;
-}
-
-/*----------------------------------------------------------------------------
- * VMGetNoteCount()
- *----------------------------------------------------------------------------
-* Returns the total note count
-*----------------------------------------------------------------------------
-*/
-EAS_I32 VMGetNoteCount (S_SYNTH *pSynth)
-{
-    return pSynth->totalNoteCount;
 }
 
 /*----------------------------------------------------------------------------

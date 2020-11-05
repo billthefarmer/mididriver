@@ -31,7 +31,7 @@
 #ifndef _EAS_DATA_H
 #define _EAS_DATA_H
 
-#define JET_INTERFACE
+#include <stdint.h>
 
 #include "eas_types.h"
 #include "eas_synthcfg.h"
@@ -114,8 +114,6 @@ typedef struct s_eas_data_tag
 
     S_EAS_STREAM                    streams[MAX_NUMBER_STREAMS];
 
-    S_PCM_STATE                     *pPCMStreams;
-
     S_VOICE_MGR                     *pVoiceMgr;
 
 #ifdef JET_INTERFACE
@@ -126,7 +124,9 @@ typedef struct s_eas_data_tag
     EAS_I16                         masterGain;
     EAS_U8                          masterVolume;
     EAS_BOOL8                       staticMemoryModel;
+#ifdef FILE_HEADER_SEARCH
     EAS_BOOL8                       searchHeaderFlag;
+#endif
 } S_EAS_DATA;
 
 #endif

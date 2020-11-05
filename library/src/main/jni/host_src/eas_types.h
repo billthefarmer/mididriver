@@ -76,6 +76,7 @@ typedef long EAS_RESULT;
 #define EAS_ERROR_QUEUE_IS_FULL             -36
 #define EAS_ERROR_QUEUE_IS_EMPTY            -37
 #define EAS_ERROR_FEATURE_ALREADY_ACTIVE    -38
+#define EAS_ERROR_DATA_INCONSISTENCY        -39
 
 /* special return codes */
 #define EAS_EOF                             3

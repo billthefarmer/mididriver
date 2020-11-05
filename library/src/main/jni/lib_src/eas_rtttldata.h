@@ -57,6 +57,7 @@ typedef struct
     EAS_I32     restTicks;                  /* ticks to rest after current note */
     EAS_I32     repeatOffset;               /* file offset to start of repeat section */
     EAS_U8      repeatCount;                /* repeat counter */
+    EAS_U8      notePlayedSinceRepeat;      /* indicates if any work done since last repeat */
     EAS_I8      dataByte;                   /* storage for characters that are "put back" */
     EAS_U8      state;                      /* current state EAS_STATE_XXXX */
     EAS_I8      style;                      /* from STYLE */

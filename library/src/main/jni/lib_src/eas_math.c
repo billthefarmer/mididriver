@@ -33,6 +33,8 @@
 
 /* anything less than this converts to a fraction too small to represent in 32-bits */
 #define MIN_CENTS   -18000
+/* anything greater than this converts to a fraction too large to represent in 32-bits */
+#define MAX_CENTS    19200
 
 /*----------------------------------------------------------------------------
  * EAS_Calculate2toX()
@@ -51,6 +53,7 @@
  *
  *----------------------------------------------------------------------------
 */
+
 EAS_I32 EAS_Calculate2toX (EAS_I32 nCents)
 {
     EAS_I32 nDents;
@@ -61,6 +64,10 @@ EAS_I32 EAS_Calculate2toX (EAS_I32 nCents)
     /* check for minimum value */
     if (nCents < MIN_CENTS)
         return 0;
+
+    if (nCents > MAX_CENTS) {
+        nCents = MAX_CENTS;
+    }
 
     /* for the time being, convert cents to dents */
     nDents = FMUL_15x15(nCents, CENTS_TO_DENTS);

@@ -117,8 +117,13 @@ const S_FILE_PARSER_INTERFACE EAS_OTA_Parser =
     OTA_State,
     OTA_Close,
     OTA_Reset,
+#ifdef JET_INTERFACE
     OTA_Pause,
     OTA_Resume,
+#else
+    NULL,
+    NULL,
+#endif
     NULL,
     OTA_SetData,
     OTA_GetData,
@@ -675,6 +680,7 @@ static EAS_RESULT OTA_Reset (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData)
     return EAS_SUCCESS;
 }
 
+#ifdef JET_INTERFACE
 /*----------------------------------------------------------------------------
  * OTA_Pause()
  *----------------------------------------------------------------------------
@@ -738,6 +744,7 @@ static EAS_RESULT OTA_Resume (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData)
     pData->state = EAS_STATE_PLAY;
     return EAS_SUCCESS;
 }
+#endif
 
 /*----------------------------------------------------------------------------
  * OTA_SetData()

@@ -219,55 +219,6 @@ EAS_RESULT EAS_IntSetStrmParam (S_EAS_DATA *pEASData, EAS_HANDLE pStream, EAS_IN
 }
 
 /*----------------------------------------------------------------------------
- * EAS_IntGetStrmParam()
- *----------------------------------------------------------------------------
- * This routine gets common parameters like transpose, volume, etc.
- * First, it attempts to use the parser EAS_GetStreamParameter interface. If that
- * fails, it attempts to get the synth handle from the parser and
- * get the parameter directly on the synth.
- *----------------------------------------------------------------------------
-*/
-EAS_RESULT EAS_IntGetStrmParam (S_EAS_DATA *pEASData, EAS_HANDLE pStream, EAS_INT param, EAS_I32 *pValue)
-{
-    S_SYNTH *pSynth;
-
-    /* try to set the parameter */
-    if (EAS_GetStreamParameter(pEASData, pStream, param, pValue) == EAS_SUCCESS)
-        return EAS_SUCCESS;
-
-    /* get a pointer to the synth object and retrieve data directly */
-    /*lint -e{740} we are cheating by passing a pointer through this interface */
-    if (EAS_GetStreamParameter(pEASData, pStream, PARSER_DATA_SYNTH_HANDLE, (EAS_I32*) &pSynth) != EAS_SUCCESS)
-        return EAS_ERROR_INVALID_PARAMETER;
-
-    if (pSynth == NULL)
-        return EAS_ERROR_INVALID_PARAMETER;
-
-    switch (param)
-    {
-        case PARSER_DATA_POLYPHONY:
-            return VMGetPolyphony(pEASData->pVoiceMgr, pSynth, pValue);
-
-        case PARSER_DATA_PRIORITY:
-            return VMGetPriority(pEASData->pVoiceMgr, pSynth, pValue);
-
-        case PARSER_DATA_TRANSPOSITION:
-            VMGetTranposition(pSynth, pValue);
-            break;
-
-        case PARSER_DATA_NOTE_COUNT:
-            *pValue = VMGetNoteCount(pSynth);
-            break;
-
-        default:
-            { /* dpp: EAS_ReportEx(_EAS_SEVERITY_ERROR, "Invalid paramter %d in call to EAS_IntSetStrmParam", param); */ }
-            return EAS_ERROR_INVALID_PARAMETER;
-    }
-
-    return EAS_SUCCESS;
-}
-
-/*----------------------------------------------------------------------------
  * EAS_AllocateStream()
  *----------------------------------------------------------------------------
  * Purpose:
@@ -683,112 +634,6 @@ EAS_PUBLIC EAS_RESULT EAS_OpenFile (EAS_DATA_HANDLE pEASData, EAS_FILE_LOCATOR l
     return EAS_ERROR_UNRECOGNIZED_FORMAT;
 }
 
-#ifdef MMAPI_SUPPORT
-/*----------------------------------------------------------------------------
- * EAS_MMAPIToneControl()
- *----------------------------------------------------------------------------
- * Purpose:
- * Opens a ToneControl file for audio playback.
- *
- * Inputs:
- * pEASData         - pointer to overall EAS data structure
- * pHandle          - pointer to file handle
- *
- * Outputs:
- *
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_MMAPIToneControl (EAS_DATA_HANDLE pEASData, EAS_FILE_LOCATOR locator, EAS_HANDLE *ppStream)
-{
-    EAS_RESULT result;
-    EAS_FILE_HANDLE fileHandle;
-    EAS_VOID_PTR streamHandle;
-    S_FILE_PARSER_INTERFACE *pParserModule;
-    EAS_INT streamNum;
-
-    /* check if the tone control parser is available */
-    *ppStream = NULL;
-    streamHandle = NULL;
-    pParserModule = EAS_CMEnumOptModules(EAS_MODULE_MMAPI_TONE_CONTROL);
-    if (pParserModule == NULL)
-    {
-        { /* dpp: EAS_ReportEx(_EAS_SEVERITY_ERROR, "EAS_MMAPIToneControl: ToneControl parser not available\n"); */ }
-        return EAS_ERROR_FEATURE_NOT_AVAILABLE;
-    }
-
-    /* open the file */
-    if ((result = EAS_HWOpenFile(pEASData->hwInstData, locator, &fileHandle, EAS_FILE_READ)) != EAS_SUCCESS)
-        return result;
-
-    /* allocate a stream */
-    if ((streamNum = EAS_AllocateStream(pEASData)) < 0)
-        return EAS_ERROR_MAX_STREAMS_OPEN;
-
-    /* see if ToneControl parser recognizes it */
-    if ((result = (*pParserModule->pfCheckFileType)(pEASData, fileHandle, &streamHandle, 0L)) != EAS_SUCCESS)
-    {
-        { /* dpp: EAS_ReportEx(_EAS_SEVERITY_ERROR, "CheckFileType returned error %ld\n", result); */ }
-        return result;
-    }
-
-    /* parser accepted the file, return the handle */
-    if (streamHandle)
-    {
-
-        /* save the parser pointer and file handle */
-        EAS_InitStream(&pEASData->streams[streamNum], pParserModule, streamHandle);
-        *ppStream = &pEASData->streams[streamNum];
-        return EAS_SUCCESS;
-    }
-
-    /* parser did not recognize the file, close it and return an error */
-    EAS_HWCloseFile(pEASData->hwInstData, fileHandle);
-    { /* dpp: EAS_ReportEx(_EAS_SEVERITY_WARNING, "No parser recognized the requested file\n"); */ }
-    return EAS_ERROR_UNRECOGNIZED_FORMAT;
-}
-
-/*----------------------------------------------------------------------------
- * EAS_GetWaveFmtChunk
- *----------------------------------------------------------------------------
- * Helper function to retrieve WAVE file fmt chunk for MMAPI
- *----------------------------------------------------------------------------
- * pEASData         - pointer to EAS persistent data object
- * pStream          - stream handle
- * pFmtChunk        - pointer to variable to receive current setting
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_GetWaveFmtChunk (S_EAS_DATA *pEASData, EAS_HANDLE pStream, EAS_VOID_PTR *ppFmtChunk)
-{
-    EAS_RESULT result;
-    EAS_I32 value;
-
-    if ((result = EAS_GetStreamParameter(pEASData, pStream, PARSER_DATA_FORMAT, &value)) != EAS_SUCCESS)
-        return result;
-    *ppFmtChunk = (EAS_VOID_PTR) value;
-    return EAS_SUCCESS;
-}
-#endif
-
-/*----------------------------------------------------------------------------
- * EAS_GetFileType
- *----------------------------------------------------------------------------
- * Returns the file type (see eas_types.h for enumerations)
- *----------------------------------------------------------------------------
- * pEASData         - pointer to EAS persistent data object
- * pStream          - stream handle
- * pFileType        - pointer to variable to receive file type
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_GetFileType (S_EAS_DATA *pEASData, EAS_HANDLE pStream, EAS_I32 *pFileType)
-{
-    if (!EAS_StreamReady (pEASData, pStream))
-        return EAS_ERROR_NOT_VALID_IN_THIS_STATE;
-    return EAS_GetStreamParameter(pEASData, pStream, PARSER_DATA_FILE_TYPE, pFileType);
-}
-
 /*----------------------------------------------------------------------------
  * EAS_Prepare()
  *----------------------------------------------------------------------------
@@ -914,6 +759,7 @@ EAS_PUBLIC EAS_RESULT EAS_Render (EAS_DATA_HANDLE pEASData, EAS_PCM *pOut, EAS_I
             /* establish pointer to parser module */
             pParserModule = pEASData->streams[streamNum].pParserModule;
 
+#ifdef JET_INTERFACE
             /* handle pause */
             if (pEASData->streams[streamNum].streamFlags & STREAM_FLAGS_PAUSE)
             {
@@ -921,11 +767,13 @@ EAS_PUBLIC EAS_RESULT EAS_Render (EAS_DATA_HANDLE pEASData, EAS_PCM *pOut, EAS_I
                     result = pParserModule->pfPause(pEASData, pEASData->streams[streamNum].handle);
                 pEASData->streams[streamNum].streamFlags &= ~STREAM_FLAGS_PAUSE;
             }
+#endif
 
             /* get current state */
             if ((result = (*pParserModule->pfState)(pEASData, pEASData->streams[streamNum].handle, &parserState)) != EAS_SUCCESS)
                 return result;
 
+#ifdef JET_INTERFACE
             /* handle resume */
             if (parserState == EAS_STATE_PAUSED)
             {
@@ -936,6 +784,7 @@ EAS_PUBLIC EAS_RESULT EAS_Render (EAS_DATA_HANDLE pEASData, EAS_PCM *pOut, EAS_I
                     pEASData->streams[streamNum].streamFlags &= ~STREAM_FLAGS_RESUME;
                 }
             }
+#endif
 
             /* if necessary, parse stream */
             if ((pEASData->streams[streamNum].streamFlags & STREAM_FLAGS_PARSED) == 0)
@@ -1019,13 +868,6 @@ EAS_PUBLIC EAS_RESULT EAS_Render (EAS_DATA_HANDLE pEASData, EAS_PCM *pOut, EAS_I
         (*pEASData->pMetricsModule->pfStartTimer)(pEASData->pMetricsData, EAS_PM_STREAM_TIME);
 #endif
 
-    /* render PCM audio */
-    if ((result = EAS_PERender(pEASData, numRequested)) != EAS_SUCCESS)
-    {
-        { /* dpp: EAS_ReportEx(_EAS_SEVERITY_ERROR, "EAS_PERender returned error %ld\n", result); */ }
-        return result;
-    }
-
 #ifdef _METRICS_ENABLED
     /* stop the stream timer */
     if (pEASData->pMetricsData)
@@ -1097,101 +939,7 @@ EAS_PUBLIC EAS_RESULT EAS_Render (EAS_DATA_HANDLE pEASData, EAS_PCM *pOut, EAS_I
     return EAS_SUCCESS;
 }
 
-/*----------------------------------------------------------------------------
- * EAS_SetRepeat()
- *----------------------------------------------------------------------------
- * Purpose:
- * Set the selected stream to repeat.
- *
- * Inputs:
- *  pEASData        - handle to data for this instance
- *  handle          - handle to stream
- *  repeatCount     - repeat count
- *
- * Outputs:
- *
- * Side Effects:
- *
- * Notes:
- *  0 = no repeat
- *  1 = repeat once, i.e. play through twice
- *  -1 = repeat forever
- *----------------------------------------------------------------------------
-*/
-/*lint -esym(715, pEASData) reserved for future use */
-EAS_PUBLIC EAS_RESULT EAS_SetRepeat (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStream, EAS_I32 repeatCount)
-{
-    pStream->repeatCount = repeatCount;
-    return EAS_SUCCESS;
-}
-
-/*----------------------------------------------------------------------------
- * EAS_GetRepeat()
- *----------------------------------------------------------------------------
- * Purpose:
- * Gets the current repeat count for the selected stream.
- *
- * Inputs:
- *  pEASData        - handle to data for this instance
- *  handle          - handle to stream
- *  pRrepeatCount   - pointer to variable to hold repeat count
- *
- * Outputs:
- *
- * Side Effects:
- *
- * Notes:
- *  0 = no repeat
- *  1 = repeat once, i.e. play through twice
- *  -1 = repeat forever
- *----------------------------------------------------------------------------
-*/
-/*lint -esym(715, pEASData) reserved for future use */
-EAS_PUBLIC EAS_RESULT EAS_GetRepeat (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStream, EAS_I32 *pRepeatCount)
-{
-    *pRepeatCount = pStream->repeatCount;
-    return EAS_SUCCESS;
-}
-
-/*----------------------------------------------------------------------------
- * EAS_SetPlaybackRate()
- *----------------------------------------------------------------------------
- * Purpose:
- * Sets the playback rate.
- *
- * Inputs:
- *  pEASData        - handle to data for this instance
- *  handle          - handle to stream
- *  rate            - rate (28-bit fractional amount)
- *
- * Outputs:
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-/*lint -esym(715, pEASData) reserved for future use */
-EAS_PUBLIC EAS_RESULT EAS_SetPlaybackRate (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStream, EAS_U32 rate)
-{
-
-    /* check range */
-    if ((rate < (1 << 27)) || (rate > (1 << 29)))
-        return EAS_ERROR_INVALID_PARAMETER;
-
-    /* calculate new frame length
-     *
-     * NOTE: The maximum frame length we can accomodate based on a
-     * maximum rate of 2.0 (2^28) is 2047 (2^13-1). To accomodate a
-     * longer frame length or a higher maximum rate, the fixed point
-     * divide below will need to be adjusted
-     */
-    pStream->frameLength = (AUDIO_FRAME_LENGTH * (rate >> 8)) >> 20;
-
-    /* notify stream of new playback rate */
-    EAS_SetStreamParameter(pEASData, pStream, PARSER_DATA_PLAYBACK_RATE, (EAS_I32) rate);
-    return EAS_SUCCESS;
-}
-
+#ifdef JET_INTERFACE
 /*----------------------------------------------------------------------------
  * EAS_SetTransposition)
  *----------------------------------------------------------------------------
@@ -1222,6 +970,7 @@ EAS_PUBLIC EAS_RESULT EAS_SetTransposition (EAS_DATA_HANDLE pEASData, EAS_HANDLE
         return EAS_ERROR_NOT_VALID_IN_THIS_STATE;
     return EAS_IntSetStrmParam(pEASData, pStream, PARSER_DATA_TRANSPOSITION, transposition);
 }
+#endif
 
 /*----------------------------------------------------------------------------
  * EAS_ParseEvents()
@@ -1415,60 +1164,6 @@ EAS_PUBLIC EAS_RESULT EAS_ParseMetaData (EAS_DATA_HANDLE pEASData, EAS_HANDLE pS
 }
 
 /*----------------------------------------------------------------------------
- * EAS_RegisterMetaDataCallback()
- *----------------------------------------------------------------------------
- * Purpose:
- * Registers a metadata callback function for parsed metadata.
- *
- * Inputs:
- * pEASData         - pointer to overall EAS data structure
- * handle           - file or stream handle
- * cbFunc           - pointer to host callback function
- * metaDataBuffer   - pointer to metadata buffer
- * metaDataBufSize  - maximum size of the metadata buffer
- *
- * Outputs:
- *
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_RegisterMetaDataCallback (
-    EAS_DATA_HANDLE pEASData,
-    EAS_HANDLE pStream,
-    EAS_METADATA_CBFUNC cbFunc,
-    char *metaDataBuffer,
-    EAS_I32 metaDataBufSize,
-    EAS_VOID_PTR pUserData)
-{
-    S_METADATA_CB metadata;
-
-    if (!EAS_StreamReady(pEASData, pStream))
-        return EAS_ERROR_NOT_VALID_IN_THIS_STATE;
-
-    /* register callback function */
-    metadata.callback = cbFunc;
-    metadata.buffer = metaDataBuffer;
-    metadata.bufferSize = metaDataBufSize;
-    metadata.pUserData = pUserData;
-    return EAS_SetStreamParameter(pEASData, pStream, PARSER_DATA_METADATA_CB, (EAS_I32) &metadata);
-}
-
-/*----------------------------------------------------------------------------
- * EAS_GetNoteCount ()
- *----------------------------------------------------------------------------
- * Returns the total number of notes played in this stream
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_GetNoteCount (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStream, EAS_I32 *pNoteCount)
-{
-    if (!EAS_StreamReady(pEASData, pStream))
-        return EAS_ERROR_NOT_VALID_IN_THIS_STATE;
-    return EAS_IntGetStrmParam(pEASData, pStream, PARSER_DATA_NOTE_COUNT, pNoteCount);
-}
-
-/*----------------------------------------------------------------------------
  * EAS_CloseFile()
  *----------------------------------------------------------------------------
  * Purpose:
@@ -1502,156 +1197,6 @@ EAS_PUBLIC EAS_RESULT EAS_CloseFile (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStrea
     pStream->handle = NULL;
     pStream->pParserModule = NULL;
     return result;
-}
-
-/*----------------------------------------------------------------------------
- * EAS_OpenMIDIStream()
- *----------------------------------------------------------------------------
- * Purpose:
- * Opens a raw MIDI stream allowing the host to route MIDI cable data directly to the synthesizer
- *
- * Inputs:
- * pEASData         - pointer to overall EAS data structure
- * pHandle          - pointer to variable to hold file or stream handle
- *
- * Outputs:
- *
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_OpenMIDIStream (EAS_DATA_HANDLE pEASData, EAS_HANDLE *ppStream, EAS_HANDLE streamHandle)
-{
-    EAS_RESULT result;
-    S_INTERACTIVE_MIDI *pMIDIStream;
-    EAS_INT streamNum;
-
-    /* initialize some pointers */
-    *ppStream = NULL;
-
-    /* allocate a stream */
-    if ((streamNum = EAS_AllocateStream(pEASData)) < 0)
-        return EAS_ERROR_MAX_STREAMS_OPEN;
-
-    /* check Configuration Module for S_EAS_DATA allocation */
-    if (pEASData->staticMemoryModel)
-        pMIDIStream = EAS_CMEnumData(EAS_CM_MIDI_STREAM_DATA);
-    else
-        pMIDIStream = EAS_HWMalloc(pEASData->hwInstData, sizeof(S_INTERACTIVE_MIDI));
-
-    /* allocate dynamic memory */
-    if (!pMIDIStream)
-    {
-        { /* dpp: EAS_ReportEx(_EAS_SEVERITY_FATAL, "Failed to allocate MIDI stream data\n"); */ }
-        return EAS_ERROR_MALLOC_FAILED;
-    }
-
-    /* zero the memory to insure complete initialization */
-    EAS_HWMemSet(pMIDIStream, 0, sizeof(S_INTERACTIVE_MIDI));
-    EAS_InitStream(&pEASData->streams[streamNum], NULL, pMIDIStream);
-
-    /* instantiate a new synthesizer */
-    if (streamHandle == NULL)
-    {
-        result = VMInitMIDI(pEASData, &pMIDIStream->pSynth);
-    }
-
-    /* use an existing synthesizer */
-    else
-    {
-        EAS_I32 value;
-        result = EAS_GetStreamParameter(pEASData, streamHandle, PARSER_DATA_SYNTH_HANDLE, &value);
-        pMIDIStream->pSynth = (S_SYNTH*) value;
-        VMIncRefCount(pMIDIStream->pSynth);
-    }
-    if (result != EAS_SUCCESS)
-    {
-        EAS_CloseMIDIStream(pEASData, &pEASData->streams[streamNum]);
-        return result;
-    }
-
-    /* initialize the MIDI stream data */
-    EAS_InitMIDIStream(&pMIDIStream->stream);
-
-    *ppStream = (EAS_HANDLE) &pEASData->streams[streamNum];
-    return EAS_SUCCESS;
-}
-
-/*----------------------------------------------------------------------------
- * EAS_WriteMIDIStream()
- *----------------------------------------------------------------------------
- * Purpose:
- * Send data to the MIDI stream device
- *
- * Inputs:
- * pEASData         - pointer to overall EAS data structure
- * handle           - stream handle
- * pBuffer          - pointer to buffer
- * count            - number of bytes to write
- *
- * Outputs:
- *
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_WriteMIDIStream (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStream, EAS_U8 *pBuffer, EAS_I32 count)
-{
-    S_INTERACTIVE_MIDI *pMIDIStream;
-    EAS_RESULT result;
-
-    pMIDIStream = (S_INTERACTIVE_MIDI*) pStream->handle;
-
-    if (count <= 0)
-        return EAS_ERROR_PARAMETER_RANGE;
-
-    /* send the entire buffer */
-    while (count--)
-    {
-        if ((result = EAS_ParseMIDIStream(pEASData, pMIDIStream->pSynth, &pMIDIStream->stream, *pBuffer++, eParserModePlay)) != EAS_SUCCESS)
-            return result;
-    }
-    return EAS_SUCCESS;
-}
-
-/*----------------------------------------------------------------------------
- * EAS_CloseMIDIStream()
- *----------------------------------------------------------------------------
- * Purpose:
- * Closes a raw MIDI stream
- *
- * Inputs:
- * pEASData         - pointer to overall EAS data structure
- * handle           - stream handle
- *
- * Outputs:
- *
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_CloseMIDIStream (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStream)
-{
-    S_INTERACTIVE_MIDI *pMIDIStream;
-
-    pMIDIStream = (S_INTERACTIVE_MIDI*) pStream->handle;
-
-    /* close synth */
-    if (pMIDIStream->pSynth != NULL)
-    {
-        VMMIDIShutdown(pEASData, pMIDIStream->pSynth);
-        pMIDIStream->pSynth = NULL;
-    }
-
-    /* release allocated memory */
-    if (!pEASData->staticMemoryModel)
-        EAS_HWFree(((S_EAS_DATA*) pEASData)->hwInstData, pMIDIStream);
-
-    pStream->handle = NULL;
-    return EAS_SUCCESS;
 }
 
 /*----------------------------------------------------------------------------
@@ -1706,152 +1251,6 @@ EAS_PUBLIC EAS_RESULT EAS_State (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStream, E
         *pState = EAS_STATE_PLAY;
 
     return EAS_SUCCESS;
-}
-
-/*----------------------------------------------------------------------------
- * EAS_SetPolyphony()
- *----------------------------------------------------------------------------
- * Purpose:
- * Set the polyphony of the stream. A value of 0 allows the stream
- * to use all voices (set by EAS_SetSynthPolyphony).
- *
- * Inputs:
- * pEASData         - pointer to overall EAS data structure
- * streamHandle     - handle returned by EAS_OpenFile
- * polyphonyCount   - the desired polyphony count
- *
- * Outputs:
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_SetPolyphony (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStream, EAS_I32 polyphonyCount)
-{
-    if (!EAS_StreamReady(pEASData, pStream))
-        return EAS_ERROR_NOT_VALID_IN_THIS_STATE;
-    return EAS_IntSetStrmParam(pEASData, pStream, PARSER_DATA_POLYPHONY, polyphonyCount);
-}
-
-/*----------------------------------------------------------------------------
- * EAS_GetPolyphony()
- *----------------------------------------------------------------------------
- * Purpose:
- * Returns the current polyphony setting of the stream
- *
- * Inputs:
- * pEASData         - pointer to overall EAS data structure
- * streamHandle     - handle returned by EAS_OpenFile
- * pPolyphonyCount  - pointer to variable to receive polyphony count
- *
- * Outputs:
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_GetPolyphony (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStream, EAS_I32 *pPolyphonyCount)
-{
-    if (!EAS_StreamReady(pEASData, pStream))
-        return EAS_ERROR_NOT_VALID_IN_THIS_STATE;
-    return EAS_IntGetStrmParam(pEASData, pStream, PARSER_DATA_POLYPHONY, pPolyphonyCount);
-}
-
-/*----------------------------------------------------------------------------
- * EAS_SetSynthPolyphony()
- *----------------------------------------------------------------------------
- * Purpose:
- * Set the polyphony of the synth . Value must be >= 1 and <= the
- * maximum number of voices. This function will pin the polyphony
- * at those limits
- *
- * Inputs:
- * pEASData         - pointer to overall EAS data structure
- * synthNum         - synthesizer number (0 = onboard, 1 = DSP)
- * polyphonyCount   - the desired polyphony count
- *
- * Outputs:
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_SetSynthPolyphony (EAS_DATA_HANDLE pEASData, EAS_I32 synthNum, EAS_I32 polyphonyCount)
-{
-    return VMSetSynthPolyphony(pEASData->pVoiceMgr, synthNum, polyphonyCount);
-}
-
-/*----------------------------------------------------------------------------
- * EAS_GetSynthPolyphony()
- *----------------------------------------------------------------------------
- * Purpose:
- * Returns the current polyphony setting of the synth
- *
- * Inputs:
- * pEASData         - pointer to overall EAS data structure
- * synthNum         - synthesizer number (0 = onboard, 1 = DSP)
- * pPolyphonyCount  - pointer to variable to receive polyphony count
- *
- * Outputs:
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_GetSynthPolyphony (EAS_DATA_HANDLE pEASData, EAS_I32 synthNum, EAS_I32 *pPolyphonyCount)
-{
-    return VMGetSynthPolyphony(pEASData->pVoiceMgr, synthNum, pPolyphonyCount);
-}
-
-/*----------------------------------------------------------------------------
- * EAS_SetPriority()
- *----------------------------------------------------------------------------
- * Purpose:
- * Set the priority of the stream. Determines which stream's voices
- * are stolen when there are insufficient voices for all notes.
- * Value must be in the range of 1-15, lower values are higher
- * priority.
- *
- * Inputs:
- * pEASData         - pointer to overall EAS data structure
- * streamHandle     - handle returned by EAS_OpenFile
- * polyphonyCount   - the desired polyphony count
- *
- * Outputs:
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_SetPriority (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStream, EAS_I32 priority)
-{
-    if (!EAS_StreamReady(pEASData, pStream))
-        return EAS_ERROR_NOT_VALID_IN_THIS_STATE;
-    return EAS_IntSetStrmParam(pEASData, pStream, PARSER_DATA_PRIORITY, priority);
-}
-
-/*----------------------------------------------------------------------------
- * EAS_GetPriority()
- *----------------------------------------------------------------------------
- * Purpose:
- * Returns the current priority setting of the stream
- *
- * Inputs:
- * pEASData         - pointer to overall EAS data structure
- * streamHandle     - handle returned by EAS_OpenFile
- * pPriority        - pointer to variable to receive priority
- *
- * Outputs:
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_GetPriority (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStream, EAS_I32 *pPriority)
-{
-    if (!EAS_StreamReady(pEASData, pStream))
-        return EAS_ERROR_NOT_VALID_IN_THIS_STATE;
-    return EAS_IntGetStrmParam(pEASData, pStream, PARSER_DATA_PRIORITY, pPriority);
 }
 
 /*----------------------------------------------------------------------------
@@ -1913,81 +1312,6 @@ EAS_PUBLIC EAS_RESULT EAS_SetVolume (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStrea
     gain = EAS_VolumeToGain(volume - STREAM_VOLUME_HEADROOM);
     pEASData->masterGain = gain;
     return EAS_SUCCESS;
-}
-
-/*----------------------------------------------------------------------------
- * EAS_GetVolume()
- *----------------------------------------------------------------------------
- * Purpose:
- * Returns the master volume for the synthesizer. The default volume setting is
- * 50. The volume range is 0 to 100;
- *
- * Inputs:
- * pEASData         - pointer to overall EAS data structure
- * volume           - the desired master volume
- * handle           - file or stream handle
- *
- * Outputs:
- *
- *
- * Side Effects:
- * overrides any previously set master volume from sysex
- *
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_I32 EAS_GetVolume (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStream)
-{
-    if (pStream == NULL)
-        return pEASData->masterVolume;
-
-    if (!EAS_StreamReady(pEASData, pStream))
-        return EAS_ERROR_NOT_VALID_IN_THIS_STATE;
-    return pStream->volume;
-}
-
-/*----------------------------------------------------------------------------
- * EAS_SetMaxLoad()
- *----------------------------------------------------------------------------
- * Purpose:
- * Sets the maximum workload the parsers will do in a single call to
- * EAS_Render. The units are currently arbitrary, but should correlate
- * well to the actual CPU cycles consumed. The primary effect is to
- * reduce the occasional peaks in CPU cycles consumed when parsing
- * dense parts of a MIDI score.
- *
- * Inputs:
- *  pEASData        - handle to data for this instance
- *  maxLoad         - the desired maximum workload
- *
- * Outputs:
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_SetMaxLoad (EAS_DATA_HANDLE pEASData, EAS_I32 maxLoad)
-{
-    VMSetWorkload(pEASData->pVoiceMgr, maxLoad);
-    return EAS_SUCCESS;
-}
-
-/*----------------------------------------------------------------------------
- * EAS_SetMaxPCMStreams()
- *----------------------------------------------------------------------------
- * Sets the maximum number of PCM streams allowed in parsers that
- * use PCM streaming.
- *
- * Inputs:
- * pEASData         - pointer to overall EAS data structure
- * streamHandle     - handle returned by EAS_OpenFile
- * maxNumStreams    - maximum number of PCM streams
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_SetMaxPCMStreams (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStream, EAS_I32 maxNumStreams)
-{
-    if (!EAS_StreamReady(pEASData, pStream))
-        return EAS_ERROR_NOT_VALID_IN_THIS_STATE;
-    return EAS_IntSetStrmParam(pEASData, pStream, PARSER_DATA_MAX_PCM_STREAMS, maxNumStreams);
 }
 
 /*----------------------------------------------------------------------------
@@ -2100,28 +1424,7 @@ EAS_PUBLIC EAS_RESULT EAS_GetLocation (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStr
     return EAS_SUCCESS;
 }
 
-/*----------------------------------------------------------------------------
- * EAS_GetRenderTime()
- *----------------------------------------------------------------------------
- * Purpose:
- * Returns the current playback offset
- *
- * Inputs:
- * pEASData         - pointer to overall EAS data structure
- *
- * Outputs:
- * Gets the render time clock in msecs.
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_GetRenderTime (EAS_DATA_HANDLE pEASData, EAS_I32 *pTime)
-{
-    *pTime = pEASData->renderTime >> 8;
-    return EAS_SUCCESS;
-}
-
+#ifdef JET_INTERFACE
 /*----------------------------------------------------------------------------
  * EAS_Pause()
  *----------------------------------------------------------------------------
@@ -2238,41 +1541,7 @@ EAS_PUBLIC EAS_RESULT EAS_Resume (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStream)
 
     return result;
 }
-
-/*----------------------------------------------------------------------------
- * EAS_GetParameter()
- *----------------------------------------------------------------------------
- * Purpose:
- * Set the parameter of a module. See E_MODULES for a list of modules
- * and the header files of the modules for a list of parameters.
- *
- * Inputs:
- * psEASData        - pointer to overall EAS data structure
- * handle           - file or stream handle
- * module           - enumerated module number
- * param            - enumerated parameter number
- * pValue           - pointer to variable to receive parameter value
- *
- * Outputs:
- *
- *
- * Side Effects:
- *
- *
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_GetParameter (EAS_DATA_HANDLE pEASData, EAS_I32 module, EAS_I32 param, EAS_I32 *pValue)
-{
-
-    if (module >= NUM_EFFECTS_MODULES)
-        return EAS_ERROR_INVALID_MODULE;
-
-    if (pEASData->effectsModules[module].effectData == NULL)
-        return EAS_ERROR_INVALID_MODULE;
-
-    return (*pEASData->effectsModules[module].effect->pFGetParam)
-        (pEASData->effectsModules[module].effectData, param, pValue);
-}
+#endif
 
 /*----------------------------------------------------------------------------
  * EAS_SetParameter()
@@ -2360,234 +1629,7 @@ EAS_PUBLIC EAS_RESULT EAS_MetricsReset (EAS_DATA_HANDLE pEASData)
 }
 #endif
 
-/*----------------------------------------------------------------------------
- * EAS_SetSoundLibrary()
- *----------------------------------------------------------------------------
- * Purpose:
- * Sets the location of the sound library.
- *
- * Inputs:
- * pEASData             - instance data handle
- * pSoundLib            - pointer to sound library
- *
- * Outputs:
- *
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_SetSoundLibrary (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStream, EAS_SNDLIB_HANDLE pSndLib)
-{
-    if (pStream)
-    {
-        if (!EAS_StreamReady(pEASData, pStream))
-            return EAS_ERROR_NOT_VALID_IN_THIS_STATE;
-        return EAS_IntSetStrmParam(pEASData, pStream, PARSER_DATA_EAS_LIBRARY, (EAS_I32) pSndLib);
-    }
-
-    return VMSetGlobalEASLib(pEASData->pVoiceMgr, pSndLib);
-}
-
-/*----------------------------------------------------------------------------
- * EAS_SetHeaderSearchFlag()
- *----------------------------------------------------------------------------
- * By default, when EAS_OpenFile is called, the parsers check the
- * first few bytes of the file looking for a specific header. Some
- * mobile devices may add a header to the start of a file, which
- * will prevent the parser from recognizing the file. If the
- * searchFlag is set to EAS_TRUE, the parser will search the entire
- * file looking for the header. This may enable EAS to recognize
- * some files that it would ordinarily reject. The negative is that
- * it make take slightly longer to process the EAS_OpenFile request.
- *
- * Inputs:
- * pEASData             - instance data handle
- * searchFlag           - search flag (EAS_TRUE or EAS_FALSE)
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_SetHeaderSearchFlag (EAS_DATA_HANDLE pEASData, EAS_BOOL searchFlag)
-{
-    pEASData->searchHeaderFlag = (EAS_BOOL8) searchFlag;
-    return EAS_SUCCESS;
-}
-
-/*----------------------------------------------------------------------------
- * EAS_SetPlayMode()
- *----------------------------------------------------------------------------
- * Some file formats support special play modes, such as iMode partial
- * play mode. This call can be used to change the play mode. The
- * default play mode (usually straight playback) is always zero.
- *
- * Inputs:
- * pEASData             - instance data handle
- * handle               - file or stream handle
- * playMode             - play mode (see file parser for specifics)
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_SetPlayMode (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStream, EAS_I32 playMode)
-{
-    return EAS_IntSetStrmParam(pEASData, pStream, PARSER_DATA_PLAY_MODE, playMode);
-}
-
-#ifdef DLS_SYNTHESIZER
-/*----------------------------------------------------------------------------
- * EAS_LoadDLSCollection()
- *----------------------------------------------------------------------------
- * Purpose:
- * Sets the location of the sound library.
- *
- * Inputs:
- * pEASData             - instance data handle
- * pSoundLib            - pointer to sound library
- *
- * Outputs:
- *
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_LoadDLSCollection (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStream, EAS_FILE_LOCATOR locator)
-{
-    EAS_FILE_HANDLE fileHandle;
-    EAS_RESULT result;
-    EAS_DLSLIB_HANDLE pDLS;
-
-    if (pStream != NULL)
-    {
-        if (!EAS_StreamReady(pEASData, pStream))
-            return EAS_ERROR_NOT_VALID_IN_THIS_STATE;
-    }
-
-    /* open the file */
-    if ((result = EAS_HWOpenFile(pEASData->hwInstData, locator, &fileHandle, EAS_FILE_READ)) != EAS_SUCCESS)
-        return result;
-
-    /* parse the file */
-    result = DLSParser(pEASData->hwInstData, fileHandle, 0, &pDLS);
-    EAS_HWCloseFile(pEASData->hwInstData, fileHandle);
-
-    if (result == EAS_SUCCESS)
-    {
-
-        /* if a stream pStream is specified, point it to the DLS collection */
-        if (pStream)
-            result = EAS_IntSetStrmParam(pEASData, pStream, PARSER_DATA_DLS_COLLECTION, (EAS_I32) pDLS);
-
-        /* global DLS load */
-        else
-            result = VMSetGlobalDLSLib(pEASData, pDLS);
-    }
-
-    return result;
-}
-#endif
-
-#ifdef EXTERNAL_AUDIO
-/*----------------------------------------------------------------------------
- * EAS_RegExtAudioCallback()
- *----------------------------------------------------------------------------
- * Purpose:
- * Registers callback functions for audio events.
- *
- * Inputs:
- * pEASData         - pointer to overall EAS data structure
- * handle           - file or stream handle
- * cbProgChgFunc    - pointer to host callback function for program change
- * cbEventFunc      - pointer to host callback functio for note events
- *
- * Outputs:
- *
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_RegExtAudioCallback (EAS_DATA_HANDLE pEASData,
-    EAS_HANDLE pStream,
-    EAS_VOID_PTR pInstData,
-    EAS_EXT_PRG_CHG_FUNC cbProgChgFunc,
-    EAS_EXT_EVENT_FUNC cbEventFunc)
-{
-    S_SYNTH *pSynth;
-
-    if (!EAS_StreamReady(pEASData, pStream))
-        return EAS_ERROR_NOT_VALID_IN_THIS_STATE;
-
-    if (EAS_GetStreamParameter(pEASData, pStream, PARSER_DATA_SYNTH_HANDLE, (EAS_I32*) &pSynth) != EAS_SUCCESS)
-        return EAS_ERROR_INVALID_PARAMETER;
-
-    if (pSynth == NULL)
-        return EAS_ERROR_INVALID_PARAMETER;
-
-    VMRegExtAudioCallback(pSynth, pInstData, cbProgChgFunc, cbEventFunc);
-    return EAS_SUCCESS;
-}
-
-/*----------------------------------------------------------------------------
- * EAS_GetMIDIControllers()
- *----------------------------------------------------------------------------
- * Purpose:
- * Returns the current state of MIDI controllers on the requested channel.
- *
- * Inputs:
- * pEASData         - pointer to overall EAS data structure
- * handle           - file or stream handle
- * pControl         - pointer to structure to receive data
- *
- * Outputs:
- *
- *
- * Side Effects:
- *
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_GetMIDIControllers (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStream, EAS_U8 channel, S_MIDI_CONTROLLERS *pControl)
-{
-    S_SYNTH *pSynth;
-
-    if (!EAS_StreamReady(pEASData, pStream))
-        return EAS_ERROR_NOT_VALID_IN_THIS_STATE;
-
-    if (EAS_GetStreamParameter(pEASData, pStream, PARSER_DATA_SYNTH_HANDLE, (EAS_I32*) &pSynth) != EAS_SUCCESS)
-        return EAS_ERROR_INVALID_PARAMETER;
-
-    if (pSynth == NULL)
-        return EAS_ERROR_INVALID_PARAMETER;
-
-    VMGetMIDIControllers(pSynth, channel, pControl);
-    return EAS_SUCCESS;
-}
-#endif
-
-#ifdef _SPLIT_ARCHITECTURE
-/*----------------------------------------------------------------------------
- * EAS_SetFrameBuffer()
- *----------------------------------------------------------------------------
- * Purpose:
- * Sets the frame buffer pointer passed to the IPC communications functions
- *
- * Inputs:
- * pEASData             - instance data handle
- * locator              - file locator
- *
- * Outputs:
- *
- *
- * Side Effects:
- * May overlay instruments in the GM sound set
- *
- *----------------------------------------------------------------------------
-*/
-EAS_PUBLIC EAS_RESULT EAS_SetFrameBuffer (EAS_DATA_HANDLE pEASData, EAS_FRAME_BUFFER_HANDLE pFrameBuffer)
-{
-    if (pEASData->pVoiceMgr)
-        pEASData->pVoiceMgr->pFrameBuffer = pFrameBuffer;
-    return EAS_SUCCESS;
-}
-#endif
-
+#ifdef FILE_HEADER_SEARCH
 /*----------------------------------------------------------------------------
  * EAS_SearchFile
  *----------------------------------------------------------------------------
@@ -2634,5 +1676,6 @@ EAS_RESULT EAS_SearchFile (S_EAS_DATA *pEASData, EAS_FILE_HANDLE fileHandle, con
     }
     return EAS_SUCCESS;
 }
+#endif
 
 
