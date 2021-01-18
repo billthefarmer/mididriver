@@ -464,6 +464,47 @@ Java_org_billthefarmer_mididriver_MidiDriver_setVolume(JNIEnv *env,
     return midi_setVolume(volume);
 }
 
+// Set EAS reverb
+jboolean midi_setReverb(jint preset)
+{
+    EAS_RESULT result;
+
+    if (preset >= 0) {
+        result = EAS_SetParameter(pEASData, EAS_MODULE_REVERB, EAS_PARAM_REVERB_PRESET, preset);
+        if (result != EAS_SUCCESS)
+        {
+            LOG_E(LOG_TAG, "Set EAS reverb preset failed: %ld", result);
+            return JNI_FALSE;
+        }
+
+        result = EAS_SetParameter(pEASData, EAS_MODULE_REVERB, EAS_PARAM_REVERB_BYPASS, EAS_FALSE);
+        if (result != EAS_SUCCESS)
+        {
+            LOG_E(LOG_TAG, "Enable EAS reverb failed: %ld", result);
+            return JNI_FALSE;
+        }
+    }
+    else
+    {
+        result = EAS_SetParameter(pEASData, EAS_MODULE_REVERB, EAS_PARAM_REVERB_BYPASS, EAS_TRUE);
+        if (result != EAS_SUCCESS)
+        {
+            LOG_E(LOG_TAG, "Disable EAS reverb failed: %ld", result);
+            return JNI_FALSE;
+        }
+    }
+
+    return JNI_TRUE;
+}
+
+jboolean
+Java_org_billthefarmer_mididriver_MidiDriver_setReverb(JNIEnv *env,
+                                                          jobject obj,
+                                                          jint preset)
+{
+    return midi_setReverb(preset);
+}
+
 // shutdown EAS midi
 jboolean midi_shutdown() {
     EAS_RESULT result;

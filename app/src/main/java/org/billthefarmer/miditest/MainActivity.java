@@ -25,6 +25,7 @@ package org.billthefarmer.miditest;
 import android.app.Activity;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.widget.CompoundButton;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
@@ -32,6 +33,7 @@ import android.widget.TextView;
 import org.billthefarmer.mididriver.MidiDriver;
 import org.billthefarmer.mididriver.MidiConstants;
 import org.billthefarmer.mididriver.GeneralMidiConstants;
+import org.billthefarmer.mididriver.ReverbConstants;
 
 import java.util.Locale;
 
@@ -70,6 +72,18 @@ public class MainActivity extends Activity
         v = findViewById(R.id.nants);
         if (v != null)
             v.setOnClickListener(this);
+
+        v = findViewById(R.id.reverb);
+        if (v != null)
+            ((CompoundButton)v).setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        if (isChecked) {
+                            midi.setReverb(ReverbConstants.CHAMBER);
+                        } else {
+                            midi.setReverb(ReverbConstants.OFF);
+                        }
+                    }
+                });
 
         text = findViewById(R.id.status);
 

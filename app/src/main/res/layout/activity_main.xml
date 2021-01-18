@@ -33,6 +33,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/g" />
+
+        <ToggleButton
+            android:id="@+id/reverb"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:textOn="@string/reverbon"
+            android:textOff="@string/reverboff" />
     </LinearLayout>
 
     <LinearLayout
