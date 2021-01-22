@@ -39,7 +39,8 @@ import java.util.Locale;
 
 public class MainActivity extends Activity
     implements View.OnTouchListener, View.OnClickListener,
-            MidiDriver.OnMidiStartListener
+               CompoundButton.OnCheckedChangeListener,
+               MidiDriver.OnMidiStartListener
 {
     private TextView text;
 
@@ -75,15 +76,7 @@ public class MainActivity extends Activity
 
         v = findViewById(R.id.reverb);
         if (v != null)
-            ((CompoundButton)v).setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        if (isChecked) {
-                            midi.setReverb(ReverbConstants.CHAMBER);
-                        } else {
-                            midi.setReverb(ReverbConstants.OFF);
-                        }
-                    }
-                });
+            ((CompoundButton) v).setOnCheckedChangeListener(this);
 
         text = findViewById(R.id.status);
 
@@ -198,6 +191,17 @@ public class MainActivity extends Activity
                 player.stop();
             break;
         }
+    }
+
+    // onCheckedChanged
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
+    {
+        if (isChecked)
+            midi.setReverb(ReverbConstants.CHAMBER);
+
+        else
+            midi.setReverb(ReverbConstants.OFF);
     }
 
     // Listener for sending initial midi messages when the Sonivox

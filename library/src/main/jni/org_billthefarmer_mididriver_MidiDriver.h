@@ -46,7 +46,7 @@ JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_setVolum
  * Signature: (I)Z
  */
 JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_setReverb
-(JNIEnv *, jobject, jint);
+        (JNIEnv *, jobject, jint);
 
 
 /*
