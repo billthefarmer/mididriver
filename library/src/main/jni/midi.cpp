@@ -161,17 +161,17 @@ SLresult createBufferQueueAudioPlayer()
 
     // configure audio source
     SLDataLocator_AndroidSimpleBufferQueue loc_bufq =
-        {
-         SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2
-        };
+    {
+        SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2
+    };
     SLDataFormat_PCM format_pcm =
-        {
-         SL_DATAFORMAT_PCM, static_cast<SLuint32>(pLibConfig->numChannels),
-         static_cast<SLuint32>(pLibConfig->sampleRate * 1000),
-         SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_16,
-         SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT,
-         SL_BYTEORDER_LITTLEENDIAN
-        };
+    {
+        SL_DATAFORMAT_PCM, static_cast<SLuint32>(pLibConfig->numChannels),
+        static_cast<SLuint32>(pLibConfig->sampleRate * 1000),
+        SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_16,
+        SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT,
+        SL_BYTEORDER_LITTLEENDIAN
+    };
     SLDataSource audioSrc = {&loc_bufq, &format_pcm};
 
     // configure audio sink
@@ -464,8 +464,55 @@ Java_org_billthefarmer_mididriver_MidiDriver_setVolume(JNIEnv *env,
     return midi_setVolume(volume);
 }
 
+// Set EAS reverb
+jboolean midi_setReverb(jint preset)
+{
+    EAS_RESULT result;
+
+    if (preset >= 0)
+    {
+        result = EAS_SetParameter(pEASData, EAS_MODULE_REVERB,
+                                  EAS_PARAM_REVERB_PRESET, preset);
+        if (result != EAS_SUCCESS)
+        {
+            LOG_E(LOG_TAG, "Set EAS reverb preset failed: %ld", result);
+            return JNI_FALSE;
+        }
+
+        result = EAS_SetParameter(pEASData, EAS_MODULE_REVERB,
+                                  EAS_PARAM_REVERB_BYPASS, EAS_FALSE);
+        if (result != EAS_SUCCESS)
+        {
+            LOG_E(LOG_TAG, "Enable EAS reverb failed: %ld", result);
+            return JNI_FALSE;
+        }
+    }
+
+    else
+    {
+        result = EAS_SetParameter(pEASData, EAS_MODULE_REVERB,
+                                  EAS_PARAM_REVERB_BYPASS, EAS_TRUE);
+        if (result != EAS_SUCCESS)
+        {
+            LOG_E(LOG_TAG, "Disable EAS reverb failed: %ld", result);
+            return JNI_FALSE;
+        }
+    }
+
+    return JNI_TRUE;
+}
+
+jboolean
+Java_org_billthefarmer_mididriver_MidiDriver_setReverb(JNIEnv *env,
+                                                       jobject obj,
+                                                       jint preset)
+{
+    return midi_setReverb(preset);
+}
+
 // shutdown EAS midi
-jboolean midi_shutdown() {
+jboolean midi_shutdown()
+{
     EAS_RESULT result;
 
     shutdownAudio();

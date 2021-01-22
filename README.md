@@ -94,6 +94,10 @@ dependencies {
                                   // synthesizer (between 0 and 100).
                                   // Returns true on success, false on
                                   // failure.
+    boolean setReverb(int preset) // Set Reverb effect preset for EAS
+                                  // synthesizer (value from
+                                  // ReverbConstants). Returns true
+                                  // on success, false on failure.
 
     boolean shutdown() // Shut down the synthesizer. Returns true on
                        // success, false on failure.
@@ -113,6 +117,16 @@ dependencies {
     jboolean midi_setVolume(jint volume)
                                   // Set master volume for EAS
                                   // synthesizer (between 0 and 100).
+                                  // Returns true on success, false on
+                                  // failure.
+    jboolean midi_setReverb(jint preset)
+                                  // Set Reverb effect preset for EAS
+                                  // synthesizer. Preset could be:
+                                  //   -1: turn reverb off
+                                  //    0: large hall
+                                  //    1: hall
+                                  //    2: chamber
+                                  //    3: room.
                                   // Returns true on success, false on
                                   // failure.
     jboolean midi_shutdown() // Shut down the synthesizer. Returns true on

@@ -42,6 +42,15 @@ JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_setVolum
 
 /*
  * Class:     org_billthefarmer_mididriver_MidiDriver
+ * Method:    setReverb
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_setReverb
+        (JNIEnv *, jobject, jint);
+
+
+/*
+ * Class:     org_billthefarmer_mididriver_MidiDriver
  * Method:    shutdown
  * Signature: ()Z
  */

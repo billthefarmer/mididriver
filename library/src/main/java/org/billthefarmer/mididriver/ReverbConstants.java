@@ -16,39 +16,20 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 //
-//  Bill Farmer	 william j farmer [at] yahoo [dot] co [dot] uk.
+//  Joseph Hindin hindin [at] jhindin [dot] com
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef MIDI_H
-#define MIDI_H
+package org.billthefarmer.mididriver;
 
-#include <jni.h>
-#include "eas.h"
-
-/* for C++ linkage */
-#ifdef __cplusplus
-extern "C"
+/**
+ * Reverb presets constants
+ */
+public class ReverbConstants
 {
-#endif
-
-// init mididriver
-jboolean midi_init();
-
-// midi write
-jboolean midi_write(EAS_U8 *bytes, jint length);
-
-// set EAS master volume
-jboolean midi_setVolume(jint volume);
-
-// set EAS reverb preset
-jboolean midi_setReverb(jint preset);
-
-// shutdown EAS midi
-jboolean midi_shutdown();
-
-#ifdef __cplusplus
-} /* end extern "C" */
-#endif
-
-#endif /* MIDI_H */
+    public static final byte OFF                            = -1;
+    public static final byte LARGE_HALL                     = 0;
+    public static final byte HALL                           = 1;
+    public static final byte CHAMBER                        = 2;
+    public static final byte ROOM                           = 3;
+}

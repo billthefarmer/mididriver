@@ -124,6 +124,13 @@ public class MidiDriver
     public  native boolean setVolume(int volume);
 
     /**
+     * Set EAS module parameter
+     * @param preset reverb preset to use (value from ReverbConstants)
+     * @return true for success
+     */
+    public native boolean setReverb(int preset);
+
+    /**
      * Shut down native code
      *
      * @return true for success
