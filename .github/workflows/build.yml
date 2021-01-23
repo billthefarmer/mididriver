@@ -1,0 +1,34 @@
+# Build on push and PR events
+on:
+  push:
+    branches:
+      - '*'
+    tags-ignore:
+      - '*'
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: "actions/checkout@v2"
+
+      - name: Build with Gradle
+        run: ./gradlew build
+
+      - name: Show checksums
+        run: |
+          sha256sum library/build/outputs/aar/library-release.aar
+          sha256sum app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload library
+        uses: actions/upload-artifact@v2
+        with:
+          name: library-release.aar
+          path: library/build/outputs/aar/library-release.aar
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v2
+        with:
+          name: app-debug.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
