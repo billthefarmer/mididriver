@@ -33,10 +33,36 @@ public class MidiDriver
     private OnMidiStartListener listener;
 
     /**
+     * Instance
+     */
+    private static MidiDriver instance;
+
+    /**
      * Class constructor
      */
-    public MidiDriver()
+    private MidiDriver()
     {
+    }
+
+    /**
+     * Get instance
+     */
+    public static MidiDriver getInstance()
+    {
+        if (instance == null)
+            instance = new MidiDriver();
+
+        return instance;
+    }
+
+    /**
+     * Get instance
+     */
+    public static MidiDriver getInstance(OnMidiStartListener l)
+    {
+        MidiDriver instance = getInstance();
+        instance.listener = l;
+        return instance;
     }
 
     /**

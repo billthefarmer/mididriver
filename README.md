@@ -56,14 +56,22 @@ dependencies {
     implementation 'com.github.billthefarmer:mididriver:v1.20'
 }
 ```
+### Constructor
+The constructor has been made private and `getInstance()` methods
+added so it is not possible to have more than one instance in an
+app. See the demo app for an example.
 
 ### Methods
 ```java
+    static MidiDriver getInstance() // Get instance of driver
+
+    static MidiDriver getInstance(OnMidiStartListener l)
+
     void start() // Start the driver. Call from onResume().
 
     void stop()  // Stop the driver. Call from onPause();
 
-    void addOnMidiStartListener(OnMidiStartListener l);
+    void addOnMidiStartListener(OnMidiStartListener l)
 
     void queueEvent(byte[]) // Send a midi message. This method now just
                             // calls write()
@@ -79,7 +87,7 @@ dependencies {
     boolean init()  // Return true on success, or false on failure.
 	
     int[] config()  // Return a four element array of ints with part of
-                    // the EAS onfig:
+                    // the EAS config:
 
         config[0] = pLibConfig->maxVoices;
         config[1] = pLibConfig->numChannels;

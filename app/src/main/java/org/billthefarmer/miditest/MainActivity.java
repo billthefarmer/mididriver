@@ -55,7 +55,7 @@ public class MainActivity extends Activity
         setContentView(R.layout.activity_main);
 
         // Create midi driver
-        midi = new MidiDriver();
+        midi = MidiDriver.getInstance(this);
 
         // Set on touch listener
         View v = findViewById(R.id.c);
@@ -81,8 +81,8 @@ public class MainActivity extends Activity
         text = findViewById(R.id.status);
 
         // Set on midi start listener
-        if (midi != null)
-            midi.setOnMidiStartListener(this);
+        // if (midi != null)
+        //     midi.setOnMidiStartListener(this);
     }
 
     // On resume

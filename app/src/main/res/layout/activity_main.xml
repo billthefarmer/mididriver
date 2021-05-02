@@ -3,6 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_marginTop="16dp"
+    android:layout_marginLeft="16dp"
+    android:layout_marginRight="16dp"
     android:orientation="vertical"
     tools:ignore="RtlHardcoded">
 
@@ -10,7 +13,6 @@
         android:id="@+id/intro"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
         android:text="@string/intro"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
@@ -41,6 +43,7 @@
             android:checked="true"
             android:textOn="@string/reverbon"
             android:textOff="@string/reverboff" />
+
     </LinearLayout>
 
     <LinearLayout
@@ -62,14 +65,23 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/nants" />
+
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/status"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:gravity="center"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
+        android:orientation="horizontal">
+
+      <TextView
+          android:id="@+id/status"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="8dp"
+          android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    </LinearLayout>
 
 </LinearLayout>

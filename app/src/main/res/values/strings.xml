@@ -2,14 +2,13 @@
 <resources>
 
     <string name="app_name">Midi</string>
-    <string name="intro">
-        To test the midi driver, touch the <b>C chord</b> or <b>G
-        chord</b> buttons below. Press the <b>Reverb</b> button to
-        toggle the effect. The <b>Ants</b> and <b><u>Ants</u></b>
-        buttons play and stop playing a short midi tune file from the
-        Sonivox sources. The chord buttons use the driver, the tune
-        buttons use the standard Android midi file player. They should
-        all work simultaneously.
+    <string name="intro">To test the midi driver, touch the <b>C
+    chord</b> or <b>G chord</b> buttons below. Press the <b>Reverb</b>
+    button to toggle the effect. The <b>Ants</b> and
+    <b><u>Ants</u></b> buttons play and stop playing a short midi tune
+    file from the Sonivox sources. The chord buttons use the driver,
+    the tune buttons use the standard Android midi file player. They
+    should all work simultaneously.
     </string>
 
     <string name="c">C chord</string>
@@ -19,10 +18,9 @@
     <string name="reverbon">Reverb</string>
     <string name="reverboff">Reverb</string>
 
-    <string name="format" formatted="false">
-        Sonivox synthesizer config:\n
-        maxVoices = %d\nnumChannels = %d\n
-        sampleRate = %d\nmixBufferSize = %d
+    <string name="format" formatted="false">Sonivox synthesizer
+    config:\nmaxVoices = %d\nnumChannels = %d\nsampleRate =
+    %d\nmixBufferSize = %d
     </string>
 
 </resources>
