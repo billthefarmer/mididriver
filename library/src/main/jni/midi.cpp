@@ -21,8 +21,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <jni.h>
-// #include <dlfcn.h>
-// #include <assert.h>
 #include <pthread.h>
 
 #include <android/log.h>
