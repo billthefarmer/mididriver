@@ -5,7 +5,6 @@ group='com.github.billthefarmer'
 
 android {
     compileSdkVersion 28
-    buildToolsVersion '29.0.3'
 
     externalNativeBuild {
         ndkBuild {
@@ -14,26 +13,12 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 14
+        minSdkVersion 16
         targetSdkVersion 28
-
-        ndk {
-            abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
-        }
     }
 
-    buildTypes {
-        release {
-            ndk {
-                abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
-            }
-        }
-
-        debug {
-            ndk {
-                abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
-            }
-        }
+    buildFeatures {
+        prefab true
     }
 
     compileOptions {
@@ -43,6 +28,10 @@ android {
     }
 
     lintOptions {
-        disable 'OldTargetApi'
+        disable 'OldTargetApi', 'ExpiredTargetSdkVersion'
     }
+}
+
+dependencies {
+    implementation 'com.google.oboe:oboe:1.6.0'
 }

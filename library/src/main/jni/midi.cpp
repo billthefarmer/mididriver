@@ -28,6 +28,7 @@
 #include <android/log.h>
 
 // for native audio
+#include <oboe/Oboe.h>
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
 
@@ -50,6 +51,9 @@
 // mutex
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
+// oboe stream
+std::shared_ptr<oboe::AudioStream> oboeStream;
+
 // engine interfaces
 static SLObjectItf engineObject = NULL;
 static SLEngineItf engineEngine;
@@ -68,6 +72,67 @@ const S_EAS_LIB_CONFIG *pLibConfig;
 static EAS_PCM *buffer;
 static EAS_I32 bufferSize;
 static EAS_HANDLE midiHandle;
+
+// oboe callback
+class OboeCallback : public oboe::AudioStreamDataCallback
+{
+public:
+    oboe::DataCallbackResult onAudioReady(oboe::AudioStream *audioStream,
+                                          void *audioData, int32_t numFrames)
+    {
+        EAS_RESULT result;
+        EAS_I32 numGenerated;
+        EAS_I32 count = 0;
+
+        // We requested AudioFormat::I16. So if the stream opens
+        // we know we got the I16 format.
+        auto *outputData = static_cast<int16_t *>(audioData);
+
+        while (count < bufferSize)
+        {
+            // lock
+            pthread_mutex_lock(&mutex);
+
+            result = EAS_Render(pEASData, outputData + count,
+                                pLibConfig->mixBufferSize, &numGenerated);
+            // unlock
+            pthread_mutex_unlock(&mutex);
+
+            assert(result == EAS_SUCCESS);
+
+            count += numGenerated * pLibConfig->numChannels;
+        }
+
+        return oboe::DataCallbackResult::Continue;
+    }
+};
+
+// oboe callback
+OboeCallback oboeCallback;
+
+// build oboe
+oboe::Result buildOboe()
+{
+    oboe::AudioStreamBuilder builder;
+
+    builder.setDirection(oboe::Direction::Output);
+    builder.setPerformanceMode(oboe::PerformanceMode::LowLatency);
+    builder.setSharingMode(oboe::SharingMode::Exclusive);
+    builder.setFormat(oboe::AudioFormat::I16);
+    builder.setFramesPerCallback(bufferSize / pLibConfig->numChannels);
+    builder.setChannelCount(pLibConfig->numChannels);
+    builder.setSampleRate(pLibConfig->sampleRate);
+    builder.setDataCallback(&oboeCallback);
+
+    return builder.openStream(oboeStream);
+}
+
+// close oboe
+oboe::Result closeOboe()
+{
+    oboeStream->requestStop();
+    return oboeStream->close();
+}
 
 // this callback handler is called every time a buffer finishes
 // playing
@@ -313,6 +378,7 @@ void shutdownEAS()
 jboolean midi_init()
 {
     EAS_RESULT result;
+    oboe::Result res;
 
     if ((result = initEAS()) != EAS_SUCCESS)
     {
@@ -327,7 +393,63 @@ jboolean midi_init()
 
     // allocate buffer in bytes
     buffer = new EAS_PCM[bufferSize];
-    if (buffer == NULL) {
+    if (buffer == NULL)
+    {
+        shutdownEAS();
+
+        LOG_E(LOG_TAG, "Allocate buffer failed");
+
+        return JNI_FALSE;
+    }
+
+    if ((res = buildOboe()) != oboe::Result::OK)
+    {
+        shutdownEAS();
+        delete[] buffer;
+        buffer = NULL;
+
+        LOG_E(LOG_TAG, "Failed to create oboe stream. Error: %s",
+              oboe::convertToText(res));
+
+        return JNI_FALSE;
+    }
+
+    if ((res = oboeStream->requestStart()) != oboe::Result::OK)
+    {
+        shutdownEAS();
+        closeOboe();
+        delete[] buffer;
+        buffer = NULL;
+
+        LOG_E(LOG_TAG, "Failed to create oboe stream. Error: %s",
+              oboe::convertToText(res));
+
+        return JNI_FALSE;
+    }
+
+    return JNI_TRUE;
+}
+
+// init mididriver old
+jboolean midi_old_init()
+{
+    EAS_RESULT result;
+
+    if ((result = initEAS()) != EAS_SUCCESS)
+    {
+        shutdownEAS();
+
+        LOG_E(LOG_TAG, "Init EAS failed: %ld", result);
+
+        return JNI_FALSE;
+    }
+
+    // LOG_D(LOG_TAG, "Init EAS success, buffer: %ld", bufferSize);
+
+    // allocate buffer in bytes
+    buffer = new EAS_PCM[bufferSize];
+    if (buffer == NULL)
+    {
         shutdownEAS();
 
         LOG_E(LOG_TAG, "Allocate buffer failed");

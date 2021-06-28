@@ -144,6 +144,9 @@ LOCAL_MODULE    := midi
 LOCAL_SRC_FILES := midi.cpp
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/host_src
 LOCAL_STATIC_LIBRARIES := sonivox
+LOCAL_SHARED_LIBRARIES := oboe
 LOCAL_LDLIBS := -lOpenSLES -llog
 
 include $(BUILD_SHARED_LIBRARY)
+
+$(call import-module,prefab/oboe)

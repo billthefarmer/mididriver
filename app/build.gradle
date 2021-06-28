@@ -2,11 +2,10 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 28
-    buildToolsVersion '29.0.3'
 
     defaultConfig {
         applicationId "org.billthefarmer.miditest"
-        minSdkVersion 14
+        minSdkVersion 16
         targetSdkVersion 28
         versionName "1.21"
         versionCode 121
@@ -20,7 +19,8 @@ android {
 
     lintOptions {
         disable 'IconMissingDensityFolder', 'GoogleAppIndexingWarning',
-            'AllowBackup', 'OldTargetApi', 'NonConstantResourceId'
+            'AllowBackup', 'OldTargetApi', 'NonConstantResourceId',
+            'ExpiredTargetSdkVersion'
     }
 }
 
