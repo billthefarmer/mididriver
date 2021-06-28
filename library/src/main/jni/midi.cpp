@@ -54,22 +54,9 @@ static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 // oboe stream
 std::shared_ptr<oboe::AudioStream> oboeStream;
 
-// engine interfaces
-static SLObjectItf engineObject = NULL;
-static SLEngineItf engineEngine;
-
-// output mix interfaces
-static SLObjectItf outputMixObject = NULL;
-
-// buffer queue player interfaces
-static SLObjectItf bqPlayerObject = NULL;
-static SLPlayItf bqPlayerPlay;
-static SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue;
-
 // EAS data
 static EAS_DATA_HANDLE pEASData;
 const S_EAS_LIB_CONFIG *pLibConfig;
-static EAS_PCM *buffer;
 static EAS_I32 bufferSize;
 static EAS_HANDLE midiHandle;
 
@@ -134,199 +121,6 @@ oboe::Result closeOboe()
     return oboeStream->close();
 }
 
-// this callback handler is called every time a buffer finishes
-// playing
-void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
-{
-    EAS_RESULT result;
-    EAS_I32 numGenerated;
-    EAS_I32 count;
-
-    assert(bq == bqPlayerBufferQueue);
-    assert(NULL == context);
-
-    // for streaming playback, replace this test by logic to fill the
-    // next buffer
-
-    count = 0;
-    while (count < bufferSize)
-    {
-        // lock
-        pthread_mutex_lock(&mutex);
-
-        result = EAS_Render(pEASData, buffer + count,
-                            pLibConfig->mixBufferSize, &numGenerated);
-        // unlock
-        pthread_mutex_unlock(&mutex);
-
-        assert(result == EAS_SUCCESS);
-
-        count += numGenerated * pLibConfig->numChannels;
-    }
-
-    // enqueue another buffer
-    result = (*bqPlayerBufferQueue)->Enqueue(bq, buffer,
-                                             bufferSize * sizeof(EAS_PCM));
-
-    // the most likely other result is SL_RESULT_BUFFER_INSUFFICIENT,
-    // which for this code example would indicate a programming error
-    assert(SL_RESULT_SUCCESS == result);
-}
-
-// create the engine and output mix objects
-SLresult createEngine()
-{
-    SLresult result;
-
-    // create engine
-    result = slCreateEngine(&engineObject, 0, NULL, 0, NULL, NULL);
-    if (SL_RESULT_SUCCESS != result)
-        return result;
-
-    // LOG_D(LOG_TAG, "Engine created");
-
-    // realize the engine
-    result = (*engineObject)->Realize(engineObject, SL_BOOLEAN_FALSE);
-    if (SL_RESULT_SUCCESS != result)
-        return result;
-
-    // LOG_D(LOG_TAG, "Engine realised");
-
-    // get the engine interface, which is needed in order to create
-    // other objects
-    result = (*engineObject)->GetInterface(engineObject, SL_IID_ENGINE,
-                                           &engineEngine);
-    if (SL_RESULT_SUCCESS != result)
-        return result;
-
-    // LOG_D(LOG_TAG, "Engine Interface retrieved");
-
-    // create output mix
-    result = (*engineEngine)->CreateOutputMix(engineEngine, &outputMixObject,
-                                              0, NULL, NULL);
-    if (SL_RESULT_SUCCESS != result)
-        return result;
-
-    // LOG_D(LOG_TAG, "Output mix created");
-
-    // realize the output mix
-    result = (*outputMixObject)->Realize(outputMixObject, SL_BOOLEAN_FALSE);
-    if (SL_RESULT_SUCCESS != result)
-        return result;
-
-    // LOG_D(LOG_TAG, "Output mix realised");
-
-    return SL_RESULT_SUCCESS;
-}
-
-// create buffer queue audio player
-SLresult createBufferQueueAudioPlayer()
-{
-    SLresult result;
-
-    // configure audio source
-    SLDataLocator_AndroidSimpleBufferQueue loc_bufq =
-    {
-        SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2
-    };
-    SLDataFormat_PCM format_pcm =
-    {
-        SL_DATAFORMAT_PCM, static_cast<SLuint32>(pLibConfig->numChannels),
-        static_cast<SLuint32>(pLibConfig->sampleRate * 1000),
-        SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_16,
-        SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT,
-        SL_BYTEORDER_LITTLEENDIAN
-    };
-    SLDataSource audioSrc = {&loc_bufq, &format_pcm};
-
-    // configure audio sink
-    SLDataLocator_OutputMix loc_outmix =
-        {SL_DATALOCATOR_OUTPUTMIX, outputMixObject};
-    SLDataSink audioSnk = {&loc_outmix, NULL};
-
-    // create audio player
-    const SLInterfaceID ids[1] = {SL_IID_BUFFERQUEUE};
-    const SLboolean req[1] = {SL_BOOLEAN_TRUE};
-
-    result = (*engineEngine)->CreateAudioPlayer(engineEngine,
-                                                &bqPlayerObject,
-                                                &audioSrc, &audioSnk,
-                                                1, ids, req);
-    if (SL_RESULT_SUCCESS != result)
-        return result;
-
-    // LOG_D(LOG_TAG, "Audio player created");
-
-    // realize the player
-    result = (*bqPlayerObject)->Realize(bqPlayerObject, SL_BOOLEAN_FALSE);
-    if (SL_RESULT_SUCCESS != result)
-        return result;
-
-    // LOG_D(LOG_TAG, "Audio player realised");
-
-    // get the play interface
-    result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_PLAY,
-                                             &bqPlayerPlay);
-    if (SL_RESULT_SUCCESS != result)
-        return result;
-
-    // LOG_D(LOG_TAG, "Play interface retrieved");
-
-    // get the buffer queue interface
-    result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_BUFFERQUEUE,
-                                             &bqPlayerBufferQueue);
-    if (SL_RESULT_SUCCESS != result)
-        return result;
-
-    // LOG_D(LOG_TAG, "Buffer queue interface retrieved");
-
-    // register callback on the buffer queue
-    result = (*bqPlayerBufferQueue)->RegisterCallback(bqPlayerBufferQueue,
-                                                      bqPlayerCallback, NULL);
-    if (SL_RESULT_SUCCESS != result)
-        return result;
-
-    // LOG_D(LOG_TAG, "Callback registered");
-
-    // set the player's state to playing
-    result = (*bqPlayerPlay)->SetPlayState(bqPlayerPlay, SL_PLAYSTATE_PLAYING);
-    if (SL_RESULT_SUCCESS != result)
-        return result;
-
-    // LOG_D(LOG_TAG, "Audio player set playing");
-
-    return SL_RESULT_SUCCESS;
-}
-
-// shut down the native audio system
-void shutdownAudio()
-{
-    // destroy buffer queue audio player object, and invalidate all
-    // associated interfaces
-    if (bqPlayerObject != NULL)
-    {
-        (*bqPlayerObject)->Destroy(bqPlayerObject);
-        bqPlayerObject = NULL;
-        bqPlayerPlay = NULL;
-        bqPlayerBufferQueue = NULL;
-    }
-
-    // destroy output mix object, and invalidate all associated interfaces
-    if (outputMixObject != NULL)
-    {
-        (*outputMixObject)->Destroy(outputMixObject);
-        outputMixObject = NULL;
-    }
-
-    // destroy engine object, and invalidate all associated interfaces
-    if (engineObject != NULL)
-    {
-        (*engineObject)->Destroy(engineObject);
-        engineObject = NULL;
-        engineEngine = NULL;
-    }
-}
-
 // init EAS midi
 EAS_RESULT initEAS()
 {
@@ -378,7 +172,7 @@ void shutdownEAS()
 jboolean midi_init()
 {
     EAS_RESULT result;
-    oboe::Result res;
+    oboe::Result oboeResult;
 
     if ((result = initEAS()) != EAS_SUCCESS)
     {
@@ -391,100 +185,26 @@ jboolean midi_init()
 
     // LOG_D(LOG_TAG, "Init EAS success, buffer: %ld", bufferSize);
 
-    // allocate buffer in bytes
-    buffer = new EAS_PCM[bufferSize];
-    if (buffer == NULL)
+    if ((oboeResult = buildOboe()) != oboe::Result::OK)
     {
         shutdownEAS();
-
-        LOG_E(LOG_TAG, "Allocate buffer failed");
-
-        return JNI_FALSE;
-    }
-
-    if ((res = buildOboe()) != oboe::Result::OK)
-    {
-        shutdownEAS();
-        delete[] buffer;
-        buffer = NULL;
 
         LOG_E(LOG_TAG, "Failed to create oboe stream. Error: %s",
-              oboe::convertToText(res));
+              oboe::convertToText(oboeResult));
 
         return JNI_FALSE;
     }
 
-    if ((res = oboeStream->requestStart()) != oboe::Result::OK)
+    if ((oboeResult = oboeStream->requestStart()) != oboe::Result::OK)
     {
         shutdownEAS();
         closeOboe();
-        delete[] buffer;
-        buffer = NULL;
 
-        LOG_E(LOG_TAG, "Failed to create oboe stream. Error: %s",
-              oboe::convertToText(res));
+        LOG_E(LOG_TAG, "Failed to start oboe stream. Error: %s",
+              oboe::convertToText(oboeResult));
 
         return JNI_FALSE;
     }
-
-    return JNI_TRUE;
-}
-
-// init mididriver old
-jboolean midi_old_init()
-{
-    EAS_RESULT result;
-
-    if ((result = initEAS()) != EAS_SUCCESS)
-    {
-        shutdownEAS();
-
-        LOG_E(LOG_TAG, "Init EAS failed: %ld", result);
-
-        return JNI_FALSE;
-    }
-
-    // LOG_D(LOG_TAG, "Init EAS success, buffer: %ld", bufferSize);
-
-    // allocate buffer in bytes
-    buffer = new EAS_PCM[bufferSize];
-    if (buffer == NULL)
-    {
-        shutdownEAS();
-
-        LOG_E(LOG_TAG, "Allocate buffer failed");
-
-        return JNI_FALSE;
-    }
-
-    // create the engine and output mix objects
-    if ((result = createEngine()) != SL_RESULT_SUCCESS)
-    {
-        shutdownEAS();
-        shutdownAudio();
-        delete[] buffer;
-        buffer = NULL;
-
-        LOG_E(LOG_TAG, "Create engine failed: %ld", result);
-
-        return JNI_FALSE;
-    }
-
-    // create buffer queue audio player
-    if ((result = createBufferQueueAudioPlayer()) != SL_RESULT_SUCCESS)
-    {
-        shutdownEAS();
-        shutdownAudio();
-        delete[] buffer;
-        buffer = NULL;
-
-        LOG_E(LOG_TAG, "Create buffer queue audio player failed: %ld", result);
-
-        return JNI_FALSE;
-    }
-
-    // call the callback to start playing
-    bqPlayerCallback(bqPlayerBufferQueue, NULL);
 
     return JNI_TRUE;
 }
@@ -635,14 +355,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_setReverb(JNIEnv *env,
 // shutdown EAS midi
 jboolean midi_shutdown()
 {
-    EAS_RESULT result;
-
-    shutdownAudio();
-
-    if (buffer != NULL)
-        delete[] buffer;
-    buffer = NULL;
-
+    closeOboe();
     shutdownEAS();
 
     return JNI_TRUE;
