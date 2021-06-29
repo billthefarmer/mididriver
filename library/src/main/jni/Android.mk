@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
@@ -93,13 +94,6 @@ LOCAL_ARM_MODE := arm
 
 LOCAL_MODULE := sonivox
 
-# LOCAL_COPY_HEADERS_TO := libsonivox
-# LOCAL_COPY_HEADERS := \
-# 	host_src/eas.h \
-# 	host_src/eas_types.h \
-# 	host_src/eas_reverb.h \
-# 	host_src/jet.h
-
 ifeq ($(TARGET_ARCH),arm)
 LOCAL_SRC_FILES += \
 	lib_src/ARM-E_filter_gnu.s \
@@ -110,17 +104,14 @@ LOCAL_SRC_FILES += \
 #	lib_src/ARM-E_interpolate_noloop_gnu.s \
 #	lib_src/ARM-E_voice_gain_gnu.s
 
-# .s files not ported for Clang assembler yet.
 LOCAL_ASFLAGS += \
 	-xassembler-with-cpp \
 	-D SAMPLE_RATE_22050 \
 	-D STEREO_OUTPUT \
 	-D FILTER_ENABLED \
-	-D SAMPLES_16_BIT \
-	-D LDRSHGT=LDRGTSH
+	-D SAMPLES_16_BIT
 
-LOCAL_CFLAGS += -no-integrated-as \
-		-D NATIVE_EAS_KERNEL
+LOCAL_CFLAGS += -D NATIVE_EAS_KERNEL
 endif
 
 include $(BUILD_STATIC_LIBRARY)
