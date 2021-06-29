@@ -49,22 +49,21 @@ tmp3	.req	r6
 
 numSamples	.req	r9
 
-	.if	STEREO_OUTPUT
+	#if	STEREO_OUTPUT
 gainIncLeft	.req	r7
 gainIncRight	.req	r8
 gainLeft	.req	r10
 gainRight	.req	r11
-	.else
+	#else
 gainIncrement	.req	r7
 gain	.req	r8
-	.endif
+	#endif
 
 
 @ register context for local variables
 @SaveRegs	RLIST	{r4-r11,lr}
 @RestoreRegs	RLIST	{r4-r11,pc}
 
-	.func	WT_VoiceGain
 WT_VoiceGain:
 
 	STMFD	sp!, {r4-r11,lr}
@@ -80,7 +79,7 @@ WT_VoiceGain:
 @ due to storage and computational dependencies.
 @----------------------------------------------------------------
 
-	.if	STEREO_OUTPUT
+	#if	STEREO_OUTPUT
 
 	LDR		tmp0, [pWTFrame, #m_prevGain]
 	LDR		tmp1, [pWTFrame, #m_gainTarget]
@@ -132,7 +131,7 @@ StereoGainLoop:
 @----------------------------------------------------------------
 @ Mono version
 @----------------------------------------------------------------
-	.else
+	#else
 
 	LDR		gain, [pWTFrame, #m_prevGain]
 	MOV		gain, gain, LSL #(NUM_MIXER_GUARD_BITS + 4)
@@ -156,11 +155,10 @@ MonoGainLoop:
 	SUBS	numSamples, numSamples, #1
 	BGT		MonoGainLoop
 
-	.endif	@end Mono version
+	#endif	@end Mono version
 
 	LDMFD	sp!,{r4-r11,lr}
 	BX		lr
 	
-	.endfunc
 	.end
 

@@ -482,7 +482,7 @@ EAS_BOOL WT_CheckSampleEnd (S_WT_VOICE *pWTVoice, S_WT_INT_FRAME *pWTIntFrame, E
 #endif
         /* now account for the fractional portion */
         /*lint -e{703} use shift for performance */
-        numSamples = (EAS_I32) ((numSamples << NUM_PHASE_FRAC_BITS) - pWTVoice->phaseFrac);
+        numSamples = (numSamples << NUM_PHASE_FRAC_BITS) - (EAS_I32) pWTVoice->phaseFrac;
         if (pWTIntFrame->frame.phaseIncrement) {
             pWTIntFrame->numSamples = 1 + (numSamples / pWTIntFrame->frame.phaseIncrement);
         } else {

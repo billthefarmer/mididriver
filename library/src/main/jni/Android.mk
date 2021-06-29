@@ -110,31 +110,18 @@ LOCAL_SRC_FILES += \
 #	lib_src/ARM-E_interpolate_noloop_gnu.s \
 #	lib_src/ARM-E_voice_gain_gnu.s
 
-asm_flags := \
-	-I $(LOCAL_PATH)/lib_src \
-	--defsym SAMPLE_RATE_22050=1 \
-	--defsym STEREO_OUTPUT=1 \
-	--defsym FILTER_ENABLED=1 \
-	--defsym SAMPLES_16_BIT=1
-
-LOCAL_CFLAGS += \
-	$(foreach f,$(asm_flags),-Wa,"$(f)")
-
 # .s files not ported for Clang assembler yet.
-LOCAL_ASFLAGS += -xassembler-with-cpp
-
-asm_flags :=
+LOCAL_ASFLAGS += \
+	-xassembler-with-cpp \
+	-D SAMPLE_RATE_22050 \
+	-D STEREO_OUTPUT \
+	-D FILTER_ENABLED \
+	-D SAMPLES_16_BIT \
+	-D LDRSHGT=LDRGTSH
 
 LOCAL_CFLAGS += -no-integrated-as \
 		-D NATIVE_EAS_KERNEL
-
-# LOCAL_COPY_HEADERS += lib_src/ARM_synth_constants_gnu.inc
 endif
-
-# LOCAL_SHARED_LIBRARIES := \
-# 	libutils libcutils
-
-# LOCAL_LDLIBS := -llog
 
 include $(BUILD_STATIC_LIBRARY)
 

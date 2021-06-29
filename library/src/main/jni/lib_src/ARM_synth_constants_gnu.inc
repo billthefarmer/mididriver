@@ -12,45 +12,45 @@
 @****************************************************************
 
 
-    .ifdef  SAMPLE_RATE_8000
+    #ifdef  SAMPLE_RATE_8000
     .equ    SYNTH_UPDATE_PERIOD_IN_BITS, 5
     .equ    BUFFER_SIZE_IN_MONO_SAMPLES, 32
-    .endif
+    #endif
 
-    .ifdef  SAMPLE_RATE_16000
+    #ifdef  SAMPLE_RATE_16000
     .equ    SYNTH_UPDATE_PERIOD_IN_BITS, 6
     .equ    BUFFER_SIZE_IN_MONO_SAMPLES, 64
-    .endif
+    #endif
 
-    .ifdef  SAMPLE_RATE_20000
+    #ifdef  SAMPLE_RATE_20000
     .equ    SYNTH_UPDATE_PERIOD_IN_BITS, 7
     .equ    BUFFER_SIZE_IN_MONO_SAMPLES, 128
-    .endif
+    #endif
 
-    .ifdef  SAMPLE_RATE_22050
+    #ifdef  SAMPLE_RATE_22050
     .equ    SYNTH_UPDATE_PERIOD_IN_BITS, 7
     .equ    BUFFER_SIZE_IN_MONO_SAMPLES, 128
-    .endif
+    #endif
 
-    .ifdef  SAMPLE_RATE_24000
+    #ifdef  SAMPLE_RATE_24000
     .equ    SYNTH_UPDATE_PERIOD_IN_BITS, 7
     .equ    BUFFER_SIZE_IN_MONO_SAMPLES, 128
-    .endif
+    #endif
 
-    .ifdef  SAMPLE_RATE_32000
+    #ifdef  SAMPLE_RATE_32000
     .equ    SYNTH_UPDATE_PERIOD_IN_BITS, 7
     .equ    BUFFER_SIZE_IN_MONO_SAMPLES, 128
-    .endif
+    #endif
 
-    .ifdef  SAMPLE_RATE_44100
+    #ifdef  SAMPLE_RATE_44100
     .equ    SYNTH_UPDATE_PERIOD_IN_BITS, 8
     .equ    BUFFER_SIZE_IN_MONO_SAMPLES, 256
-    .endif
+    #endif
 
-    .ifdef  SAMPLE_RATE_48000
+    #ifdef  SAMPLE_RATE_48000
     .equ    SYNTH_UPDATE_PERIOD_IN_BITS, 8
     .equ    BUFFER_SIZE_IN_MONO_SAMPLES, 256
-    .endif
+    #endif
 
 
 @ if the OUTPUT PCM sample is 16-bits, then when using indexed addressing,
@@ -64,13 +64,13 @@
     .equ    PHASE_FRAC_MASK, 0x7FFF
 
 @ shift for phase accumulator when fraction carries over
-    .ifdef  SAMPLES_8_BIT
+    #ifdef  SAMPLES_8_BIT
     .equ    NEXT_INPUT_PCM_SHIFT, 0
-    .endif
+    #endif
 
-    .ifdef  SAMPLES_16_BIT
+    #ifdef  SAMPLES_16_BIT
     .equ    NEXT_INPUT_PCM_SHIFT, 1
-    .endif
+    #endif
 
 @****************************************************************************
     .equ    NUM_MIXER_GUARD_BITS, 4
@@ -90,19 +90,19 @@
 @ handle a struct in a compatible fashion. Switching to old fashion EQU
 @
 
-    .if FILTER_ENABLED
+    #if FILTER_ENABLED
 @**************************************
 @ typedef struct s_filter_tag
     .equ    m_z1, 0
     .equ    m_z2, 2
-    .endif
+    #endif
 
 @**************************************
 @ typedef struct s_wt_frame_tag
     .equ    m_gainTarget, 0
     .equ    m_phaseIncrement, 4
 
-    .if FILTER_ENABLED
+    #if FILTER_ENABLED
     .equ    m_k, 8
     .equ    m_b1, 12
     .equ    m_b2, 16
@@ -110,12 +110,12 @@
     .equ    m_pMixBuffer, 24
     .equ    m_numSamples, 28
     .equ    m_prevGain, 32
-    .else
+    #else
     .equ    m_pAudioBuffer, 8
     .equ    m_pMixBuffer, 12
     .equ    m_numSamples, 16
     .equ    m_prevGain, 20
-    .endif
+    #endif
 
 
 @**************************************
@@ -125,10 +125,10 @@
     .equ    m_pPhaseAccum, 8    @ /* points to first sample at start of loop */
     .equ    m_phaseFrac, 12 @ /* points to first sample at start of loop */
 
-    .if STEREO_OUTPUT
+    #if STEREO_OUTPUT
     .equ    m_gainLeft, 16  @ /* current gain, left ch  */
     .equ    m_gainRight, 18 @ /* current gain, right ch */
-    .endif
+    #endif
 
 
 @****************************************************************************
