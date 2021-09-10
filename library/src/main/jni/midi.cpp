@@ -56,6 +56,10 @@ const S_EAS_LIB_CONFIG *pLibConfig;
 static EAS_I32 bufferSize;
 static EAS_HANDLE midiHandle;
 
+// Functions
+oboe::Result initOboe();
+oboe::Result closeOboe();
+
 // oboe callback
 class OboeCallback : public oboe::AudioStreamDataCallback
 {
@@ -88,6 +92,14 @@ public:
 
         return oboe::DataCallbackResult::Continue;
     }
+
+    void onErrorAfterClose (oboe::AudioStream *audioStream , oboe::Result  error)
+    {
+        if(error ==  oboe::Result::ErrorDisconnected)
+        {
+            initOboe();
+        }
+    }
 };
 
 // oboe callback
@@ -108,6 +120,31 @@ oboe::Result buildOboe()
     builder.setDataCallback(&oboeCallback);
 
     return builder.openStream(oboeStream);
+}
+
+oboe::Result initOboe()
+{
+    oboe::Result oboeResult;
+
+    if ((oboeResult = buildOboe()) != oboe::Result::OK)
+    {
+        LOG_E(LOG_TAG, "Failed to create oboe stream. Error: %s",
+              oboe::convertToText(oboeResult));
+
+        return oboeResult;
+    }
+
+    if ((oboeResult = oboeStream->requestStart()) != oboe::Result::OK)
+    {
+        closeOboe();
+
+        LOG_E(LOG_TAG, "Failed to start oboe stream. Error: %s",
+              oboe::convertToText(oboeResult));
+
+        return oboeResult;
+    }
+
+    return oboe::Result::OK;
 }
 
 // close oboe
@@ -181,23 +218,9 @@ jboolean midi_init()
 
     // LOG_D(LOG_TAG, "Init EAS success, buffer: %ld", bufferSize);
 
-    if ((oboeResult = buildOboe()) != oboe::Result::OK)
+    if ((oboeResult = initOboe()) != oboe::Result::OK)
     {
         shutdownEAS();
-
-        LOG_E(LOG_TAG, "Failed to create oboe stream. Error: %s",
-              oboe::convertToText(oboeResult));
-
-        return JNI_FALSE;
-    }
-
-    if ((oboeResult = oboeStream->requestStart()) != oboe::Result::OK)
-    {
-        shutdownEAS();
-        closeOboe();
-
-        LOG_E(LOG_TAG, "Failed to start oboe stream. Error: %s",
-              oboe::convertToText(oboeResult));
 
         return JNI_FALSE;
     }

@@ -18,9 +18,8 @@
     <string name="reverbon">Reverb</string>
     <string name="reverboff">Reverb</string>
 
-    <string name="format" formatted="false">Sonivox synthesizer
-    config:\nmaxVoices = %d\nnumChannels = %d\nsampleRate =
-    %d\nmixBufferSize = %d
+    <string name="format">Sonivox synthesizer config:\nmaxVoices =
+    %1$d\nnumChannels = %2$d\nsampleRate = %3$d\nmixBufferSize = %4$d
     </string>
 
 </resources>
