@@ -53,7 +53,7 @@ allprojects {
 and:
 ```gradle
 dependencies {
-    implementation 'com.github.billthefarmer:mididriver:v1.20'
+    implementation 'com.github.billthefarmer:mididriver:v1.24'
 }
 ```
 ### Constructor
