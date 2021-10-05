@@ -143,3 +143,27 @@ app. See the demo app for an example.
     jboolean midi_shutdown() // Shut down the synthesizer. Returns true on
                              // success, false on failure.
 ```
+### Native library locations
+The location of the native `libmidi.so` libraries for building native
+code may be found by doing a search in the app build folder. This
+location may change with different versions of the android build
+tools.
+```shell
+$ find ./build -name libmidi.so
+./build/intermediates/merged_native_libs/debug/out/lib/arm64-v8a/libmidi.so
+./build/intermediates/merged_native_libs/debug/out/lib/armeabi-v7a/libmidi.so
+./build/intermediates/merged_native_libs/debug/out/lib/x86/libmidi.so
+./build/intermediates/merged_native_libs/debug/out/lib/x86_64/libmidi.so
+./build/intermediates/merged_native_libs/release/out/lib/arm64-v8a/libmidi.so
+./build/intermediates/merged_native_libs/release/out/lib/armeabi-v7a/libmidi.so
+./build/intermediates/merged_native_libs/release/out/lib/x86/libmidi.so
+./build/intermediates/merged_native_libs/release/out/lib/x86_64/libmidi.so
+./build/intermediates/stripped_native_libs/debug/out/lib/arm64-v8a/libmidi.so
+./build/intermediates/stripped_native_libs/debug/out/lib/armeabi-v7a/libmidi.so
+./build/intermediates/stripped_native_libs/debug/out/lib/x86/libmidi.so
+./build/intermediates/stripped_native_libs/debug/out/lib/x86_64/libmidi.so
+./build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libmidi.so
+./build/intermediates/stripped_native_libs/release/out/lib/armeabi-v7a/libmidi.so
+./build/intermediates/stripped_native_libs/release/out/lib/x86/libmidi.so
+./build/intermediates/stripped_native_libs/release/out/lib/x86_64/libmidi.so
+```

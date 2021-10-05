@@ -59,8 +59,7 @@
               android:layout_height="wrap_content"
               android:checked="true"
               android:textOn="@string/reverbon"
-              android:textOff="@string/reverboff"
-              tools:ignore="UnusedAttribute" />
+              android:textOff="@string/reverboff" />
 
         </LinearLayout>
 
