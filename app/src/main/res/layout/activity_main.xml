@@ -36,13 +36,33 @@
             android:layout_height="wrap_content"
             android:text="@string/g" />
 
-        <ToggleButton
-            android:id="@+id/reverb"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checked="true"
-            android:textOn="@string/reverbon"
-            android:textOff="@string/reverboff" />
+            android:layout_marginLeft="4dp"
+            android:layout_marginRight="4dp"
+            android:orientation="vertical"
+            tools:ignore="ButtonStyle">
+
+          <TextView
+              android:id="@+id/label"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_gravity="center"
+              android:gravity="center"
+              android:text="@string/reverbon"
+              android:textAppearance="?android:attr/textAppearanceMedium" />
+
+          <Switch
+              android:id="@+id/reverb"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:checked="true"
+              android:textOn="@string/reverbon"
+              android:textOff="@string/reverboff"
+              tools:ignore="UnusedAttribute" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
