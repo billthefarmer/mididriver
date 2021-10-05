@@ -61,7 +61,7 @@ oboe::Result initOboe();
 oboe::Result closeOboe();
 
 // oboe callback
-class OboeCallback : public oboe::AudioStreamDataCallback
+class OboeCallback: public oboe::AudioStreamDataCallback
 {
 public:
     oboe::DataCallbackResult onAudioReady(oboe::AudioStream *audioStream,
@@ -93,12 +93,10 @@ public:
         return oboe::DataCallbackResult::Continue;
     }
 
-    void onErrorAfterClose (oboe::AudioStream *audioStream , oboe::Result  error)
+    void onErrorAfterClose(oboe::AudioStream *audioStream, oboe::Result error)
     {
-        if(error ==  oboe::Result::ErrorDisconnected)
-        {
+        if (error ==  oboe::Result::ErrorDisconnected)
             initOboe();
-        }
     }
 };
 
