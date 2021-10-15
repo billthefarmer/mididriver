@@ -284,6 +284,7 @@ void WT_InterpolateNoLoop (S_WT_VOICE *pWTVoice, S_WT_INT_FRAME *pWTIntFrame)
     EAS_I32 phaseFrac;
     EAS_I32 acc0;
     const EAS_SAMPLE *pSamples;
+    const EAS_SAMPLE *bufferEndP1;
     EAS_I32 samp1;
     EAS_I32 samp2;
     EAS_I32 numSamples;
@@ -298,8 +299,9 @@ void WT_InterpolateNoLoop (S_WT_VOICE *pWTVoice, S_WT_INT_FRAME *pWTIntFrame)
     pOutputBuffer = pWTIntFrame->pAudioBuffer;
 
     phaseInc = pWTIntFrame->frame.phaseIncrement;
+    bufferEndP1 = (const EAS_SAMPLE*) pWTVoice->loopEnd + 1;
     pSamples = (const EAS_SAMPLE*) pWTVoice->phaseAccum;
-    phaseFrac = (EAS_I32)pWTVoice->phaseFrac;
+    phaseFrac = (EAS_I32)(pWTVoice->phaseFrac & PHASE_FRAC_MASK);
 
     /* fetch adjacent samples */
 #if defined(_8_BIT_SAMPLES)
@@ -314,6 +316,7 @@ void WT_InterpolateNoLoop (S_WT_VOICE *pWTVoice, S_WT_INT_FRAME *pWTIntFrame)
 
     while (numSamples--) {
 
+        EAS_I32 nextSamplePhaseInc;
 
         /* linear interpolation */
         acc0 = samp2 - samp1;
@@ -328,13 +331,18 @@ void WT_InterpolateNoLoop (S_WT_VOICE *pWTVoice, S_WT_INT_FRAME *pWTIntFrame)
         /* increment phase */
         phaseFrac += phaseInc;
         /*lint -e{704} <avoid divide>*/
-        acc0 = phaseFrac >> NUM_PHASE_FRAC_BITS;
+        nextSamplePhaseInc = phaseFrac >> NUM_PHASE_FRAC_BITS;
 
         /* next sample */
-        if (acc0 > 0) {
+        if (nextSamplePhaseInc > 0) {
+
+            /* check for loop end */
+            if ( &pSamples[nextSamplePhaseInc+1] >= bufferEndP1) {
+                break;
+            }
 
             /* advance sample pointer */
-            pSamples += acc0;
+            pSamples += nextSamplePhaseInc;
             phaseFrac = (EAS_I32)((EAS_U32)phaseFrac & PHASE_FRAC_MASK);
 
             /* fetch new samples */
