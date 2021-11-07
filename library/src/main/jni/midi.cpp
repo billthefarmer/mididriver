@@ -148,8 +148,13 @@ oboe::Result initOboe()
 // close oboe
 oboe::Result closeOboe()
 {
-    oboeStream->requestStop();
-    return oboeStream->close();
+    if (oboeStream != NULL)
+    {
+        oboeStream->requestStop();
+        return oboeStream->close();
+    }
+
+    return oboe::Result::ErrorNull;
 }
 
 // init EAS midi
