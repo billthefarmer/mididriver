@@ -1,7 +1,10 @@
 
-apply plugin: 'com.android.library'
+// apply plugin: 'com.android.library'
 
-group=''
+plugins {
+    id 'com.android.library'
+    id 'maven-publish'
+}
 
 android {
     compileSdkVersion 28
@@ -19,6 +22,8 @@ android {
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 28
+        versionCode 124
+        versionName "1.24"
     }
 
     buildFeatures {
@@ -35,23 +40,23 @@ android {
         disable 'OldTargetApi', 'ExpiredTargetSdkVersion'
     }
 
+    namespace = 'org.billthefarmer.mididriver'
+}
+
+afterEvaluate {
     // Because the components are created only during the
     // afterEvaluate phase, you must configure your publications using
     // the afterEvaluate() lifecycle method.
-    afterEvaluate {
-        publishing {
-            publications {
-                // Creates a Maven publication called "release".
-                release(MavenPublication) {
-                    // Applies the component for the release build variant.
-                    from components.release
-
-                    // You can then customize attributes of the
-                    // publication as shown below.
-                    groupId = 'com.github.billthefarmer'
-                    artifactId = 'mididriver'
-                    version = '1.24'
-                }
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            release(MavenPublication) {
+                from components.release
+                // You can then customize attributes of the
+                // publication as shown below.
+                groupId = 'com.github.billthefarmer'
+                artifactId = 'mididriver'
+                version = '1.24'
             }
         }
     }

@@ -1340,31 +1340,32 @@ static EAS_RESULT Parse_data (SDLS_SYNTHESIZER_DATA *pDLSData, EAS_I32 pos, EAS_
     if ((result = EAS_HWFileSeek(pDLSData->hwInstData, pDLSData->fileHandle, pos)) != EAS_SUCCESS)
         return result;
 
-        p = pSample;
+    p = pSample;
 
-        while (size)
+    while (size)
+    {
+        /* read a small chunk of data and convert it */
+        count = (size < SAMPLE_CONVERT_CHUNK_SIZE ? size : SAMPLE_CONVERT_CHUNK_SIZE);
+        if ((result = EAS_HWReadFile(pDLSData->hwInstData, pDLSData->fileHandle, convBuf, count, &count)) != EAS_SUCCESS)
         {
-            /* read a small chunk of data and convert it */
-            count = (size < SAMPLE_CONVERT_CHUNK_SIZE ? size : SAMPLE_CONVERT_CHUNK_SIZE);
-            if ((result = EAS_HWReadFile(pDLSData->hwInstData, pDLSData->fileHandle, convBuf, count, &count)) != EAS_SUCCESS)
-            {
-                return result;
-            }
-            size -= count;
-            if (pWsmp->bitsPerSample == 16)
-            {
-                memcpy(p, convBuf, count);
-                p += count >> 1;
-            }
-            else
-            {
-                for(i=0; i<count; i++)
-                {
-                    *p++ = (short)((convBuf[i] ^ 0x80) << 8);
-                }
-            }
-
+            return result;
         }
+        size -= count;
+        if (pWsmp->bitsPerSample == 16)
+        {
+            memcpy(p, convBuf, count);
+            p += count >> 1;
+        }
+        else
+        {
+            for(i=0; i<count; i++)
+            {
+                *p++ = (short)((convBuf[i] ^ 0x80) << 8);
+            }
+        }
+
+    }
+
     /* for looped samples, copy the last sample to the end */
     if (pWsmp->loopLength)
     {
