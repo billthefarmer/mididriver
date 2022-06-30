@@ -1,6 +1,4 @@
 
-// apply plugin: 'com.android.library'
-
 plugins {
     id 'com.android.library'
     id 'maven-publish'
@@ -22,8 +20,8 @@ android {
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 28
-        versionCode 124
-        versionName "1.24"
+        versionCode 125
+        versionName "1.25"
     }
 
     buildFeatures {
@@ -56,7 +54,7 @@ afterEvaluate {
                 // publication as shown below.
                 groupId = 'com.github.billthefarmer'
                 artifactId = 'mididriver'
-                version = '1.24'
+                version = '1.25'
             }
         }
     }
