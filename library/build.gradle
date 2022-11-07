@@ -21,8 +21,8 @@ android {
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 28
-        versionCode 125
-        versionName "1.25"
+        versionCode 126
+        versionName "1.26"
     }
 
     buildFeatures {
@@ -53,7 +53,7 @@ afterEvaluate {
                 // publication as shown below.
                 groupId = 'com.github.billthefarmer'
                 artifactId = 'mididriver'
-                version = '1.25'
+                version = '1.26'
             }
         }
     }
