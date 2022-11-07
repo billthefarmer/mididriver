@@ -6,6 +6,7 @@ plugins {
 
 android {
     compileSdkVersion 28
+    namespace "org.billthefarmer.mididriver"
 
     externalNativeBuild {
         ndkBuild {
@@ -37,8 +38,6 @@ android {
     lintOptions {
         disable 'OldTargetApi', 'ExpiredTargetSdkVersion'
     }
-
-    namespace = 'org.billthefarmer.mididriver'
 }
 
 afterEvaluate {

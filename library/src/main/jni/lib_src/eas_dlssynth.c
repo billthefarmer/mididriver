@@ -348,11 +348,24 @@ EAS_RESULT DLS_StartVoice (S_VOICE_MGR *pVoiceMgr, S_SYNTH *pSynth, S_SYNTH_VOIC
     pWTVoice->phaseAccum = (EAS_U32) pSynth->pDLS->pDLSSamples + pSynth->pDLS->pDLSSampleOffsets[pDLSRegion->wtRegion.waveIndex];
     if (pDLSRegion->wtRegion.region.keyGroupAndFlags & REGION_FLAG_IS_LOOPED)
     {
+#if defined (_8_BIT_SAMPLES)
         pWTVoice->loopStart = pWTVoice->phaseAccum + pDLSRegion->wtRegion.loopStart;
         pWTVoice->loopEnd = pWTVoice->phaseAccum + pDLSRegion->wtRegion.loopEnd - 1;
+#else //_16_BIT_SAMPLES
+        pWTVoice->loopStart = pWTVoice->phaseAccum + (pDLSRegion->wtRegion.loopStart<<1);
+        pWTVoice->loopEnd = pWTVoice->phaseAccum + (pDLSRegion->wtRegion.loopEnd<<1) - 2;
+#endif
     }
     else
-        pWTVoice->loopStart = pWTVoice->loopEnd = pWTVoice->phaseAccum + pSynth->pDLS->pDLSSampleLen[pDLSRegion->wtRegion.waveIndex] - 1;
+    {
+#if defined (_8_BIT_SAMPLES)
+       pWTVoice->loopStart = pWTVoice->loopEnd = pWTVoice->phaseAccum
+                + pSynth->pDLS->pDLSSampleLen[pDLSRegion->wtRegion.waveIndex] - 1;
+#else //_16_BIT_SAMPLES
+        pWTVoice->loopStart = pWTVoice->loopEnd = pWTVoice->phaseAccum
+                + pSynth->pDLS->pDLSSampleLen[pDLSRegion->wtRegion.waveIndex] - 2;
+#endif
+    }
 
     return EAS_SUCCESS;
 }
