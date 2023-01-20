@@ -36,7 +36,7 @@ android {
     }
 
     lintOptions {
-        disable 'OldTargetApi', 'ExpiredTargetSdkVersion'
+        disable 'OldTargetApi', 'ExpiredTargetSdkVersion', 'GradleDependency'
     }
 }
 
