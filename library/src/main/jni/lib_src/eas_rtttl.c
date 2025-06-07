@@ -137,7 +137,7 @@ const S_FILE_PARSER_INTERFACE EAS_RTTTL_Parser =
 */
 static EAS_RESULT RTTTL_CheckFileType (S_EAS_DATA *pEASData, EAS_FILE_HANDLE fileHandle, EAS_VOID_PTR *ppHandle, EAS_I32 offset)
 {
-    S_RTTTL_DATA data;
+    S_RTTTL_DATA data = {0};
     S_RTTTL_DATA *pData;
 
     /* see if we can parse the header */

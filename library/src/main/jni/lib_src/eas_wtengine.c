@@ -99,6 +99,10 @@ void WT_VoiceGain (S_WT_VOICE *pWTVoice, S_WT_INT_FRAME *pWTIntFrame)
         ALOGE("b/26366256");
         android_errorWriteLog(0x534e4554, "26366256");
         return;
+    } else if (numSamples > BUFFER_SIZE_IN_MONO_SAMPLES) {
+        ALOGE("b/317780080 clip numSamples %ld -> %d", numSamples, BUFFER_SIZE_IN_MONO_SAMPLES);
+        android_errorWriteLog(0x534e4554, "317780080");
+        numSamples = BUFFER_SIZE_IN_MONO_SAMPLES;
     }
     pMixBuffer = pWTIntFrame->pMixBuffer;
     pInputBuffer = pWTIntFrame->pAudioBuffer;
@@ -196,6 +200,10 @@ void WT_Interpolate (S_WT_VOICE *pWTVoice, S_WT_INT_FRAME *pWTIntFrame)
         ALOGE("b/26366256");
         android_errorWriteLog(0x534e4554, "26366256");
         return;
+    } else if (numSamples > BUFFER_SIZE_IN_MONO_SAMPLES) {
+        ALOGE("b/317780080 clip numSamples %ld -> %d", numSamples, BUFFER_SIZE_IN_MONO_SAMPLES);
+        android_errorWriteLog(0x534e4554, "317780080");
+        numSamples = BUFFER_SIZE_IN_MONO_SAMPLES;
     }
     pOutputBuffer = pWTIntFrame->pAudioBuffer;
 
@@ -297,6 +305,10 @@ void WT_InterpolateNoLoop (S_WT_VOICE *pWTVoice, S_WT_INT_FRAME *pWTIntFrame)
         ALOGE("b/26366256");
         android_errorWriteLog(0x534e4554, "26366256");
         return;
+    } else if (numSamples > BUFFER_SIZE_IN_MONO_SAMPLES) {
+        ALOGE("b/317780080 clip numSamples %ld -> %d", numSamples, BUFFER_SIZE_IN_MONO_SAMPLES);
+        android_errorWriteLog(0x534e4554, "317780080");
+        numSamples = BUFFER_SIZE_IN_MONO_SAMPLES;
     }
     pOutputBuffer = pWTIntFrame->pAudioBuffer;
 
@@ -397,6 +409,10 @@ void WT_VoiceFilter (S_FILTER_CONTROL *pFilter, S_WT_INT_FRAME *pWTIntFrame)
         ALOGE("b/26366256");
         android_errorWriteLog(0x534e4554, "26366256");
         return;
+    } else if (numSamples > BUFFER_SIZE_IN_MONO_SAMPLES) {
+        ALOGE("b/317780080 clip numSamples %ld -> %d", numSamples, BUFFER_SIZE_IN_MONO_SAMPLES);
+        android_errorWriteLog(0x534e4554, "317780080");
+        numSamples = BUFFER_SIZE_IN_MONO_SAMPLES;
     }
     pAudioBuffer = pWTIntFrame->pAudioBuffer;
 
@@ -465,6 +481,10 @@ void WT_VoiceFilter (S_FILTER_CONTROL *pFilter, S_WT_INT_FRAME *pWTIntFrame)
         ALOGE("b/26366256");
         android_errorWriteLog(0x534e4554, "26366256");
         return;
+    } else if (numSamples > BUFFER_SIZE_IN_MONO_SAMPLES) {
+        ALOGE("b/317780080 clip numSamples %ld -> %d", numSamples, BUFFER_SIZE_IN_MONO_SAMPLES);
+        android_errorWriteLog(0x534e4554, "317780080");
+        numSamples = BUFFER_SIZE_IN_MONO_SAMPLES;
     }
     pOutputBuffer = pWTIntFrame->pAudioBuffer;
     phaseInc = pWTIntFrame->frame.phaseIncrement;
@@ -613,6 +633,10 @@ void WT_InterpolateMono (S_WT_VOICE *pWTVoice, S_WT_INT_FRAME *pWTIntFrame)
         ALOGE("b/26366256");
         android_errorWriteLog(0x534e4554, "26366256");
         return;
+    } else if (numSamples > BUFFER_SIZE_IN_MONO_SAMPLES) {
+        ALOGE("b/317780080 clip numSamples %ld -> %d", numSamples, BUFFER_SIZE_IN_MONO_SAMPLES);
+        android_errorWriteLog(0x534e4554, "317780080");
+        numSamples = BUFFER_SIZE_IN_MONO_SAMPLES;
     }
     pMixBuffer = pWTIntFrame->pMixBuffer;
 

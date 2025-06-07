@@ -484,7 +484,12 @@ EAS_BOOL WT_CheckSampleEnd (S_WT_VOICE *pWTVoice, S_WT_INT_FRAME *pWTIntFrame, E
         /*lint -e{703} use shift for performance */
         numSamples = (numSamples << NUM_PHASE_FRAC_BITS) - (EAS_I32) pWTVoice->phaseFrac;
         if (pWTIntFrame->frame.phaseIncrement) {
-            pWTIntFrame->numSamples = 1 + (numSamples / pWTIntFrame->frame.phaseIncrement);
+            EAS_I32 oldMethod = 1 + (numSamples / pWTIntFrame->frame.phaseIncrement);
+            pWTIntFrame->numSamples =
+                (numSamples + pWTIntFrame->frame.phaseIncrement - 1) / pWTIntFrame->frame.phaseIncrement;
+            if (oldMethod != pWTIntFrame->numSamples) {
+                ALOGE("b/317780080 old %ld new %ld", oldMethod, pWTIntFrame->numSamples);
+            }
         } else {
             pWTIntFrame->numSamples = numSamples;
         }
@@ -492,6 +497,11 @@ EAS_BOOL WT_CheckSampleEnd (S_WT_VOICE *pWTVoice, S_WT_INT_FRAME *pWTIntFrame, E
             ALOGE("b/26366256");
             android_errorWriteLog(0x534e4554, "26366256");
             pWTIntFrame->numSamples = 0;
+        } else if (pWTIntFrame->numSamples > BUFFER_SIZE_IN_MONO_SAMPLES) {
+            ALOGE("b/317780080 clip numSamples %ld -> %d",
+                  pWTIntFrame->numSamples, BUFFER_SIZE_IN_MONO_SAMPLES);
+            android_errorWriteLog(0x534e4554, "317780080");
+            pWTIntFrame->numSamples = BUFFER_SIZE_IN_MONO_SAMPLES;
         }
 
         /* sound will be done this frame */
