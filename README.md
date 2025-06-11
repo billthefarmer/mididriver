@@ -42,6 +42,12 @@ the midi library. This should resolve problems with various android
 versions.
 
 ## Use
+### Note:
+The latest two versions ([v1.26](https://github.com/billthefarmer/mididriver/releases/tag/v1.26), 
+[v1.27](https://github.com/billthefarmer/mididriver/releases/tag/v1.27)) will not build on [JitPack](https://jitpack.io/#billthefarmer/mididriver) due to
+"Execution failed for task ':library:configureNdkBuildDebug[arm64-v8a]'". Builds fine elsewhere, including 
+[Github Actions](https://github.com/billthefarmer/mididriver/actions).
+
 Add the driver to your build.gradle with
 ```gradle
 allprojects {
