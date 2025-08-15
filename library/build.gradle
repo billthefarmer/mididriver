@@ -21,7 +21,7 @@ android {
     ndkVersion "28.1.13356709"
 
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 21
         targetSdkVersion 28
         versionCode 127
         versionName "1.27"
@@ -62,5 +62,5 @@ afterEvaluate {
 }
 
 dependencies {
-    implementation 'com.google.oboe:oboe:1.6.1'
+    implementation 'com.google.oboe:oboe:1.9.3'
 }

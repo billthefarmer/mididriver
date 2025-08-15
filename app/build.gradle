@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "org.billthefarmer.miditest"
-        minSdkVersion 16
+        minSdkVersion 21
         targetSdkVersion 28
         versionName "1.27"
         versionCode 127
