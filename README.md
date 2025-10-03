@@ -13,15 +13,15 @@ libutils and libcutils. The ARM versions have been build with the
 assembler source files.
 
 ## Load DLS soundfont files
-I have attempted to add code to load DLS soundfont files, which I have
+~~I have attempted to add code to load DLS soundfont files, which I have
 not been able to get working.  The code is in the [DLS
 branch](https://github.com/billthefarmer/mididriver/tree/DLS) and the
 relevent issue is [Costum soundfont is
-possible?](https://github.com/billthefarmer/mididriver/issues/21).
+possible?](https://github.com/billthefarmer/mididriver/issues/21).~~
 
-If anyone would like to take this up and attempt to get it working
+~~If anyone would like to take this up and attempt to get it working
 that would be much appreciated. I know Google know how it works
-because they have fixed a bug in it...
+because they have fixed a bug in it...~~
 ```
     Author: Eric Laurent <elaurent@google.com>
     Date:   Thu May 14 09:10:40 2015 -0700
@@ -30,6 +30,7 @@ because they have fixed a bug in it...
 
     Bug: 21132860.
 ```
+This has now been implemented in [Version 1.29](https://github.com/billthefarmer/mididriver/releases/tag/v1.29) by @SmithGol.
 
 ## Bugs
 Google has fixed the 64 bit reverb bug:
