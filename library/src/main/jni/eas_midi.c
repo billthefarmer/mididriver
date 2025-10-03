@@ -49,6 +49,93 @@
 #include "eas_mdls.h"
 #endif
 
+static EAS_RESULT MIDIStream_State (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData, EAS_I32 *pState);
+static EAS_RESULT MIDIStream_GetData (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData, EAS_I32 param, EAS_I32 *pValue);
+
+/*---------------------------------------------------------------------------- 
+  * 
+  * EAS_MIDIStream_Parser 
+  * 
+  * This structure contains the functional interface for the MIDI Stream parser 
+  *---------------------------------------------------------------------------- 
+ */ 
+const static S_FILE_PARSER_INTERFACE EAS_MIDIStream_Parser = 
+{ 
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    MIDIStream_State,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    MIDIStream_GetData,
+    NULL 
+};
+
+/*----------------------------------------------------------------------------
+ * MIDIStream_State()
+ *----------------------------------------------------------------------------
+ * Purpose:
+ * Returns the current state of the stream
+ *
+ * Inputs:
+ * pEASData         - pointer to overall EAS data structure
+ * handle           - pointer to file handle
+ * pState           - pointer to variable to store state
+ *
+ * Outputs:
+ *
+ *
+ * Side Effects:
+ *
+ *----------------------------------------------------------------------------
+*/
+/*lint -esym(715, pEASData) common decoder interface - pEASData not used */
+static EAS_RESULT MIDIStream_State (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData, EAS_I32 *pState)
+{
+    *pState = EAS_STATE_READY;
+    return EAS_SUCCESS;
+}
+
+/*----------------------------------------------------------------------------
+ * MIDIStream_GetData()
+ *----------------------------------------------------------------------------
+ * Purpose:
+ * Get specified data
+ *
+ * Inputs:
+ * pEASData         - pointer to overall EAS data structure
+ * handle           - pointer to file handle
+ *
+ * Outputs:
+ *
+ *
+ * Side Effects:
+ *
+ *----------------------------------------------------------------------------
+*/
+/*lint -esym(715, pEASData) common decoder interface - pEASData not used */
+static EAS_RESULT MIDIStream_GetData (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData, EAS_I32 param, EAS_I32 *pValue)
+{
+    S_INTERACTIVE_MIDI *pData;
+
+    pData = (S_INTERACTIVE_MIDI*) pInstData;
+    switch (param)
+    {
+        case PARSER_DATA_SYNTH_HANDLE:
+            *pValue = (EAS_I32) pData->pSynth;
+            break;
+
+        default:
+            return EAS_ERROR_INVALID_PARAMETER;
+    }
+    return EAS_SUCCESS;
+}
+
 /*----------------------------------------------------------------------------
  * EAS_AllocateStream()
  *----------------------------------------------------------------------------
@@ -181,7 +268,7 @@ EAS_PUBLIC EAS_RESULT EAS_OpenMIDIStream (EAS_DATA_HANDLE pEASData, EAS_HANDLE *
 
     /* zero the memory to insure complete initialization */
     EAS_HWMemSet(pMIDIStream, 0, sizeof(S_INTERACTIVE_MIDI));
-    EAS_InitStream(&pEASData->streams[streamNum], NULL, pMIDIStream);
+    EAS_InitStream(&pEASData->streams[streamNum], (EAS_VOID_PTR) &EAS_MIDIStream_Parser, pMIDIStream);
 
     /* instantiate a new synthesizer */
     if (streamHandle == NULL)

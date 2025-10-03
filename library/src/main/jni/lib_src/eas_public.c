@@ -1629,6 +1629,60 @@ EAS_PUBLIC EAS_RESULT EAS_MetricsReset (EAS_DATA_HANDLE pEASData)
 }
 #endif
 
+#ifdef DLS_SYNTHESIZER
+/*----------------------------------------------------------------------------
+ * EAS_LoadDLSCollection()
+ *----------------------------------------------------------------------------
+ * Purpose:
+ * Sets the location of the sound library.
+ *
+ * Inputs:
+ * pEASData             - instance data handle
+ * pSoundLib            - pointer to sound library
+ *
+ * Outputs:
+ *
+ *
+ * Side Effects:
+ *
+ *----------------------------------------------------------------------------
+*/
+EAS_PUBLIC EAS_RESULT EAS_LoadDLSCollection (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStream, EAS_FILE_LOCATOR locator)
+{
+    EAS_FILE_HANDLE fileHandle;
+    EAS_RESULT result;
+    EAS_DLSLIB_HANDLE pDLS;
+
+    if (pStream != NULL)
+    {
+        if (!EAS_StreamReady(pEASData, pStream))
+            return EAS_ERROR_NOT_VALID_IN_THIS_STATE;
+    }
+
+    /* open the file */
+    if ((result = EAS_HWOpenFile(pEASData->hwInstData, locator, &fileHandle, EAS_FILE_READ)) != EAS_SUCCESS)
+        return result;
+
+    /* parse the file */
+    result = DLSParser(pEASData->hwInstData, fileHandle, 0, &pDLS);
+    EAS_HWCloseFile(pEASData->hwInstData, fileHandle);
+
+    if (result == EAS_SUCCESS)
+    {
+
+        /* if a stream pStream is specified, point it to the DLS collection */
+        if (pStream)
+            result = EAS_IntSetStrmParam(pEASData, pStream, PARSER_DATA_DLS_COLLECTION, (EAS_I32) pDLS);
+
+        /* global DLS load */
+        else
+            result = VMSetGlobalDLSLib(pEASData, pDLS);
+    }
+
+    return result;
+}
+#endif
+
 #ifdef FILE_HEADER_SEARCH
 /*----------------------------------------------------------------------------
  * EAS_SearchFile

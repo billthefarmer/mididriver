@@ -608,6 +608,28 @@ EAS_PUBLIC EAS_RESULT EAS_MetricsReport (EAS_DATA_HANDLE pEASData);
 EAS_PUBLIC EAS_RESULT EAS_MetricsReset (EAS_DATA_HANDLE pEASData);
 #endif
 
+#ifdef DLS_SYNTHESIZER
+/*----------------------------------------------------------------------------
+ * EAS_LoadDLSCollection()
+ *----------------------------------------------------------------------------
+ * Purpose:
+ * Downloads a DLS collection
+ *
+ * Inputs:
+ * pEASData             - instance data handle
+ * streamHandle         - file or stream handle
+ * locator              - file locator
+ *
+ * Outputs:
+ *
+ *
+ * Side Effects:
+ *
+ *----------------------------------------------------------------------------
+*/
+EAS_PUBLIC EAS_RESULT EAS_LoadDLSCollection (EAS_DATA_HANDLE pEASData, EAS_HANDLE streamHandle, EAS_FILE_LOCATOR locator);
+#endif
+
 /*----------------------------------------------------------------------------
  * EAS_SearchFile
  *----------------------------------------------------------------------------
