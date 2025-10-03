@@ -30,8 +30,12 @@
 #include <oboe/Oboe.h>
 
 // for EAS midi
+#define DLS_SYNTHESIZER
 #include "eas.h"
 #include "eas_reverb.h"
+
+// for EAS_HWMemCpy
+#include "eas_host.h"
 
 #include "org_billthefarmer_mididriver_MidiDriver.h"
 #include "midi.h"
@@ -45,6 +49,13 @@
 // determines how many EAS buffers to fill a host buffer
 #define NUM_BUFFERS 4
 
+// typedef
+typedef struct
+{
+    int len;
+    const EAS_U8 *data;
+} EAS_DLS_HANDLE;
+
 // mutex
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -56,6 +67,7 @@ static EAS_DATA_HANDLE pEASData;
 const S_EAS_LIB_CONFIG *pLibConfig;
 static EAS_I32 bufferSize;
 static EAS_HANDLE midiHandle;
+static int isDLSLoaded;
 
 // Functions
 oboe::Result initOboe();
@@ -185,6 +197,8 @@ EAS_RESULT initEAS()
     if ((result = EAS_OpenMIDIStream(pEASData, &midiHandle, NULL)) != EAS_SUCCESS)
         return result;
 
+    isDLSLoaded = 0;
+
     return EAS_SUCCESS;
 }
 
@@ -203,6 +217,8 @@ void shutdownEAS()
         EAS_Shutdown(pEASData);
         pEASData = NULL;
     }
+
+    isDLSLoaded = 0;
 }
 
 // init mididriver
@@ -290,7 +306,7 @@ Java_org_billthefarmer_mididriver_MidiDriver_write(JNIEnv *env,
                                                    jobject obj,
                                                    jbyteArray byteArray)
 {
-    EAS_RESULT result;
+    jboolean result;
     jboolean isCopy;
     jint length;
     EAS_U8 *bytes;
@@ -389,4 +405,65 @@ Java_org_billthefarmer_mididriver_MidiDriver_shutdown(JNIEnv *env,
                                                       jobject obj)
 {
     return midi_shutdown();
+}
+
+static int memDLS_readAt(void *handle, void *buf, int offset, int size)
+{
+    const EAS_U8 *data;
+    EAS_DLS_HANDLE *pHandle;
+
+    pHandle = (EAS_DLS_HANDLE *) handle;
+    data = pHandle->data;
+    EAS_HWMemCpy(buf, data + offset, size);
+
+    return size;
+}
+
+static int memDLS_size(void *handle)
+{
+    EAS_DLS_HANDLE *pHandle;
+
+    pHandle = (EAS_DLS_HANDLE *) handle;
+    return pHandle->len;
+}
+
+jboolean midi_loadDLS(const EAS_U8 *dlsData, jint length)
+{
+    EAS_FILE file;
+    EAS_RESULT result;
+    EAS_DLS_HANDLE handle = { length, dlsData };
+
+    file.handle = (void *) &handle;
+    file.readAt = memDLS_readAt;
+    file.size = memDLS_size;
+
+    result = EAS_LoadDLSCollection(pEASData, midiHandle, &file);
+    if (result != EAS_SUCCESS)
+        return JNI_FALSE;
+
+    isDLSLoaded = 1;
+    return JNI_TRUE;
+}
+
+jboolean
+Java_org_billthefarmer_mididriver_MidiDriver_loadDLS(JNIEnv *env,
+                                                     jobject obj,
+                                                     jbyteArray byteArray)
+{
+    jint length;
+    EAS_U8 *bytes;
+    jboolean isCopy;
+    jboolean result;
+
+    if (isDLSLoaded != 0)
+        return JNI_FALSE;
+
+    bytes = (EAS_U8 *) env->GetByteArrayElements(byteArray, &isCopy);
+    length = env->GetArrayLength(byteArray);
+
+    result = midi_loadDLS(bytes, length);
+
+    env->ReleaseByteArrayElements(byteArray, (jbyte *) bytes, 0);
+
+    return result;
 }

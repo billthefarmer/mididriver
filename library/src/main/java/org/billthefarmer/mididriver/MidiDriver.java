@@ -163,6 +163,13 @@ public class MidiDriver
      */
     private native boolean shutdown();
 
+    /**
+     * Load DLS soundbank from memory
+     *
+     * @param byte array of DLS file data
+     */
+    public native boolean loadDLS(byte a[]);
+
     // Load midi library
     static
     {
