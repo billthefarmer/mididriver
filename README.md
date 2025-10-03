@@ -30,7 +30,7 @@ because they have fixed a bug in it...~~
 
     Bug: 21132860.
 ```
-This has now been implemented in [Version 1.29](https://github.com/billthefarmer/mididriver/releases/tag/v1.29) by @SmithGol.
+This has now been implemented in [Version 1.29](https://github.com/billthefarmer/mididriver/releases/tag/v1.29) by @SmithGoll.
 
 ## Bugs
 Google has fixed the 64 bit reverb bug:
