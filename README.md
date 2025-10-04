@@ -112,10 +112,15 @@ app. See the demo app for an example.
                                   // synthesizer (between 0 and 100).
                                   // Returns true on success, false on
                                   // failure.
+
     boolean setReverb(int preset) // Set Reverb effect preset for EAS
                                   // synthesizer (value from
                                   // ReverbConstants). Returns true
                                   // on success, false on failure.
+
+    boolean loadDLS(byte a[])     // Loads DLS soundbank into the Sonivox
+                                  // synthesizer. Returns true on success,
+                                  // false on failure.
 
     boolean shutdown() // Shut down the synthesizer. Returns true on
                        // success, false on failure.
@@ -147,6 +152,10 @@ app. See the demo app for an example.
                                   //    3: room.
                                   // Returns true on success, false on
                                   // failure.
+    jboolean midi_loadDLS(const EAS_U8 *dlsData, jint length)
+                                  // Loads DLS soundbank into the Sonivox
+                                  // synthesizer. Returns true on success,
+                                  // false on failure.
     jboolean midi_shutdown() // Shut down the synthesizer. Returns true on
                              // success, false on failure.
 ```

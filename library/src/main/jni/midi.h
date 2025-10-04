@@ -47,6 +47,9 @@ jboolean midi_setReverb(jint preset);
 // shutdown EAS midi
 jboolean midi_shutdown();
 
+// load DLS soundbank
+jboolean midi_loadDLS(const EAS_U8 *dlsData, jint length);
+
 #ifdef __cplusplus
 } /* end extern "C" */
 #endif
