@@ -20,11 +20,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <jni.h>
-#include <assert.h>
-#include <pthread.h>
-
 #include <android/log.h>
+#include <assert.h>
+#include <jni.h>
+
+#include <atomic>
 
 // for oboe native audio
 #include <oboe/Oboe.h>
@@ -36,9 +36,8 @@
 
 // for EAS_HWMemCpy
 #include "eas_host.h"
-
-#include "org_billthefarmer_mididriver_MidiDriver.h"
 #include "midi.h"
+#include "org_billthefarmer_mididriver_MidiDriver.h"
 
 #define LOG_TAG "MidiDriver"
 
@@ -50,21 +49,23 @@
 #define NUM_BUFFERS 4
 
 // typedef
-typedef struct
-{
+typedef struct {
     int len;
-    const EAS_U8 *data;
+    const EAS_U8* data;
 } EAS_DLS_HANDLE;
 
 // mutex
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static std::atomic_flag mutex = ATOMIC_FLAG_INIT;
+
+#define LOCK() while (mutex.test_and_set(std::memory_order_acquire));
+#define UNLOCK() mutex.clear(std::memory_order_release);
 
 // oboe stream
 std::shared_ptr<oboe::AudioStream> oboeStream;
 
 // EAS data
 static EAS_DATA_HANDLE pEASData;
-const S_EAS_LIB_CONFIG *pLibConfig;
+const S_EAS_LIB_CONFIG* pLibConfig;
 static EAS_I32 bufferSize;
 static EAS_HANDLE midiHandle;
 static int isDLSLoaded;
@@ -74,29 +75,26 @@ oboe::Result initOboe();
 oboe::Result closeOboe();
 
 // oboe callback
-class OboeCallback: public oboe::AudioStreamDataCallback
-{
-public:
-    oboe::DataCallbackResult onAudioReady(oboe::AudioStream *audioStream,
-                                          void *audioData, int32_t numFrames)
-    {
+class OboeCallback : public oboe::AudioStreamDataCallback {
+   public:
+    oboe::DataCallbackResult onAudioReady(oboe::AudioStream* audioStream,
+                                          void* audioData, int32_t numFrames) {
         EAS_RESULT result;
         EAS_I32 numGenerated;
         EAS_I32 count = 0;
 
         // We requested AudioFormat::I16. So if the stream opens
         // we know we got the I16 format.
-        auto *outputData = static_cast<int16_t *>(audioData);
+        auto* outputData = static_cast<int16_t*>(audioData);
 
-        while (count < bufferSize)
-        {
+        while (count < bufferSize) {
             // lock
-            pthread_mutex_lock(&mutex);
+            LOCK();
 
             result = EAS_Render(pEASData, outputData + count,
                                 pLibConfig->mixBufferSize, &numGenerated);
             // unlock
-            pthread_mutex_unlock(&mutex);
+            UNLOCK();
 
             assert(result == EAS_SUCCESS);
 
@@ -106,10 +104,8 @@ public:
         return oboe::DataCallbackResult::Continue;
     }
 
-    void onErrorAfterClose(oboe::AudioStream *audioStream, oboe::Result error)
-    {
-        if (error ==  oboe::Result::ErrorDisconnected)
-            initOboe();
+    void onErrorAfterClose(oboe::AudioStream* audioStream, oboe::Result error) {
+        if (error == oboe::Result::ErrorDisconnected) initOboe();
     }
 };
 
@@ -117,12 +113,13 @@ public:
 OboeCallback oboeCallback;
 
 // build oboe
-oboe::Result buildOboe()
-{
+oboe::Result buildOboe() {
     oboe::AudioStreamBuilder builder;
 
     builder.setDirection(oboe::Direction::Output);
     builder.setPerformanceMode(oboe::PerformanceMode::LowLatency);
+    builder.setSampleRateConversionQuality(
+        oboe::SampleRateConversionQuality::Medium);
     builder.setSharingMode(oboe::SharingMode::Exclusive);
     builder.setFormat(oboe::AudioFormat::I16);
     builder.setFramesPerCallback(bufferSize / pLibConfig->numChannels);
@@ -133,20 +130,17 @@ oboe::Result buildOboe()
     return builder.openStream(oboeStream);
 }
 
-oboe::Result initOboe()
-{
+oboe::Result initOboe() {
     oboe::Result oboeResult;
 
-    if ((oboeResult = buildOboe()) != oboe::Result::OK)
-    {
+    if ((oboeResult = buildOboe()) != oboe::Result::OK) {
         LOG_E(LOG_TAG, "Failed to create oboe stream. Error: %s",
               oboe::convertToText(oboeResult));
 
         return oboeResult;
     }
 
-    if ((oboeResult = oboeStream->requestStart()) != oboe::Result::OK)
-    {
+    if ((oboeResult = oboeStream->requestStart()) != oboe::Result::OK) {
         closeOboe();
 
         LOG_E(LOG_TAG, "Failed to start oboe stream. Error: %s",
@@ -159,10 +153,8 @@ oboe::Result initOboe()
 }
 
 // close oboe
-oboe::Result closeOboe()
-{
-    if (oboeStream != NULL)
-    {
+oboe::Result closeOboe() {
+    if (oboeStream != NULL) {
         oboeStream->requestStop();
         return oboeStream->close();
     }
@@ -171,8 +163,7 @@ oboe::Result closeOboe()
 }
 
 // init EAS midi
-EAS_RESULT initEAS()
-{
+EAS_RESULT initEAS() {
     EAS_RESULT result;
 
     // get the library configuration
@@ -181,11 +172,11 @@ EAS_RESULT initEAS()
         return EAS_FAILURE;
 
     // calculate buffer size
-    bufferSize = pLibConfig->mixBufferSize * pLibConfig->numChannels * NUM_BUFFERS;
+    bufferSize =
+        pLibConfig->mixBufferSize * pLibConfig->numChannels * NUM_BUFFERS;
 
     // init library
-    if ((result = EAS_Init(&pEASData)) != EAS_SUCCESS)
-        return result;
+    if ((result = EAS_Init(&pEASData)) != EAS_SUCCESS) return result;
 
     // select reverb preset and enable
     EAS_SetParameter(pEASData, EAS_MODULE_REVERB, EAS_PARAM_REVERB_PRESET,
@@ -194,7 +185,8 @@ EAS_RESULT initEAS()
                      EAS_FALSE);
 
     // open midi stream
-    if ((result = EAS_OpenMIDIStream(pEASData, &midiHandle, NULL)) != EAS_SUCCESS)
+    if ((result = EAS_OpenMIDIStream(pEASData, &midiHandle, NULL)) !=
+        EAS_SUCCESS)
         return result;
 
     isDLSLoaded = 0;
@@ -203,17 +195,13 @@ EAS_RESULT initEAS()
 }
 
 // shutdown EAS midi
-void shutdownEAS()
-{
-
-    if (midiHandle != NULL)
-    {
+void shutdownEAS() {
+    if (midiHandle != NULL) {
         EAS_CloseMIDIStream(pEASData, midiHandle);
         midiHandle = NULL;
     }
 
-    if (pEASData != NULL)
-    {
+    if (pEASData != NULL) {
         EAS_Shutdown(pEASData);
         pEASData = NULL;
     }
@@ -222,13 +210,11 @@ void shutdownEAS()
 }
 
 // init mididriver
-jboolean midi_init()
-{
+jboolean midi_init() {
     EAS_RESULT result;
     oboe::Result oboeResult;
 
-    if ((result = initEAS()) != EAS_SUCCESS)
-    {
+    if ((result = initEAS()) != EAS_SUCCESS) {
         shutdownEAS();
 
         LOG_E(LOG_TAG, "Init EAS failed: %ld", result);
@@ -238,8 +224,7 @@ jboolean midi_init()
 
     // LOG_D(LOG_TAG, "Init EAS success, buffer: %ld", bufferSize);
 
-    if ((oboeResult = initOboe()) != oboe::Result::OK)
-    {
+    if ((oboeResult = initOboe()) != oboe::Result::OK) {
         shutdownEAS();
 
         return JNI_FALSE;
@@ -248,26 +233,21 @@ jboolean midi_init()
     return JNI_TRUE;
 }
 
-jboolean
-Java_org_billthefarmer_mididriver_MidiDriver_init(JNIEnv *env,
-                                                  jobject obj)
-{
+jboolean Java_org_billthefarmer_mididriver_MidiDriver_nativeInit(JNIEnv* env,
+                                                                 jclass cls) {
     return midi_init();
 }
 
 // midi config
-jintArray
-Java_org_billthefarmer_mididriver_MidiDriver_config(JNIEnv *env,
-                                                    jobject obj)
-{
+jintArray Java_org_billthefarmer_mididriver_MidiDriver_nativeConfig(
+    JNIEnv* env, jclass cls) {
     jboolean isCopy;
 
-    if (pLibConfig == NULL)
-        return NULL;
+    if (pLibConfig == NULL) return NULL;
 
     jintArray configArray = env->NewIntArray(4);
 
-    jint *config = env->GetIntArrayElements(configArray, &isCopy);
+    jint* config = env->GetIntArrayElements(configArray, &isCopy);
 
     config[0] = pLibConfig->maxVoices;
     config[1] = pLibConfig->numChannels;
@@ -280,101 +260,87 @@ Java_org_billthefarmer_mididriver_MidiDriver_config(JNIEnv *env,
 }
 
 // midi write
-jboolean midi_write(EAS_U8 *bytes, jint length)
-{
+jboolean midi_write(EAS_U8* bytes, jint length) {
+    return midi_write2(bytes, 0, length);
+}
+
+// midi write v2
+jboolean midi_write2(EAS_U8* bytes, jint offset, jint length) {
     EAS_RESULT result;
 
-    if (pEASData == NULL || midiHandle == NULL)
-        return JNI_FALSE;
+    if (pEASData == NULL || midiHandle == NULL) return JNI_FALSE;
 
     // lock
-    pthread_mutex_lock(&mutex);
+    LOCK();
 
+    bytes += offset;
     result = EAS_WriteMIDIStream(pEASData, midiHandle, bytes, length);
 
     // unlock
-    pthread_mutex_unlock(&mutex);
+    UNLOCK();
 
-    if (result != EAS_SUCCESS)
-        return JNI_FALSE;
+    if (result != EAS_SUCCESS) return JNI_FALSE;
 
     return JNI_TRUE;
 }
 
-jboolean
-Java_org_billthefarmer_mididriver_MidiDriver_write(JNIEnv *env,
-                                                   jobject obj,
-                                                   jbyteArray byteArray)
-{
+jboolean Java_org_billthefarmer_mididriver_MidiDriver_nativeWrite(
+    JNIEnv* env, jclass cls, jbyteArray byteArray, jint offset, jint length) {
     jboolean result;
     jboolean isCopy;
-    jint length;
-    EAS_U8 *bytes;
+    EAS_U8* bytes;
 
-    bytes = (EAS_U8 *) env->GetByteArrayElements(byteArray, &isCopy);
-    length = env->GetArrayLength(byteArray);
+    bytes = (EAS_U8*)env->GetByteArrayElements(byteArray, &isCopy);
 
-    result = midi_write(bytes, length);
+    result = midi_write2(bytes, offset, length);
 
-    env->ReleaseByteArrayElements(byteArray, (jbyte *) bytes, 0);
+    env->ReleaseByteArrayElements(byteArray, (jbyte*)bytes, 0);
 
     return result;
 }
 
 // set EAS master volume
-jboolean midi_setVolume(jint volume)
-{
+jboolean midi_setVolume(jint volume) {
     EAS_RESULT result;
 
-    if (pEASData == NULL || midiHandle == NULL)
-        return JNI_FALSE;
+    if (pEASData == NULL || midiHandle == NULL) return JNI_FALSE;
 
-    result = EAS_SetVolume(pEASData, NULL, (EAS_I32) volume);
+    result = EAS_SetVolume(pEASData, NULL, (EAS_I32)volume);
 
-    if (result != EAS_SUCCESS)
-        return JNI_FALSE;
+    if (result != EAS_SUCCESS) return JNI_FALSE;
 
     return JNI_TRUE;
 }
 
-jboolean
-Java_org_billthefarmer_mididriver_MidiDriver_setVolume(JNIEnv *env,
-                                                       jobject obj,
-                                                       jint volume)
-{
+jboolean Java_org_billthefarmer_mididriver_MidiDriver_nativeSetVolume(
+    JNIEnv* env, jclass cls, jint volume) {
     return midi_setVolume(volume);
 }
 
 // Set EAS reverb
-jboolean midi_setReverb(jint preset)
-{
+jboolean midi_setReverb(jint preset) {
     EAS_RESULT result;
 
-    if (preset >= 0)
-    {
+    if (preset >= 0) {
         result = EAS_SetParameter(pEASData, EAS_MODULE_REVERB,
                                   EAS_PARAM_REVERB_PRESET, preset);
-        if (result != EAS_SUCCESS)
-        {
+        if (result != EAS_SUCCESS) {
             LOG_E(LOG_TAG, "Set EAS reverb preset failed: %ld", result);
             return JNI_FALSE;
         }
 
         result = EAS_SetParameter(pEASData, EAS_MODULE_REVERB,
                                   EAS_PARAM_REVERB_BYPASS, EAS_FALSE);
-        if (result != EAS_SUCCESS)
-        {
+        if (result != EAS_SUCCESS) {
             LOG_E(LOG_TAG, "Enable EAS reverb failed: %ld", result);
             return JNI_FALSE;
         }
     }
 
-    else
-    {
+    else {
         result = EAS_SetParameter(pEASData, EAS_MODULE_REVERB,
                                   EAS_PARAM_REVERB_BYPASS, EAS_TRUE);
-        if (result != EAS_SUCCESS)
-        {
+        if (result != EAS_SUCCESS) {
             LOG_E(LOG_TAG, "Disable EAS reverb failed: %ld", result);
             return JNI_FALSE;
         }
@@ -383,87 +349,73 @@ jboolean midi_setReverb(jint preset)
     return JNI_TRUE;
 }
 
-jboolean
-Java_org_billthefarmer_mididriver_MidiDriver_setReverb(JNIEnv *env,
-                                                       jobject obj,
-                                                       jint preset)
-{
+jboolean Java_org_billthefarmer_mididriver_MidiDriver_nativeSetReverb(
+    JNIEnv* env, jclass cls, jint preset) {
     return midi_setReverb(preset);
 }
 
 // shutdown EAS midi
-jboolean midi_shutdown()
-{
+jboolean midi_shutdown() {
     closeOboe();
     shutdownEAS();
 
     return JNI_TRUE;
 }
 
-jboolean
-Java_org_billthefarmer_mididriver_MidiDriver_shutdown(JNIEnv *env,
-                                                      jobject obj)
-{
+jboolean Java_org_billthefarmer_mididriver_MidiDriver_nativeShutdown(
+    JNIEnv* env, jclass cls) {
     return midi_shutdown();
 }
 
-static int memDLS_readAt(void *handle, void *buf, int offset, int size)
-{
-    const EAS_U8 *data;
-    EAS_DLS_HANDLE *pHandle;
+static int memDLS_readAt(void* handle, void* buf, int offset, int size) {
+    const EAS_U8* data;
+    EAS_DLS_HANDLE* pHandle;
 
-    pHandle = (EAS_DLS_HANDLE *) handle;
+    pHandle = (EAS_DLS_HANDLE*)handle;
     data = pHandle->data;
     EAS_HWMemCpy(buf, data + offset, size);
 
     return size;
 }
 
-static int memDLS_size(void *handle)
-{
-    EAS_DLS_HANDLE *pHandle;
+static int memDLS_size(void* handle) {
+    EAS_DLS_HANDLE* pHandle;
 
-    pHandle = (EAS_DLS_HANDLE *) handle;
+    pHandle = (EAS_DLS_HANDLE*)handle;
     return pHandle->len;
 }
 
-jboolean midi_loadDLS(const EAS_U8 *dlsData, jint length)
-{
+jboolean midi_loadDLS(const EAS_U8* dlsData, jint length) {
     EAS_FILE file;
     EAS_RESULT result;
-    EAS_DLS_HANDLE handle = { length, dlsData };
+    EAS_DLS_HANDLE handle = {length, dlsData};
 
-    file.handle = (void *) &handle;
+    file.handle = (void*)&handle;
     file.readAt = memDLS_readAt;
     file.size = memDLS_size;
 
     result = EAS_LoadDLSCollection(pEASData, midiHandle, &file);
-    if (result != EAS_SUCCESS)
-        return JNI_FALSE;
+    if (result != EAS_SUCCESS) return JNI_FALSE;
 
     isDLSLoaded = 1;
     return JNI_TRUE;
 }
 
-jboolean
-Java_org_billthefarmer_mididriver_MidiDriver_loadDLS(JNIEnv *env,
-                                                     jobject obj,
-                                                     jbyteArray byteArray)
-{
+jboolean Java_org_billthefarmer_mididriver_MidiDriver_nativeLoadDLS(
+    JNIEnv* env, jclass cls, jbyteArray byteArray) {
     jint length;
-    EAS_U8 *bytes;
+    EAS_U8* bytes;
     jboolean isCopy;
     jboolean result;
 
-    if (isDLSLoaded != 0)
-        return JNI_FALSE;
+    if (isDLSLoaded != 0) return JNI_FALSE;
 
-    bytes = (EAS_U8 *) env->GetByteArrayElements(byteArray, &isCopy);
+    bytes = (EAS_U8*)env->GetByteArrayElements(byteArray, &isCopy);
     length = env->GetArrayLength(byteArray);
 
     result = midi_loadDLS(bytes, length);
 
-    env->ReleaseByteArrayElements(byteArray, (jbyte *) bytes, 0);
+    env->ReleaseByteArrayElements(byteArray, (jbyte*)bytes, 0);
 
     return result;
 }

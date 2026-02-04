@@ -5,65 +5,63 @@
 #ifndef _Included_org_billthefarmer_mididriver_MidiDriver
 #define _Included_org_billthefarmer_mididriver_MidiDriver
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 /*
  * Class:     org_billthefarmer_mididriver_MidiDriver
- * Method:    init
+ * Method:    nativeInit
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_init
-        (JNIEnv *, jobject);
+JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_nativeInit
+  (JNIEnv *, jclass);
 
 /*
  * Class:     org_billthefarmer_mididriver_MidiDriver
- * Method:    config
+ * Method:    nativeConfig
  * Signature: ()[I
  */
-JNIEXPORT jintArray JNICALL Java_org_billthefarmer_mididriver_MidiDriver_config
-        (JNIEnv *, jobject);
+JNIEXPORT jintArray JNICALL Java_org_billthefarmer_mididriver_MidiDriver_nativeConfig
+  (JNIEnv *, jclass);
 
 /*
  * Class:     org_billthefarmer_mididriver_MidiDriver
- * Method:    write
- * Signature: ([B)Z
+ * Method:    nativeWrite
+ * Signature: ([BII)Z
  */
-JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_write
-        (JNIEnv *, jobject, jbyteArray);
+JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_nativeWrite
+  (JNIEnv *, jclass, jbyteArray, jint, jint);
 
 /*
  * Class:     org_billthefarmer_mididriver_MidiDriver
- * Method:    setVolume
+ * Method:    nativeSetVolume
  * Signature: (I)Z
  */
-JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_setVolume
-        (JNIEnv *, jobject, jint);
+JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_nativeSetVolume
+  (JNIEnv *, jclass, jint);
 
 /*
  * Class:     org_billthefarmer_mididriver_MidiDriver
- * Method:    setReverb
+ * Method:    nativeSetReverb
  * Signature: (I)Z
  */
-JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_setReverb
-        (JNIEnv *, jobject, jint);
-
+JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_nativeSetReverb
+  (JNIEnv *, jclass, jint);
 
 /*
  * Class:     org_billthefarmer_mididriver_MidiDriver
- * Method:    shutdown
+ * Method:    nativeShutdown
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_shutdown
-        (JNIEnv *, jobject);
+JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_nativeShutdown
+  (JNIEnv *, jclass);
 
 /*
  * Class:     org_billthefarmer_mididriver_MidiDriver
- * Method:    loadDLS
+ * Method:    nativeLoadDLS
  * Signature: ([B)Z
  */
-JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_loadDLS
-        (JNIEnv *, jobject, jbyteArray);
+JNIEXPORT jboolean JNICALL Java_org_billthefarmer_mididriver_MidiDriver_nativeLoadDLS
+  (JNIEnv *, jclass, jbyteArray);
 
 #ifdef __cplusplus
 }

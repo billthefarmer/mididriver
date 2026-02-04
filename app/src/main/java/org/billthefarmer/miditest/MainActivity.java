@@ -37,20 +37,19 @@ import org.billthefarmer.mididriver.ReverbConstants;
 
 import java.util.Locale;
 
-public class MainActivity extends Activity
-    implements View.OnTouchListener, View.OnClickListener,
-               CompoundButton.OnCheckedChangeListener,
-               MidiDriver.OnMidiStartListener
-{
+public final class MainActivity extends Activity
+        implements View.OnTouchListener,
+                View.OnClickListener,
+                CompoundButton.OnCheckedChangeListener,
+                MidiDriver.OnMidiStartListener {
     private TextView text;
 
-    protected MidiDriver midi;
-    protected MediaPlayer player;
+    private MidiDriver midi;
+    private MediaPlayer player;
 
     // On create
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -87,8 +86,7 @@ public class MainActivity extends Activity
 
     // On resume
     @Override
-    protected void onResume()
-    {
+    protected void onResume() {
         super.onResume();
 
         // Start midi
@@ -99,8 +97,7 @@ public class MainActivity extends Activity
 
     // On pause
     @Override
-    protected void onPause()
-    {
+    protected void onPause() {
         super.onPause();
 
         // Stop midi
@@ -114,56 +111,55 @@ public class MainActivity extends Activity
 
     // On touch
     @Override
-    public boolean onTouch(View v, MotionEvent event)
-    {
+    public boolean onTouch(View v, MotionEvent event) {
         int action = event.getAction();
         int id = v.getId();
 
         switch (action) {
             // Down
-        case MotionEvent.ACTION_DOWN:
-            switch (id) {
-            case R.id.c:
-                sendMidi(MidiConstants.NOTE_ON, 48, 63);
-                sendMidi(MidiConstants.NOTE_ON, 52, 63);
-                sendMidi(MidiConstants.NOTE_ON, 55, 63);
+            case MotionEvent.ACTION_DOWN:
+                switch (id) {
+                    case R.id.c:
+                        sendMidi(MidiConstants.NOTE_ON, 48, 63);
+                        sendMidi(MidiConstants.NOTE_ON, 52, 63);
+                        sendMidi(MidiConstants.NOTE_ON, 55, 63);
+                        break;
+
+                    case R.id.g:
+                        sendMidi(MidiConstants.NOTE_ON, 55, 63);
+                        sendMidi(MidiConstants.NOTE_ON, 59, 63);
+                        sendMidi(MidiConstants.NOTE_ON, 62, 63);
+                        break;
+
+                    default:
+                        return false;
+                }
+
+                v.performClick();
                 break;
-
-            case R.id.g:
-                sendMidi(MidiConstants.NOTE_ON, 55, 63);
-                sendMidi(MidiConstants.NOTE_ON, 59, 63);
-                sendMidi(MidiConstants.NOTE_ON, 62, 63);
-                break;
-
-            default:
-                return false;
-            }
-
-            v.performClick();
-            break;
 
             // Up
-        case MotionEvent.ACTION_UP:
-            switch (id) {
-            case R.id.c:
-                sendMidi(MidiConstants.NOTE_OFF, 48, 0);
-                sendMidi(MidiConstants.NOTE_OFF, 52, 0);
-                sendMidi(MidiConstants.NOTE_OFF, 55, 0);
-                break;
+            case MotionEvent.ACTION_UP:
+                switch (id) {
+                    case R.id.c:
+                        sendMidi(MidiConstants.NOTE_OFF, 48, 0);
+                        sendMidi(MidiConstants.NOTE_OFF, 52, 0);
+                        sendMidi(MidiConstants.NOTE_OFF, 55, 0);
+                        break;
 
-            case R.id.g:
-                sendMidi(MidiConstants.NOTE_OFF, 55, 0);
-                sendMidi(MidiConstants.NOTE_OFF, 59, 0);
-                sendMidi(MidiConstants.NOTE_OFF, 62, 0);
+                    case R.id.g:
+                        sendMidi(MidiConstants.NOTE_OFF, 55, 0);
+                        sendMidi(MidiConstants.NOTE_OFF, 59, 0);
+                        sendMidi(MidiConstants.NOTE_OFF, 62, 0);
+                        break;
+
+                    default:
+                        return false;
+                }
                 break;
 
             default:
                 return false;
-            }
-            break;
-
-        default:
-            return false;
         }
 
         return false;
@@ -171,35 +167,32 @@ public class MainActivity extends Activity
 
     // On click
     @Override
-    public void onClick(View v)
-    {
+    public void onClick(View v) {
         int id = v.getId();
 
         switch (id) {
-        case R.id.ants:
-            if (player != null) {
-                player.stop();
-                player.release();
-            }
+            case R.id.ants:
+                if (player != null) {
+                    player.stop();
+                    player.release();
+                }
 
-            player = MediaPlayer.create(this, R.raw.ants);
-            player.start();
-            break;
+                player = MediaPlayer.create(this, R.raw.ants);
+                player.start();
+                break;
 
-        case R.id.nants:
-            if (player != null)
-                player.stop();
-            break;
+            case R.id.nants:
+                if (player != null)
+                    player.stop();
+                break;
         }
     }
 
     // onCheckedChanged
     @Override
-    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
-    {
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         if (isChecked)
             midi.setReverb(ReverbConstants.CHAMBER);
-
         else
             midi.setReverb(ReverbConstants.OFF);
     }
@@ -207,26 +200,24 @@ public class MainActivity extends Activity
     // Listener for sending initial midi messages when the Sonivox
     // synthesizer has been started, such as program change.
     @Override
-    public void onMidiStart()
-    {
+    public void onMidiStart() {
         // Program change - harpsichord
         sendMidi(MidiConstants.PROGRAM_CHANGE,
-                 GeneralMidiConstants.HARPSICHORD);
+        GeneralMidiConstants.HARPSICHORD);
 
         // Get the config
         int config[] = midi.config();
 
         String format = getString(R.string.format);
         String info = String.format(Locale.getDefault(), format, config[0],
-                                    config[1], config[2], config[3]);
+                config[1], config[2], config[3]);
 
         if (text != null)
             text.setText(info);
     }
 
     // Send a midi message, 2 bytes
-    protected void sendMidi(int m, int n)
-    {
+    private void sendMidi(int m, int n) {
         byte msg[] = new byte[2];
 
         msg[0] = (byte) m;
@@ -236,8 +227,7 @@ public class MainActivity extends Activity
     }
 
     // Send a midi message, 3 bytes
-    protected void sendMidi(int m, int n, int v)
-    {
+    private void sendMidi(int m, int n, int v) {
         byte msg[] = new byte[3];
 
         msg[0] = (byte) m;

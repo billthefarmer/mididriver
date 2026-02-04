@@ -60,7 +60,7 @@ allprojects {
 and:
 ```gradle
 dependencies {
-    implementation 'com.github.billthefarmer:mididriver:v1.24'
+    implementation 'com.github.billthefarmer:mididriver:v1.29'
 }
 ```
 ### Constructor
@@ -82,6 +82,10 @@ app. See the demo app for an example.
 
     void queueEvent(byte[]) // Send a midi message. This method now just
                             // calls write()
+
+    boolean write(byte[]) // Writes midi data to the Sonivox
+                          // synthesizer. Returns true on
+                          // success, false on failure.
 ```
 #### Listener
 ```java
@@ -92,7 +96,7 @@ app. See the demo app for an example.
 ### Native Methods
 ```java
     boolean init()  // Return true on success, or false on failure.
-	
+
     int[] config()  // Return a four element array of ints with part of
                     // the EAS config:
 
@@ -101,12 +105,7 @@ app. See the demo app for an example.
         config[2] = pLibConfig->sampleRate;
         config[3] = pLibConfig->mixBufferSize;
 
-    boolean write(byte buffer[]) // Writes midi data to the Sonivox
-                                 // synthesizer. The length of the array
-                                 // should be the exact length of the
-                                 // message or messages. Returns true
-                                 // on success, false on
-                                 // failure.
+    boolean write(byte[] buf, int off, int len)
 
     boolean setVolume(int volume) // Set master volume for EAS
                                   // synthesizer (between 0 and 100).
@@ -118,7 +117,7 @@ app. See the demo app for an example.
                                   // ReverbConstants). Returns true
                                   // on success, false on failure.
 
-    boolean loadDLS(byte a[])     // Loads DLS soundbank into the Sonivox
+    boolean loadDLS(byte[] a)     // Loads DLS soundbank into the Sonivox
                                   // synthesizer. Returns true on success,
                                   // false on failure.
 
@@ -137,6 +136,10 @@ app. See the demo app for an example.
                                  // message or messages. Returns true
                                  // on success, false on
                                  // failure.
+    jboolean midi_write2(EAS_U8 *bytes, jint offset, jint length)
+                                 // Writes midi data to the Sonivox
+                                 // synthesizer. Returns true on
+                                 // success, false on failure.
     jboolean midi_setVolume(jint volume)
                                   // Set master volume for EAS
                                   // synthesizer (between 0 and 100).

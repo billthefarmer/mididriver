@@ -22,61 +22,42 @@
 
 package org.billthefarmer.mididriver;
 
-/**
- * MidiDriver class
- */
-public class MidiDriver
-{
-    /**
-     * Midi start listener
-     */
-    private OnMidiStartListener listener;
+/** MidiDriver class */
+public final class MidiDriver {
 
-    /**
-     * Instance
-     */
+    /** Midi start listener */
+    private static OnMidiStartListener listener;
+
+    /** Instance */
     private static MidiDriver instance;
 
-    /**
-     * Class constructor
-     */
-    private MidiDriver()
-    {
-    }
+    /** Class constructor */
+    private MidiDriver() {}
 
-    /**
-     * Get instance
-     */
-    public static MidiDriver getInstance()
-    {
-        if (instance == null)
+    /** Get instance */
+    public static MidiDriver getInstance() {
+        if (instance == null) {
             instance = new MidiDriver();
-
+        }
         return instance;
     }
 
-    /**
-     * Get instance
-     */
-    public static MidiDriver getInstance(OnMidiStartListener l)
-    {
+    /** Get instance */
+    public static MidiDriver getInstance(OnMidiStartListener l) {
         MidiDriver instance = getInstance();
-        instance.listener = l;
+        listener = l;
         return instance;
     }
 
-    /**
-     * Start midi driver
-     */
-    public void start()
-    {
-        if (!init())
+    /** Start midi driver */
+    public void start() {
+        if (!nativeInit()) {
             return;
-
+        }
         // Call listener
-
-        if (listener != null)
+        if (listener != null) {
             listener.onMidiStart();
+         }
     }
 
     /**
@@ -84,17 +65,13 @@ public class MidiDriver
      *
      * @param byte array of midi events
      */
-    public void queueEvent(byte[] event)
-    {
+    public void queueEvent(byte[] event) {
         write(event);
     }
 
-    /**
-     * Stop midi driver
-     */
-    public void stop()
-    {
-        shutdown();
+    /** Stop midi driver */
+    public void stop() {
+        nativeShutdown();
     }
 
     /**
@@ -102,77 +79,107 @@ public class MidiDriver
      *
      * @param OnMidiStartListener
      */
-    public void setOnMidiStartListener(OnMidiStartListener l)
-    {
+    public void setOnMidiStartListener(OnMidiStartListener l) {
         listener = l;
     }
 
-    /**
-     * Midi start listener interface
-     */
-    public interface OnMidiStartListener
-    {
+    /** Midi start listener interface */
+    public interface OnMidiStartListener {
         void onMidiStart();
     }
-
-    // Native midi methods
-
-    /**
-     * Initialise native code
-     *
-     * @return true for success
-     */
-    private native boolean init();
 
     /**
      * Returm part of EAS config
      *
-     * @return Int array of part of EAS config
-     *   config[0] = pLibConfig->maxVoices;
-     *   config[1] = pLibConfig->numChannels;
-     *   config[2] = pLibConfig->sampleRate;
-     *   config[3] = pLibConfig->mixBufferSize;
+     * @return Int array of part of EAS config config[0] = pLibConfig->maxVoices; config[1] =
+     *     pLibConfig->numChannels; config[2] = pLibConfig->sampleRate; config[3] =
+     *     pLibConfig->mixBufferSize;
      */
-    public  native int[]   config();
+    public int[] config() {
+        return nativeConfig();
+    }
 
     /**
      * Write midi event or events
      *
      * @param byte array of midi events
      */
-    public  native boolean write(byte a[]);
+    public boolean write(byte[] a) {
+        return nativeWrite(a, 0, a.length);
+    }
+
+    /**
+     * Write midi event or events
+     *
+     * @param byte array of midi events
+     */
+    public boolean write(byte[] a, int off, int len) {
+        if ((off | len) < 0 || off > a.length - len) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        return nativeWrite(a, off, len);
+    }
 
     /**
      * Set master volume
+     *
      * @param volume master volume for EAS synthesizer (between 0 and 100)
      * @return true for success
      */
-    public  native boolean setVolume(int volume);
+    public boolean setVolume(int volume) {
+        return nativeSetVolume(volume);
+    }
 
     /**
      * Set EAS module parameter
+     *
      * @param preset reverb preset to use (value from ReverbConstants)
      * @return true for success
      */
-    public native boolean setReverb(int preset);
+    public boolean setReverb(int preset) {
+        return nativeSetReverb(preset);
+    }
 
     /**
-     * Shut down native code
+     * Shut down midi driver
      *
      * @return true for success
      */
-    private native boolean shutdown();
+    public boolean shutdown() {
+        return nativeShutdown();
+    }
 
     /**
      * Load DLS soundbank from memory
      *
      * @param byte array of DLS file data
      */
-    public native boolean loadDLS(byte a[]);
+    public boolean loadDLS(byte[] a) {
+        return nativeLoadDLS(a);
+    }
+
+    /**
+     * Initialise native code
+     *
+     * @return true for success
+     */
+    private static native boolean nativeInit();
+
+    private static native int[] nativeConfig();
+
+    private static native boolean nativeWrite(byte[] a, int off, int len);
+
+    private static native boolean nativeSetVolume(int volume);
+
+    private static native boolean nativeSetReverb(int preset);
+
+    private static native boolean nativeShutdown();
+
+    private static native boolean nativeLoadDLS(byte[] a);
 
     // Load midi library
-    static
-    {
+    static {
         System.loadLibrary("midi");
     }
+
 }

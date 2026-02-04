@@ -38,6 +38,9 @@ jboolean midi_init();
 // midi write
 jboolean midi_write(EAS_U8 *bytes, jint length);
 
+// midi write v2
+jboolean midi_write2(EAS_U8 *bytes, jint offset, jint length);
+
 // set EAS master volume
 jboolean midi_setVolume(jint volume);
 
