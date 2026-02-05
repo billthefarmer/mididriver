@@ -18,7 +18,7 @@ android {
         // }
     }
 
-    ndkVersion "28.1.13356709"
+    ndkVersion "29.0.14206865"
 
     defaultConfig {
         minSdkVersion 21
@@ -62,5 +62,5 @@ afterEvaluate {
 }
 
 dependencies {
-    implementation 'com.google.oboe:oboe:1.9.3'
+    implementation 'com.google.oboe:oboe:1.10.0'
 }

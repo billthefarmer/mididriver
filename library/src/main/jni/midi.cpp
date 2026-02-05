@@ -22,7 +22,8 @@
 
 #include <jni.h>
 #include <assert.h>
-#include <pthread.h>
+
+#include <atomic>
 
 #include <android/log.h>
 
@@ -57,7 +58,10 @@ typedef struct
 } EAS_DLS_HANDLE;
 
 // mutex
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static std::atomic_flag mutex = ATOMIC_FLAG_INIT;
+
+#define LOCK() while (mutex.test_and_set(std::memory_order_acquire));
+#define UNLOCK() mutex.clear(std::memory_order_release);
 
 // oboe stream
 std::shared_ptr<oboe::AudioStream> oboeStream;
@@ -91,12 +95,12 @@ public:
         while (count < bufferSize)
         {
             // lock
-            pthread_mutex_lock(&mutex);
+            LOCK();
 
             result = EAS_Render(pEASData, outputData + count,
                                 pLibConfig->mixBufferSize, &numGenerated);
             // unlock
-            pthread_mutex_unlock(&mutex);
+            UNLOCK();
 
             assert(result == EAS_SUCCESS);
 
@@ -123,6 +127,8 @@ oboe::Result buildOboe()
 
     builder.setDirection(oboe::Direction::Output);
     builder.setPerformanceMode(oboe::PerformanceMode::LowLatency);
+    builder.setSampleRateConversionQuality(
+        oboe::SampleRateConversionQuality::Medium);
     builder.setSharingMode(oboe::SharingMode::Exclusive);
     builder.setFormat(oboe::AudioFormat::I16);
     builder.setFramesPerCallback(bufferSize / pLibConfig->numChannels);
@@ -288,12 +294,12 @@ jboolean midi_write(EAS_U8 *bytes, jint length)
         return JNI_FALSE;
 
     // lock
-    pthread_mutex_lock(&mutex);
+    LOCK();
 
     result = EAS_WriteMIDIStream(pEASData, midiHandle, bytes, length);
 
     // unlock
-    pthread_mutex_unlock(&mutex);
+    UNLOCK();
 
     if (result != EAS_SUCCESS)
         return JNI_FALSE;
